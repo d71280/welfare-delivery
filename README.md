@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 福祉送迎記録システム
 
-## Getting Started
+福祉施設向けの送迎業務記録・管理システムです。利用者の送迎記録、ドライバー管理、車両管理などの機能を提供します。
 
-First, run the development server:
+## 主な機能
+
+### 管理者機能
+- **利用者管理**: 利用者情報の登録・編集・削除
+- **ドライバー管理**: ドライバー情報の管理
+- **車両管理**: 送迎車両の管理
+- **ルート管理**: 送迎ルートの設定
+- **送迎記録**: 送迎実績の確認・CSV出力
+
+### ドライバー機能
+- **送迎記録入力**: 日々の送迎記録の入力
+- **利用者情報確認**: 送迎対象利用者の情報確認
+- **ルート確認**: 担当ルートの詳細確認
+
+## 技術スタック
+
+- **フロントエンド**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **バックエンド**: Supabase (PostgreSQL)
+- **認証**: Supabase Auth
+- **状態管理**: Zustand
+- **フォーム**: React Hook Form + Zod
+
+## セットアップ
+
+### 1. 依存関係のインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env.local` ファイルを作成し、以下の環境変数を設定してください：
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. データベースのセットアップ
+
+Supabaseプロジェクトで `supabase-schema.sql` ファイルを実行してデータベースを構築してください。
+
+### 4. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてアプリケーションを確認してください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 使用方法
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 管理者ログイン
+1. `/admin/login` にアクセス
+2. 管理者認証でログイン
+3. ダッシュボードから各機能にアクセス
 
-## Learn More
+### ドライバーログイン
+1. `/login` にアクセス
+2. ドライバーID、車両番号、PINコードでログイン
+3. 送迎記録の入力・確認
 
-To learn more about Next.js, take a look at the following resources:
+## データベース構造
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **users**: 利用者情報
+- **drivers**: ドライバー情報
+- **vehicles**: 車両情報
+- **routes**: 送迎ルート
+- **destinations**: 送迎先
+- **transportation_records**: 送迎記録
+- **transportation_details**: 送迎詳細
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## デプロイ
 
-## Deploy on Vercel
+Vercelでのデプロイを推奨します：
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+環境変数をVercelプロジェクトに設定し、GitHubリポジトリと連携してデプロイしてください。

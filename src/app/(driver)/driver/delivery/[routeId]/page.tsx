@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Route, DeliveryRecord } from '@/types'
+import { Route, TransportationRecord } from '@/types'
 
 interface DriverSession {
   driverId: string
@@ -16,7 +16,7 @@ interface DriverSession {
 export default function DeliveryPage() {
   const [session, setSession] = useState<DriverSession | null>(null)
   const [route, setRoute] = useState<Route | null>(null)
-  const [deliveryRecord, setDeliveryRecord] = useState<DeliveryRecord | null>(null)
+  const [transportationRecord, setTransportationRecord] = useState<TransportationRecord | null>(null)
   const [currentTime, setCurrentTime] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isStarted, setIsStarted] = useState(false)
@@ -67,19 +67,31 @@ export default function DeliveryPage() {
 
   const fetchLastOdometer = async (vehicleId: string) => {
     try {
-      // 最新の配送記録から終了時の走行距離を取得
-      const { data } = await supabase
-        .from('delivery_records')
-        .select('end_odometer')
-        .eq('vehicle_id', vehicleId)
-        .not('end_odometer', 'is', null)
-        .order('delivery_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(1)
+      // 車両の現在走行距離を取得
+      const { data: vehicleData } = await supabase
+        .from('vehicles')
+        .select('current_odometer')
+        .eq('id', vehicleId)
+        .single()
 
-      if (data && data.length > 0 && data[0].end_odometer) {
-        setLastOdometer(data[0].end_odometer)
-        setStartOdometer(data[0].end_odometer)
+      if (vehicleData && vehicleData.current_odometer !== null) {
+        setLastOdometer(vehicleData.current_odometer)
+        setStartOdometer(vehicleData.current_odometer)
+      } else {
+        // 最新の配送記録から終了時の走行距離を取得
+        const { data } = await supabase
+          .from('transportation_records')
+          .select('end_odometer')
+          .eq('vehicle_id', vehicleId)
+          .not('end_odometer', 'is', null)
+          .order('transportation_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (data && data.length > 0 && data[0].end_odometer) {
+          setLastOdometer(data[0].end_odometer)
+          setStartOdometer(data[0].end_odometer)
+        }
       }
     } catch (err) {
       console.error('最終走行距離取得エラー:', err)
@@ -107,20 +119,18 @@ export default function DeliveryPage() {
     try {
       const today = new Date().toISOString().split('T')[0]
       const { data } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('*')
         .eq('driver_id', session.driverId)
         .eq('vehicle_id', session.vehicleId)
         .eq('route_id', routeId)
-        .eq('delivery_date', today)
+        .eq('transportation_date', today)
         .single()
 
       if (data) {
-        setDeliveryRecord(data)
+        setTransportationRecord(data)
         setIsStarted(data.status !== 'pending')
         setIsCompleted(data.status === 'completed')
-        console.log('Raw start_time from DB:', data.start_time)
-        console.log('Raw end_time from DB:', data.end_time)
         
         // start_timeとend_timeの処理を改善 (TIME形式: HH:MM:SS)
         if (data.start_time) {
@@ -142,7 +152,7 @@ export default function DeliveryPage() {
             setEndTime(data.end_time)
           }
         }
-        setNotes(data.notes || '')
+        setNotes(data.special_notes || '')
         setStartOdometer(data.start_odometer)
         setEndOdometer(data.end_odometer)
       }
@@ -189,28 +199,22 @@ export default function DeliveryPage() {
     if (!session) return
 
     try {
-      const now = new Date()
-      const [hours, minutes] = inputTime.split(':')
-      const timeDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hours), parseInt(minutes))
-      
       console.log('Input time:', inputTime)
-      console.log('Parsed time date:', timeDate)
-      console.log('ISO string:', timeDate.toISOString())
 
       if (timeInputType === 'start') {
         // 配送開始
         let recordData
-        if (deliveryRecord) {
+        if (transportationRecord) {
           // 既存の記録を更新
           const { data, error } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .update({
               start_time: inputTime + ':00', // TIME形式に変換 (HH:MM:SS)
               status: 'in_progress',
               start_odometer: startOdometer,
               updated_at: new Date().toISOString()
             })
-            .eq('id', deliveryRecord.id)
+            .eq('id', transportationRecord.id)
             .select()
             .single()
 
@@ -219,12 +223,12 @@ export default function DeliveryPage() {
         } else {
           // 新規記録作成
           const { data, error } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .insert([{
               driver_id: session.driverId,
               vehicle_id: session.vehicleId,
               route_id: routeId,
-              delivery_date: new Date().toISOString().split('T')[0],
+              transportation_date: new Date().toISOString().split('T')[0],
               start_time: inputTime + ':00', // TIME形式に変換 (HH:MM:SS)
               status: 'in_progress',
               start_odometer: startOdometer
@@ -236,32 +240,37 @@ export default function DeliveryPage() {
           recordData = data
         }
 
-        setDeliveryRecord(recordData)
+        setTransportationRecord(recordData)
         setIsStarted(true)
         setStartTime(inputTime)
       } else {
         // 配送完了
-        if (deliveryRecord) {
+        if (transportationRecord) {
           const { data, error } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .update({
               end_time: inputTime + ':00', // TIME形式に変換 (HH:MM:SS)
               status: 'completed',
-              notes: notes,
+              special_notes: notes,
               end_odometer: endOdometer,
               updated_at: new Date().toISOString()
             })
-            .eq('id', deliveryRecord.id)
+            .eq('id', transportationRecord.id)
             .select()
             .single()
 
           if (error) throw error
-          setDeliveryRecord(data)
+          setTransportationRecord(data)
           setIsCompleted(true)
           setEndTime(inputTime)
           
+          // 車両の現在走行距離を更新
+          if (endOdometer && session.vehicleId) {
+            await updateVehicleOdometer(session.vehicleId, endOdometer)
+          }
+          
           // オイル交換チェック時の処理
-          if (oilChangeChecked && endOdometer) {
+          if (oilChangeChecked && endOdometer && session.vehicleId) {
             await updateVehicleOilChange(session.vehicleId, endOdometer)
           }
         }
@@ -271,6 +280,22 @@ export default function DeliveryPage() {
     } catch (err) {
       console.error('時間記録エラー:', err)
       alert('時間の記録に失敗しました')
+    }
+  }
+
+  const updateVehicleOdometer = async (vehicleId: string, odometer: number) => {
+    try {
+      const { error } = await supabase
+        .from('vehicles')
+        .update({
+          current_odometer: odometer,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', vehicleId)
+
+      if (error) throw error
+    } catch (err) {
+      console.error('車両走行距離更新エラー:', err)
     }
   }
 

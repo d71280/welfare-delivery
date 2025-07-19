@@ -245,6 +245,7 @@ export default function LoginPage() {
           route_id: routeId,
           name: 'ABC商店', 
           address: '〒150-0001 東京都渋谷区神宮前1-1-1', 
+          destination_type: 'facility' as const,
           display_order: 1,
           is_active: true,
           created_at: new Date().toISOString(),
@@ -282,7 +283,7 @@ export default function LoginPage() {
 
       console.log('配送データ:', deliveryData)
 
-      const result = await createDeliveryRecord(deliveryData)
+      const result = await createDeliveryRecord(deliveryData as any)
       
       console.log('配送記録作成結果:', result)
       
@@ -420,177 +421,261 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50">
-      {/* トップナビゲーション */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-md mx-auto px-4 py-3">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'}}>
+      {/* 福祉送迎アプリ用ヘッダー */}
+      <div className="bg-white shadow-lg border-b-4 border-blue-500">
+        <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">ドライバーログイン</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl font-bold">🚐</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">福祉送迎システム</h1>
+                <p className="text-sm text-gray-600">安全・安心な送迎サービス</p>
+              </div>
+            </div>
             <Link 
               href="/admin/login"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="welfare-button welfare-button-outline text-sm"
             >
-              管理者ログイン
+              📊 管理者ログイン
             </Link>
           </div>
         </div>
       </div>
       
-      <div className="flex items-center justify-center p-4 pt-8">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            配送管理システム
-          </h1>
-          <p className="text-gray-600">ドライバーログイン</p>
-          {currentTime && (
-            <div className="mt-2 text-2xl font-mono font-bold text-blue-600">
-              {currentTime}
+      <div className="flex items-center justify-center p-6 pt-12">
+        <div className="welfare-card w-full max-w-5xl fade-in">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <span className="text-white text-3xl">🚐</span>
             </div>
-          )}
-        </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              福祉送迎ドライバー
+            </h1>
+            <p className="text-xl text-gray-600 mb-4">安全運転でご利用者様をお送りします</p>
+            {currentTime && (
+              <div className="inline-flex items-center gap-2 bg-blue-50 px-6 py-3 rounded-full">
+                <span className="text-blue-600">🕐</span>
+                <span className="text-2xl font-mono font-bold text-blue-600">
+                  {currentTime}
+                </span>
+              </div>
+            )}
+          </div>
 
         {!showSelectionForm ? (
-          // 初期画面：配送開始ボタンのみ表示
-          <div className="space-y-6">
-            <button
-              onClick={handleStartDelivery}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-4 rounded-lg text-xl transition-colors"
-            >
-              配送開始
-            </button>
+          // 初期画面：送迎開始ボタンのみ表示
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="text-center p-6 bg-blue-50 rounded-xl">
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white text-2xl">🏠</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">通所支援</h3>
+                <p className="text-sm text-gray-600">ご自宅と施設間の送迎</p>
+              </div>
+              <div className="text-center p-6 bg-green-50 rounded-xl">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white text-2xl">🏥</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">医療送迎</h3>
+                <p className="text-sm text-gray-600">病院・診療所への送迎</p>
+              </div>
+              <div className="text-center p-6 bg-orange-50 rounded-xl">
+                <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white text-2xl">🌟</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">外出支援</h3>
+                <p className="text-sm text-gray-600">お買い物・レクリエーション</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <button
+                onClick={handleStartDelivery}
+                className="welfare-button welfare-button-primary text-2xl px-12 py-6 shadow-xl hover:shadow-2xl"
+              >
+                🚐 送迎を開始する
+              </button>
+              <p className="text-gray-500 mt-4 text-lg">安全第一でご利用者様をお送りします</p>
+            </div>
           </div>
         ) : (
           // 選択フォーム：ドライバーと車両を選択
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-8">
+            <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                👨‍💼 送迎情報の設定
+              </h2>
+              <p className="text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
+            </div>
+
             {/* ドライバー選択 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ドライバー名
+            <div className="welfare-card">
+              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                👨‍💼 担当ドライバー
               </label>
               <select
                 value={selectedDriver}
                 onChange={(e) => setSelectedDriver(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                className="welfare-select"
                 required
               >
                 <option value="">ドライバーを選択してください</option>
                 {drivers.map((driver) => (
                   <option key={driver.id} value={driver.id}>
-                    {driver.name} ({driver.employee_no})
+                    👨‍💼 {driver.name} ({driver.employee_no})
                   </option>
                 ))}
               </select>
             </div>
 
             {/* 車両選択 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                車両番号
+            <div className="welfare-card">
+              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                🚐 送迎車両
               </label>
               <select
                 value={selectedVehicle}
                 onChange={(e) => handleVehicleSelect(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                className="welfare-select"
                 required
               >
-                <option value="">車両を選択してください</option>
+                <option value="">送迎車両を選択してください</option>
                 {vehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.vehicle_no}
+                    🚐 {vehicle.vehicle_no} ({vehicle.vehicle_type})
                   </option>
                 ))}
               </select>
               
               {/* 開始走行距離表示 */}
               {startOdometer !== null && (
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                  <p className="text-sm text-blue-700">
-                    開始走行距離: <span className="font-semibold">{startOdometer.toLocaleString()} km</span>
-                    <span className="text-xs text-blue-600 ml-2">（自動設定）</span>
+                <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-green-600 text-xl">📊</span>
+                    <span className="font-bold text-green-800">走行距離情報</span>
+                  </div>
+                  <p className="text-green-700 text-lg">
+                    開始走行距離: <span className="font-bold text-xl">{startOdometer.toLocaleString()} km</span>
                   </p>
+                  <p className="text-green-600 text-sm mt-1">💡 車両から自動取得されました</p>
                 </div>
               )}
             </div>
 
 
             {/* ルート選択 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                配送ルート <span className="text-red-500">*</span>
+            <div className="welfare-card">
+              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                🗺️ 送迎ルート <span className="text-red-500 text-xl">*</span>
               </label>
               <select
                 value={selectedRoute}
                 onChange={(e) => handleRouteSelect(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                className="welfare-select"
                 required
               >
-                <option value="">ルートを選択してください</option>
+                <option value="">送迎ルートを選択してください</option>
                 {routes.map((route) => (
                   <option key={route.id} value={route.id}>
-                    {route.route_name} ({route.estimated_time} / {route.distance})
+                    🗺️ {route.route_name} ({route.estimated_time} / {route.distance})
                   </option>
                 ))}
               </select>
+              <p className="text-gray-600 text-sm mt-2">⚠️ 安全運転でご利用者様をお送りください</p>
             </div>
 
             {/* 時間入力セクション */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">配送時間</h3>
+            <div className="welfare-card border-l-4 border-orange-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🕐 送迎開始時間
+              </h3>
               
               {/* 開始時刻 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  開始時刻 <span className="text-red-500">*</span>
+                <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  🕐 開始時刻 <span className="text-red-500 text-xl">*</span>
                 </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="flex-1 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xl font-mono text-center"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-3">
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="welfare-input text-2xl font-mono text-center"
+                      required
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       const now = new Date()
                       setStartTime(now.toTimeString().slice(0, 5))
                     }}
-                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded-lg transition-colors"
+                    className="welfare-button welfare-button-outline"
                   >
-                    現在
+                    🕐 現在時刻
                   </button>
                 </div>
+                <p className="text-orange-600 text-sm mt-2 flex items-center gap-1">
+                  ⚠️ 予定時刻より早めの出発をお勧めします
+                </p>
               </div>
-
             </div>
 
 
             {/* エラーメッセージ */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-sm">{error}</p>
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-red-500 text-xl">⚠️</span>
+                  <span className="font-bold text-red-800">エラーが発生しました</span>
+                </div>
+                <p className="text-red-700 text-lg">{error}</p>
               </div>
             )}
 
             {/* ボタン */}
-            <div className="flex space-x-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-4 rounded-lg text-lg transition-colors"
+                className="welfare-button welfare-button-outline text-lg"
               >
-                キャンセル
+                ❌ キャンセル
               </button>
               <button
                 type="button"
                 onClick={handleStartDeliveryWithRecord}
                 disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || !selectedRoute}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg text-lg transition-colors"
+                className="welfare-button welfare-button-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? '処理中...' : '配送開始'}
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    処理中...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    🚐 送迎開始
+                  </span>
+                )}
               </button>
+            </div>
+            
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-yellow-600 text-xl">🛡️</span>
+                <span className="font-bold text-yellow-800">安全運転のお願い</span>
+              </div>
+              <ul className="text-yellow-700 space-y-1 text-sm">
+                <li>• シートベルトの着用確認をお願いします</li>
+                <li>• ご利用者様の体調にご配慮ください</li>
+                <li>• 急発進・急ブレーキはお控えください</li>
+                <li>• 困ったときは本部にご連絡ください</li>
+              </ul>
             </div>
           </form>
         )}

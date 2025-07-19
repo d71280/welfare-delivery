@@ -75,39 +75,39 @@ export default function AdminDashboardPage() {
         routes.map(async (route) => {
           // 今月の配送記録を取得
           const { data: monthlyData, error: monthlyError } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .select(`
               *,
               start_time,
               end_time,
-              delivery_details(
-                arrival_time,
-                departure_time,
+              transportation_details(
+                pickup_time,
+                drop_off_time,
                 destinations(display_order)
               )
             `)
             .eq('route_id', route.id)
-            .gte('delivery_date', monthAgo)
-            .order('delivery_date', { ascending: false })
+            .gte('transportation_date', monthAgo)
+            .order('transportation_date', { ascending: false })
 
           console.log(`Monthly data for route ${route.route_name}:`, monthlyData)
           if (monthlyError) console.error('Monthly data error:', monthlyError)
 
           // 今日の配送記録を取得
           const { data: todayData, error: todayError } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .select(`
               *,
               start_time,
               end_time,
-              delivery_details(
-                arrival_time,
-                departure_time,
+              transportation_details(
+                pickup_time,
+                drop_off_time,
                 destinations(display_order)
               )
             `)
             .eq('route_id', route.id)
-            .eq('delivery_date', today)
+            .eq('transportation_date', today)
 
           console.log(`Today's data for route ${route.route_name}:`, todayData)
           if (todayError) console.error('Today data error:', todayError)
@@ -116,9 +116,9 @@ export default function AdminDashboardPage() {
           const calculateDeliveryTime = (record: {
             start_time?: string
             end_time?: string
-            delivery_details?: Array<{
-              arrival_time?: string
-              departure_time?: string
+            transportation_details?: Array<{
+              pickup_time?: string
+              drop_off_time?: string
               destinations?: { display_order?: number }
             }>
           }) => {
@@ -146,11 +146,11 @@ export default function AdminDashboardPage() {
               console.log('No start_time or end_time found')
             }
             
-            // フォールバック：delivery_detailsから計算
-            if (!record.delivery_details || record.delivery_details.length === 0) return 0
+            // フォールバック：transportation_detailsから計算
+            if (!record.transportation_details || record.transportation_details.length === 0) return 0
             
-            const sortedDetails = record.delivery_details
-              .filter((d) => d.arrival_time && d.departure_time)
+            const sortedDetails = record.transportation_details
+              .filter((d) => d.pickup_time && d.drop_off_time)
               .sort((a, b) => (a.destinations?.display_order || 0) - (b.destinations?.display_order || 0))
             
             if (sortedDetails.length === 0) return 0
@@ -158,12 +158,12 @@ export default function AdminDashboardPage() {
             const firstDetail = sortedDetails[0]
             const lastDetail = sortedDetails[sortedDetails.length - 1]
             
-            if (!firstDetail.arrival_time || !lastDetail.departure_time) return 0
+            if (!firstDetail.pickup_time || !lastDetail.drop_off_time) return 0
             
             // TIME型のデータを今日の日付と組み合わせてDateオブジェクトを作成
             const today = new Date().toISOString().split('T')[0]
-            const startTime = new Date(`${today}T${firstDetail.arrival_time}`)
-            const endTime = new Date(`${today}T${lastDetail.departure_time}`)
+            const startTime = new Date(`${today}T${firstDetail.pickup_time}`)
+            const endTime = new Date(`${today}T${lastDetail.drop_off_time}`)
             
             // 時間が有効でない場合は0を返す
             if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) return 0

@@ -14,7 +14,7 @@ interface DriverSession {
   endTime: string | null
   selectedRoute: string
   routeName: string
-  deliveryRecordId?: string
+  transportationRecordId?: string
 }
 
 interface DeliveryDestination {
@@ -62,7 +62,7 @@ export default function RouteDetailsPage() {
   const [destinations, setDestinations] = useState<DeliveryDestination[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState('')
-  const [deliveryRecordId, setDeliveryRecordId] = useState<string | null>(null)
+  const [transportationRecordId, setDeliveryRecordId] = useState<string | null>(null)
   const [arrivalTimes, setArrivalTimes] = useState<{[key: string]: string}>({})
   const [departureTimes, setDepartureTimes] = useState<{[key: string]: string}>({})
   const [startMileage, setStartMileage] = useState('')
@@ -94,8 +94,8 @@ export default function RouteDetailsPage() {
     setSession(parsedSession)
     
     // 配送記録IDを取得または作成
-    if (parsedSession.deliveryRecordId) {
-      setDeliveryRecordId(parsedSession.deliveryRecordId)
+    if (parsedSession.transportationRecordId) {
+      setDeliveryRecordId(parsedSession.transportationRecordId)
     } else {
       // セッションに配送記録IDがない場合は、今日の配送記録を検索
       checkExistingDeliveryRecord(parsedSession)
@@ -142,18 +142,18 @@ export default function RouteDetailsPage() {
     try {
       const today = new Date().toISOString().split('T')[0]
       const { data: existingRecord } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('id')
         .eq('driver_id', session.driverId)
         .eq('vehicle_id', session.vehicleId)
         .eq('route_id', routeId)
-        .eq('delivery_date', today)
+        .eq('transportation_date', today)
         .single()
 
       if (existingRecord) {
         setDeliveryRecordId(existingRecord.id)
         // セッションを更新
-        const updatedSession = { ...session, deliveryRecordId: existingRecord.id }
+        const updatedSession = { ...session, transportationRecordId: existingRecord.id }
         localStorage.setItem('driverSession', JSON.stringify(updatedSession))
       }
     } catch (error) {
@@ -344,12 +344,12 @@ export default function RouteDetailsPage() {
       
       // 今日の配送記録があるかチェック
       const { data: existingRecords, error: fetchError } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('id, start_odometer, end_odometer, status')
         .eq('driver_id', session.driverId)
         .eq('vehicle_id', session.vehicleId)
         .eq('route_id', routeId)
-        .eq('delivery_date', today)
+        .eq('transportation_date', today)
         
       const existingRecord = existingRecords?.[0]
 
@@ -367,11 +367,11 @@ export default function RouteDetailsPage() {
 
       // 車両の現在の走行距離を取得（車両管理画面と同じロジック）
       const { data: lastRecords, error: lastRecordError } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('end_odometer')
         .eq('vehicle_id', session.vehicleId)
         .not('end_odometer', 'is', null)
-        .order('delivery_date', { ascending: false })
+        .order('transportation_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(1)
         
@@ -412,7 +412,7 @@ export default function RouteDetailsPage() {
 
       // 新しい配送記録を作成
       const insertData = {
-        delivery_date: today,
+        transportation_date: today,
         driver_id: session.driverId,
         vehicle_id: session.vehicleId,
         route_id: routeId,
@@ -426,7 +426,7 @@ export default function RouteDetailsPage() {
       console.log('新しい配送記録を作成:', insertData)
       
       const { data: newRecord, error: insertError } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .insert(insertData)
         .select('id')
         .single()
@@ -438,12 +438,12 @@ export default function RouteDetailsPage() {
         if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
           console.log('重複エラー発生、既存の記録を再取得します')
           const { data: existingRecords } = await supabase
-            .from('delivery_records')
+            .from('transportation_records')
             .select('id')
             .eq('driver_id', session.driverId)
             .eq('vehicle_id', session.vehicleId)
             .eq('route_id', routeId)
-            .eq('delivery_date', today)
+            .eq('transportation_date', today)
             .limit(1)
           
           if (existingRecords && existingRecords.length > 0) {
@@ -471,7 +471,7 @@ export default function RouteDetailsPage() {
     const now = new Date()
     const currentTime = now.toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
     
-    console.log('到着処理開始:', { destinationId, currentTime, deliveryRecordId })
+    console.log('到着処理開始:', { destinationId, currentTime, transportationRecordId })
     
     // 到着時間を設定（手入力可能）
     setArrivalTimes(prev => ({
@@ -542,19 +542,19 @@ export default function RouteDetailsPage() {
   }
 
   const saveArrivalTime = async (destinationId: string, arrivalTime: string) => {
-    if (!deliveryRecordId) {
+    if (!transportationRecordId) {
       console.error('配送記録IDが見つかりません')
       return
     }
 
     try {
-      console.log('到着時間保存開始:', { deliveryRecordId, destinationId, arrivalTime })
+      console.log('到着時間保存開始:', { transportationRecordId, destinationId, arrivalTime })
       
       // 既存の配送詳細があるかチェック
       const { data: existingDetails } = await supabase
         .from('delivery_details')
         .select('id')
-        .eq('delivery_record_id', deliveryRecordId)
+        .eq('delivery_record_id', transportationRecordId)
         .eq('destination_id', destinationId)
 
       const existingDetail = existingDetails?.[0]
@@ -562,9 +562,9 @@ export default function RouteDetailsPage() {
       if (existingDetail) {
         // 更新
         const { error } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .update({
-            arrival_time: arrivalTime,
+            pickup_time: arrivalTime,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingDetail.id)
@@ -577,12 +577,11 @@ export default function RouteDetailsPage() {
       } else {
         // 新規作成
         const { data, error } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .insert({
-            delivery_record_id: deliveryRecordId,
+            transportation_record_id: transportationRecordId,
             destination_id: destinationId,
-            arrival_time: arrivalTime,
-            has_invoice: false
+            pickup_time: arrivalTime
           })
           .select()
           
@@ -598,19 +597,19 @@ export default function RouteDetailsPage() {
   }
 
   const saveDepartureTime = async (destinationId: string, departureTime: string) => {
-    if (!deliveryRecordId) {
+    if (!transportationRecordId) {
       console.error('配送記録IDが見つかりません')
       return
     }
 
     try {
-      console.log('出発時間保存開始:', { deliveryRecordId, destinationId, departureTime })
+      console.log('出発時間保存開始:', { transportationRecordId, destinationId, departureTime })
       
       // 既存の配送詳細があるかチェック
       const { data: existingDetails } = await supabase
         .from('delivery_details')
         .select('id')
-        .eq('delivery_record_id', deliveryRecordId)
+        .eq('delivery_record_id', transportationRecordId)
         .eq('destination_id', destinationId)
 
       const existingDetail = existingDetails?.[0]
@@ -618,9 +617,9 @@ export default function RouteDetailsPage() {
       if (existingDetail) {
         // 更新
         const { error } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .update({
-            departure_time: departureTime,
+            drop_off_time: departureTime,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingDetail.id)
@@ -633,12 +632,11 @@ export default function RouteDetailsPage() {
       } else {
         // 新規作成（到着時間がまだ記録されていない場合）
         const { data, error } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .insert({
-            delivery_record_id: deliveryRecordId,
+            transportation_record_id: transportationRecordId,
             destination_id: destinationId,
-            departure_time: departureTime,
-            has_invoice: false
+            drop_off_time: departureTime
           })
           .select()
           
@@ -654,7 +652,7 @@ export default function RouteDetailsPage() {
   }
 
   const saveMileage = async (isStart: boolean, mileage: string) => {
-    if (!deliveryRecordId) {
+    if (!transportationRecordId) {
       console.error('配送記録IDが見つかりません')
       return
     }
@@ -665,12 +663,12 @@ export default function RouteDetailsPage() {
         : { end_odometer: parseFloat(mileage) || 0 }
 
       await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .update({
           ...updateData,
           updated_at: new Date().toISOString()
         })
-        .eq('id', deliveryRecordId)
+        .eq('id', transportationRecordId)
     } catch (error) {
       console.error('走行距離保存エラー:', error)
     }
@@ -752,7 +750,7 @@ export default function RouteDetailsPage() {
   }
 
   const saveDeliveryDetail = async (destinationId: string, status: string, currentTime: string) => {
-    if (!deliveryRecordId) {
+    if (!transportationRecordId) {
       console.error('配送記録IDが見つかりません')
       return
     }
@@ -760,30 +758,30 @@ export default function RouteDetailsPage() {
     try {
       // 既存の配送詳細があるかチェック
       const { data: existingDetail } = await supabase
-        .from('delivery_details')
-        .select('id, arrival_time')
-        .eq('delivery_record_id', deliveryRecordId)
+        .from('transportation_details')
+        .select('id, pickup_time')
+        .eq('transportation_record_id', transportationRecordId)
         .eq('destination_id', destinationId)
         .single()
 
       if (existingDetail) {
         // 更新
         const updateData: {
-          departure_time: string
+          drop_off_time: string
           updated_at: string
-          arrival_time?: string
+          pickup_time?: string
         } = {
-          departure_time: currentTime,
+          drop_off_time: currentTime,
           updated_at: new Date().toISOString()
         }
 
         // 到着時間がまだ設定されていない場合は設定
-        if (!existingDetail.arrival_time) {
-          updateData.arrival_time = currentTime
+        if (!existingDetail.pickup_time) {
+          updateData.pickup_time = currentTime
         }
 
         const { error: updateError } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .update(updateData)
           .eq('id', existingDetail.id)
 
@@ -793,13 +791,12 @@ export default function RouteDetailsPage() {
       } else {
         // 新規作成
         const { error: insertError } = await supabase
-          .from('delivery_details')
+          .from('transportation_details')
           .insert({
-            delivery_record_id: deliveryRecordId,
+            transportation_record_id: transportationRecordId,
             destination_id: destinationId,
-            arrival_time: currentTime,
-            departure_time: currentTime,
-            has_invoice: status === 'completed',
+            pickup_time: currentTime,
+            drop_off_time: currentTime,
             remarks: status === 'failed' ? '配送失敗' : null
           })
 
@@ -851,8 +848,8 @@ export default function RouteDetailsPage() {
       const today = new Date().toISOString().split('T')[0]
       const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
       
-      const deliveryRecordData = {
-        delivery_date: today,
+      const transportationRecordData = {
+        transportation_date: today,
         driver_id: session.driverId,
         vehicle_id: session.vehicleId,
         route_id: routeId,
@@ -864,16 +861,16 @@ export default function RouteDetailsPage() {
         gas_card_used: false
       }
       
-      console.log('配送記録データ:', deliveryRecordData)
+      console.log('配送記録データ:', transportationRecordData)
 
       // 既存の配送記録があるかチェック
       const { data: existingRecords } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('id')
         .eq('driver_id', session.driverId)
         .eq('vehicle_id', session.vehicleId)
         .eq('route_id', routeId)
-        .eq('delivery_date', today)
+        .eq('transportation_date', today)
 
       let finalRecordId = null
 
@@ -882,8 +879,8 @@ export default function RouteDetailsPage() {
         console.log('既存の配送記録を更新:', existingRecords[0].id)
         
         const { data: updatedRecord, error: updateError } = await supabase
-          .from('delivery_records')
-          .update(deliveryRecordData)
+          .from('transportation_records')
+          .update(transportationRecordData)
           .eq('id', existingRecords[0].id)
           .select('*')
           .single()
@@ -900,8 +897,8 @@ export default function RouteDetailsPage() {
         console.log('新しい配送記録を作成')
         
         const { data: newRecord, error: insertError } = await supabase
-          .from('delivery_records')
-          .insert(deliveryRecordData)
+          .from('transportation_records')
+          .insert(transportationRecordData)
           .select('*')
           .single()
 
@@ -966,11 +963,10 @@ export default function RouteDetailsPage() {
     for (const destination of destinations) {
       if (destination.status === 'completed' || arrivalTimes[destination.id] || departureTimes[destination.id]) {
         const detailData = {
-          delivery_record_id: recordId,
+          transportation_record_id: recordId,
           destination_id: destination.id,
-          arrival_time: arrivalTimes[destination.id] || null,
-          departure_time: departureTimes[destination.id] || null,
-          has_invoice: destination.status === 'completed',
+          pickup_time: arrivalTimes[destination.id] || null,
+          drop_off_time: departureTimes[destination.id] || null,
           remarks: destination.status === 'failed' ? '配送失敗' : `配送開始:${session?.startTime || currentTime}, 配送終了:${deliveryEndTime || currentTime}`
         }
 
@@ -979,15 +975,15 @@ export default function RouteDetailsPage() {
         try {
           // 既存の配送詳細があるかチェック
           const { data: existingDetails } = await supabase
-            .from('delivery_details')
+            .from('transportation_details')
             .select('id')
-            .eq('delivery_record_id', recordId)
+            .eq('transportation_record_id', recordId)
             .eq('destination_id', destination.id)
 
           if (existingDetails && existingDetails.length > 0) {
             // 更新
             const { error: updateError } = await supabase
-              .from('delivery_details')
+              .from('transportation_details')
               .update(detailData)
               .eq('id', existingDetails[0].id)
 
@@ -999,7 +995,7 @@ export default function RouteDetailsPage() {
           } else {
             // 新規作成
             const { error: insertError } = await supabase
-              .from('delivery_details')
+              .from('transportation_details')
               .insert(detailData)
 
             if (insertError) {

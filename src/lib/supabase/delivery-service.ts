@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { DeliveryRecordForm, DeliveryDetailForm } from '@/types'
+import type { TransportationRecordForm, TransportationDetailForm } from '@/types'
 
 const supabase = createClient()
 
@@ -7,17 +7,17 @@ const supabase = createClient()
  * 既存の配送記録をチェック
  */
 export async function checkExistingDeliveryRecord(
-  deliveryDate: string,
+  transportationDate: string,
   driverId: string,
   routeId: string
 ) {
   try {
-    console.log('既存配送記録チェック開始:', { deliveryDate, driverId, routeId })
+    console.log('既存配送記録チェック開始:', { transportationDate, driverId, routeId })
     
     const { data, error } = await supabase
-      .from('delivery_records')
+      .from('transportation_records')
       .select('*')
-      .eq('delivery_date', deliveryDate)
+      .eq('transportation_date', transportationDate)
       .eq('driver_id', driverId)
       .eq('route_id', routeId)
       .maybeSingle() // single()ではなくmaybeSingle()を使用
@@ -41,7 +41,7 @@ export async function checkExistingDeliveryRecord(
 export async function deleteDeliveryRecord(deliveryRecordId: string) {
   try {
     const { error } = await supabase
-      .from('delivery_records')
+      .from('transportation_records')
       .delete()
       .eq('id', deliveryRecordId)
 
@@ -84,13 +84,13 @@ export async function getVehicleCurrentOdometer(vehicleId: string): Promise<numb
 /**
  * 配送記録を作成（開始走行距離を自動設定）
  */
-export async function createDeliveryRecord(formData: DeliveryRecordForm) {
+export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
     console.log('配送記録作成開始:', formData)
     
     // 既存の配送記録をチェック
     const existingCheck = await checkExistingDeliveryRecord(
-      formData.deliveryDate,
+      formData.transportationDate,
       formData.driverId,
       formData.routeId
     )
@@ -112,20 +112,23 @@ export async function createDeliveryRecord(formData: DeliveryRecordForm) {
     console.log('取得した現在走行距離:', currentOdometer)
     
     const deliveryData = {
-      delivery_date: formData.deliveryDate,
+      transportation_date: formData.transportationDate,
       driver_id: formData.driverId,
       vehicle_id: formData.vehicleId,
       route_id: formData.routeId,
+      transportation_type: formData.transportationType || 'regular',
       start_odometer: currentOdometer, // 自動設定
       end_odometer: formData.endOdometer,
-      gas_card_used: formData.gasCardUsed,
+      passenger_count: formData.passengerCount || 0,
+      weather_condition: formData.weatherCondition,
+      special_notes: formData.specialNotes,
       status: 'pending'
     }
 
     console.log('挿入する配送データ:', deliveryData)
 
     const { data, error } = await supabase
-      .from('delivery_records')
+      .from('transportation_records')
       .insert([deliveryData])
       .select('*')
       .single()
@@ -154,7 +157,7 @@ export async function completeDeliveryRecord(
   try {
     // トランザクション的に両方を更新
     const { data: deliveryData, error: deliveryError } = await supabase
-      .from('delivery_records')
+      .from('transportation_records')
       .update({
         end_odometer: endOdometer,
         status: 'completed'
@@ -196,7 +199,7 @@ export async function updateDeliveryOdometer(
     if (endOdometer !== undefined) updateData.end_odometer = endOdometer
 
     const { data, error } = await supabase
-      .from('delivery_records')
+      .from('transportation_records')
       .update(updateData)
       .eq('id', deliveryRecordId)
       .select()
@@ -215,21 +218,25 @@ export async function updateDeliveryOdometer(
  */
 export async function createDeliveryDetails(
   deliveryRecordId: string,
-  details: DeliveryDetailForm[]
+  details: TransportationDetailForm[]
 ) {
   try {
     const detailsData = details.map(detail => ({
-      delivery_record_id: deliveryRecordId,
+      transportation_record_id: deliveryRecordId,
+      user_id: detail.userId,
       destination_id: detail.destinationId,
+      pickup_time: detail.pickupTime,
       arrival_time: detail.arrivalTime,
       departure_time: detail.departureTime,
-      has_invoice: detail.hasInvoice,
-      remarks: detail.remarks,
-      time_slot: detail.timeSlot
+      drop_off_time: detail.dropOffTime,
+      health_condition: detail.healthCondition,
+      behavior_notes: detail.behaviorNotes,
+      assistance_required: detail.assistanceRequired,
+      remarks: detail.remarks
     }))
 
     const { data, error } = await supabase
-      .from('delivery_details')
+      .from('transportation_details')
       .insert(detailsData)
       .select()
 
@@ -266,6 +273,55 @@ export async function updateVehicleOdometer(
     return { data, error: null }
   } catch (error) {
     console.error('車両走行距離の更新に失敗:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * 配送記録に時間を記録
+ */
+export async function updateDeliveryTime(
+  deliveryRecordId: string,
+  timeType: 'start' | 'end',
+  time: string,
+  additionalData?: {
+    status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    odometer?: number
+    specialNotes?: string
+  }
+) {
+  try {
+    const updateData: any = {}
+    
+    if (timeType === 'start') {
+      updateData.start_time = time
+      updateData.status = additionalData?.status || 'in_progress'
+      if (additionalData?.odometer !== undefined) {
+        updateData.start_odometer = additionalData.odometer
+      }
+    } else {
+      updateData.end_time = time
+      updateData.status = additionalData?.status || 'completed'
+      if (additionalData?.odometer !== undefined) {
+        updateData.end_odometer = additionalData.odometer
+      }
+    }
+    
+    if (additionalData?.specialNotes) {
+      updateData.special_notes = additionalData.specialNotes
+    }
+
+    const { data, error } = await supabase
+      .from('transportation_records')
+      .update(updateData)
+      .eq('id', deliveryRecordId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return { data, error: null }
+  } catch (error) {
+    console.error('配送時間の更新に失敗:', error)
     return { data: null, error }
   }
 } 

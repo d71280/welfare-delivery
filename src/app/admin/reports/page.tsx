@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { DeliveryRecord } from '@/types'
+import { TransportationRecord } from '@/types'
 
 interface ReportData {
   totalDeliveries: number
@@ -82,7 +82,7 @@ export default function ReportsPage() {
       
       // 基本統計の取得
       const { data: allDeliveries } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select('*')
       
       const totalDeliveries = allDeliveries?.length || 0
@@ -92,39 +92,39 @@ export default function ReportsPage() {
 
       // ドライバー統計
       const { data: driverDeliveries } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select(`
           driver_id,
           status,
           drivers(name)
         `)
       
-      const driverStats = processDriverStats((driverDeliveries || []) as unknown as DeliveryRecord[])
+      const driverStats = processDriverStats((driverDeliveries || []) as unknown as TransportationRecord[])
 
       // 車両統計
       const { data: vehicleDeliveries } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select(`
           vehicle_id,
           status,
           vehicles(vehicle_no)
         `)
       
-      const vehicleStats = processVehicleStats((vehicleDeliveries || []) as unknown as DeliveryRecord[])
+      const vehicleStats = processVehicleStats((vehicleDeliveries || []) as unknown as TransportationRecord[])
 
       // ルート統計
       const { data: routeDeliveries } = await supabase
-        .from('delivery_records')
+        .from('transportation_records')
         .select(`
           route_id,
           status,
           routes(route_name)
         `)
       
-      const routeStats = processRouteStats((routeDeliveries || []) as unknown as DeliveryRecord[])
+      const routeStats = processRouteStats((routeDeliveries || []) as unknown as TransportationRecord[])
 
       // 月別データ
-      const monthlyData = processMonthlyData((allDeliveries || []) as unknown as DeliveryRecord[])
+      const monthlyData = processMonthlyData((allDeliveries || []) as unknown as TransportationRecord[])
 
       setReportData({
         totalDeliveries,
@@ -143,7 +143,7 @@ export default function ReportsPage() {
     }
   }
 
-  const processDriverStats = (data: DeliveryRecord[]) => {
+  const processDriverStats = (data: TransportationRecord[]) => {
     const stats: Record<string, {driver_id: string, driver_name: string, total_deliveries: number, completed_deliveries: number, completion_rate: number}> = {}
     
     data.forEach(item => {
@@ -173,7 +173,7 @@ export default function ReportsPage() {
     }))
   }
 
-  const processVehicleStats = (data: DeliveryRecord[]) => {
+  const processVehicleStats = (data: TransportationRecord[]) => {
     const stats: Record<string, {vehicle_id: string, vehicle_no: string, total_deliveries: number, completed_deliveries: number, completion_rate: number}> = {}
     
     data.forEach(item => {
@@ -203,7 +203,7 @@ export default function ReportsPage() {
     }))
   }
 
-  const processRouteStats = (data: DeliveryRecord[]) => {
+  const processRouteStats = (data: TransportationRecord[]) => {
     const stats: Record<string, {route_id: string, route_name: string, total_deliveries: number, completed_deliveries: number, completion_rate: number}> = {}
     
     data.forEach(item => {
@@ -233,11 +233,11 @@ export default function ReportsPage() {
     }))
   }
 
-  const processMonthlyData = (data: DeliveryRecord[]) => {
+  const processMonthlyData = (data: TransportationRecord[]) => {
     const monthlyStats: Record<string, {month: string, total_deliveries: number, completed_deliveries: number, completion_rate: number}> = {}
     
     data.forEach(item => {
-      const month = new Date(item.delivery_date).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit' })
+      const month = new Date((item as any).transportation_date).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit' })
       
       if (!monthlyStats[month]) {
         monthlyStats[month] = {

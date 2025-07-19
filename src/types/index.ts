@@ -5,41 +5,46 @@ export type Driver = Database['public']['Tables']['drivers']['Row']
 export type Vehicle = Database['public']['Tables']['vehicles']['Row']
 export type Route = Database['public']['Tables']['routes']['Row']
 export type Destination = Database['public']['Tables']['destinations']['Row']
-export type DeliveryRecord = Database['public']['Tables']['delivery_records']['Row']
-export type DeliveryDetail = Database['public']['Tables']['delivery_details']['Row']
+export type User = Database['public']['Tables']['users']['Row']
+export type TransportationRecord = Database['public']['Tables']['transportation_records']['Row']
+export type TransportationDetail = Database['public']['Tables']['transportation_details']['Row']
 
 // Database insert types
 export type DriverInsert = Database['public']['Tables']['drivers']['Insert']
 export type VehicleInsert = Database['public']['Tables']['vehicles']['Insert']
 export type RouteInsert = Database['public']['Tables']['routes']['Insert']
 export type DestinationInsert = Database['public']['Tables']['destinations']['Insert']
-export type DeliveryRecordInsert = Database['public']['Tables']['delivery_records']['Insert']
-export type DeliveryDetailInsert = Database['public']['Tables']['delivery_details']['Insert']
+export type UserInsert = Database['public']['Tables']['users']['Insert']
+export type TransportationRecordInsert = Database['public']['Tables']['transportation_records']['Insert']
+export type TransportationDetailInsert = Database['public']['Tables']['transportation_details']['Insert']
 
 // Database update types
 export type DriverUpdate = Database['public']['Tables']['drivers']['Update']
 export type VehicleUpdate = Database['public']['Tables']['vehicles']['Update']
 export type RouteUpdate = Database['public']['Tables']['routes']['Update']
 export type DestinationUpdate = Database['public']['Tables']['destinations']['Update']
-export type DeliveryRecordUpdate = Database['public']['Tables']['delivery_records']['Update']
-export type DeliveryDetailUpdate = Database['public']['Tables']['delivery_details']['Update']
+export type UserUpdate = Database['public']['Tables']['users']['Update']
+export type TransportationRecordUpdate = Database['public']['Tables']['transportation_records']['Update']
+export type TransportationDetailUpdate = Database['public']['Tables']['transportation_details']['Update']
 
 // Extended types with relationships
 export interface RouteWithDestinations extends Route {
   destinations: Destination[]
 }
 
-export interface DeliveryRecordWithDetails extends DeliveryRecord {
+export interface TransportationRecordWithDetails extends TransportationRecord {
   driver: Driver
   vehicle: Vehicle
   route: RouteWithDestinations
-  delivery_details: (DeliveryDetail & {
+  transportation_details: (TransportationDetail & {
     destination: Destination
+    user?: any
   })[]
 }
 
-export interface DeliveryDetailWithDestination extends DeliveryDetail {
+export interface TransportationDetailWithDestination extends TransportationDetail {
   destination: Destination
+  user?: any
 }
 
 // Form types
@@ -49,27 +54,36 @@ export interface DriverLoginForm {
   pinCode?: string
 }
 
-export interface DeliveryRecordForm {
+export interface TransportationRecordForm {
   driverId: string
   vehicleId: string
   routeId: string
-  deliveryDate: string
+  transportationDate: string
+  transportationType: 'regular' | 'medical' | 'emergency' | 'outing'
   startOdometer?: number
   endOdometer?: number
-  gasCardUsed: boolean
+  passengerCount?: number
+  weatherCondition?: string
+  specialNotes?: string
 }
 
-export interface DeliveryDetailForm {
+export interface TransportationDetailForm {
+  userId?: string
   destinationId: string
+  pickupTime?: string
   arrivalTime?: string
   departureTime?: string
-  hasInvoice: boolean
+  dropOffTime?: string
+  healthCondition?: string
+  behaviorNotes?: string
+  assistanceRequired?: string
   remarks?: string
-  timeSlot?: number
 }
 
 // Status types
-export type DeliveryStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+export type TransportationStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+export type TransportationType = 'regular' | 'medical' | 'emergency' | 'outing'
+export type DestinationType = 'home' | 'facility' | 'medical' | 'other'
 
 // UI types
 export interface NavigationItem {
@@ -86,9 +100,9 @@ export interface UserRole {
 // Report types
 export interface MonthlyReport {
   month: string
-  totalDeliveries: number
+  totalTransportations: number
   totalDistance: number
-  averageDeliveryTime: number
+  averageTransportationTime: number
   driverStats: DriverStat[]
   routeStats: RouteStat[]
 }
@@ -96,16 +110,16 @@ export interface MonthlyReport {
 export interface DriverStat {
   driverId: string
   driverName: string
-  totalDeliveries: number
+  totalTransportations: number
   totalDistance: number
-  averageDeliveryTime: number
+  averageTransportationTime: number
 }
 
 export interface RouteStat {
   routeId: string
   routeName: string
-  totalDeliveries: number
-  averageDeliveryTime: number
+  totalTransportations: number
+  averageTransportationTime: number
 }
 
 // Export format types
@@ -118,21 +132,20 @@ export interface ExportOptions {
   includeDetails: boolean
 }
 
-// Time slot mappings (0便〜9便)
-export const TIME_SLOTS = {
-  0: '0便',
-  1: '1便',
-  2: '2便',
-  3: '3便',
-  4: '4便',
-  5: '5便',
-  6: '6便',
-  7: '7便',
-  8: '8便',
-  9: '9便',
+// Transportation type mappings
+export const TRANSPORTATION_TYPES = {
+  regular: '通所支援',
+  medical: '医療送迎',
+  emergency: '緊急送迎',
+  outing: '外出支援',
 } as const
 
-export type TimeSlot = keyof typeof TIME_SLOTS
+export const DESTINATION_TYPES = {
+  home: '自宅',
+  facility: '施設',
+  medical: '医療機関',
+  other: 'その他',
+} as const
 
 // Error types
 export interface AppError {
@@ -156,8 +169,8 @@ export interface SyncStatus {
 }
 
 export interface UnsyncedData {
-  deliveryRecords: DeliveryRecordInsert[]
-  deliveryDetails: DeliveryDetailInsert[]
+  transportationRecords: TransportationRecordInsert[]
+  transportationDetails: TransportationDetailInsert[]
 }
 
 // Chart data types for dashboard
