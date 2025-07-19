@@ -26,6 +26,15 @@ export default function AdminPage() {
           <a href="/admin/transportation-records" className="block text-purple-600 hover:underline">
             送迎記録
           </a>
+          <a href="/admin/delivery-records" className="block text-purple-600 hover:underline">
+            送迎記録管理
+          </a>
+          <a href="/admin/reports" className="block text-orange-600 hover:underline">
+            レポート・分析
+          </a>
+          <a href="/vehicles" className="block text-blue-600 hover:underline">
+            車両状態確認
+          </a>
           <a href="/login" className="block text-gray-600 hover:underline mt-4">
             ドライバーログインに戻る
           </a>
