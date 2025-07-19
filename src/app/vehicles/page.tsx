@@ -123,6 +123,20 @@ export default function VehiclesPage() {
                 <p className="text-gray-600">送迎車両の状態確認・メンテナンス管理</p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <a 
+                href="/admin/dashboard"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                🏠 ダッシュボード
+              </a>
+              <a 
+                href="/admin/master/vehicles"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                ⚙️ 車両管理
+              </a>
+            </div>
           </div>
         </div>
       </div>

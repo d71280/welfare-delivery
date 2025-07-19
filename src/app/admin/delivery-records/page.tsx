@@ -157,12 +157,26 @@ export default function DeliveryRecordsPage() {
                 <p className="text-gray-600">送迎の実績記録を確認・管理します</p>
               </div>
             </div>
-            <button 
-              onClick={exportToCSV}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-            >
-              📊 CSV出力
-            </button>
+            <div className="flex items-center gap-3">
+              <a 
+                href="/admin/dashboard"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                🏠 ダッシュボード
+              </a>
+              <a 
+                href="/admin/transportation-records"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                ➕ 新規記録
+              </a>
+              <button 
+                onClick={exportToCSV}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                📊 CSV出力
+              </button>
+            </div>
           </div>
         </div>
       </div>
