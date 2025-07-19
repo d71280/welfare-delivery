@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配送管理システム - 接続テスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .loading { background-color: #e3f2fd; color: #1976d2; }
+        .success { background-color: #e8f5e8; color: #2e7d32; }
+        .error { background-color: #ffebee; color: #c62828; }
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>配送管理システム - 接続テスト</h1>
+        
+        <div id="status" class="status loading">
+            接続テスト中...
+        </div>
+        
+        <div>
+            <button onclick="testConnection()">接続テスト</button>
+            <button onclick="testDriverData()">ドライバーデータ取得</button>
+            <button onclick="testRouteData()">ルートデータ取得</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://bkoiryvybvaxrcueab.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrb2lyeXl2eXlidmF4cmN1ZWFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4OTA2ODEsImV4cCI6MjA2NzQ2NjY4MX0.cvy5EsjOjZMU1FMqfKm0N_-L5I_HNEBpL0nO52_980o'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status')
+            statusEl.textContent = message
+            statusEl.className = `status ${type}`
+        }
+        
+        function updateResult(data) {
+            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`
+        }
+        
+        async function testConnection() {
+            updateStatus('接続テスト中...', 'loading')
+            try {
+                const { data, error } = await supabase
+                    .from('drivers')
+                    .select('count')
+                    .limit(1)
+                
+                if (error) throw error
+                
+                updateStatus('✅ 接続成功！', 'success')
+                updateResult({ message: '接続が正常に確立されました', data })
+            } catch (error) {
+                updateStatus('❌ 接続エラー', 'error')
+                updateResult({ error: error.message })
+            }
+        }
+        
+        async function testDriverData() {
+            updateStatus('ドライバーデータ取得中...', 'loading')
+            try {
+                const { data, error } = await supabase
+                    .from('drivers')
+                    .select('*')
+                    .eq('is_active', true)
+                
+                if (error) throw error
+                
+                updateStatus(`✅ ドライバーデータ取得成功！ (${data.length}件)`, 'success')
+                updateResult({ drivers: data })
+            } catch (error) {
+                updateStatus('❌ ドライバーデータ取得エラー', 'error')
+                updateResult({ error: error.message })
+            }
+        }
+        
+        async function testRouteData() {
+            updateStatus('ルートデータ取得中...', 'loading')
+            try {
+                const { data, error } = await supabase
+                    .from('routes')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('display_order')
+                
+                if (error) throw error
+                
+                updateStatus(`✅ ルートデータ取得成功！ (${data.length}件)`, 'success')
+                updateResult({ routes: data })
+            } catch (error) {
+                updateStatus('❌ ルートデータ取得エラー', 'error')
+                updateResult({ error: error.message })
+            }
+        }
+        
+        // 自動テスト実行
+        testConnection()
+    </script>
+</body>
+</html>
