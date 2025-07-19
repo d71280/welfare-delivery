@@ -176,128 +176,119 @@ export default function RoutesManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">ルート情報を読み込み中...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">ルート管理</h1>
-              <p className="text-sm text-gray-600">配送ルートと配送先の管理</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+      {/* 統一ヘッダー */}
+      <div className="welfare-header">
+        <div className="welfare-header-content">
+          <div className="welfare-header-title">
+            <div className="welfare-header-icon">🛣️</div>
+            <div className="welfare-header-text">
+              <h1>ルート管理</h1>
+              <p>配送ルートと配送先の管理</p>
             </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => router.push('/admin/dashboard')}
-                className="text-gray-600 text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                ダッシュボードに戻る
-              </button>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-              >
-                新規登録
-              </button>
-            </div>
+          </div>
+          <div className="welfare-nav-buttons">
+            <a href="/admin/dashboard" className="welfare-button welfare-button-outline">
+              🏠 ダッシュボード
+            </a>
+            <button 
+              onClick={() => setShowForm(true)}
+              className="welfare-button welfare-button-primary"
+            >
+              ➕ 新規登録
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
-        {/* フォーム */}
+      <div className="welfare-content">
+        {/* ルート登録・編集フォーム */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">
-                {editingRoute ? 'ルート編集' : 'ルート新規登録'}
-              </h2>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ルート名 <span className="text-red-500">*</span>
-                  </label>
+          <div className="welfare-section fade-in">
+            <h2 className="welfare-section-title">
+              {editingRoute ? '✏️ ルート情報の編集' : '🛣️ 新規ルート登録'}
+            </h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="welfare-filter-grid">
+                <div className="welfare-filter-item">
+                  <label>🛣️ ルート名 <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={formData.route_name}
                     onChange={(e) => setFormData({...formData, route_name: e.target.value})}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.route_name ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="Aルート"
+                    className="welfare-input"
+                    placeholder="例: Aルート"
+                    required
                   />
-                  {errors.route_name && <p className="mt-1 text-sm text-red-500">{errors.route_name}</p>}
+                  {errors.route_name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.route_name}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ルートコード <span className="text-red-500">*</span>
-                  </label>
+                <div className="welfare-filter-item">
+                  <label>🔢 ルートコード <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={formData.route_code}
                     onChange={(e) => setFormData({...formData, route_code: e.target.value})}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.route_code ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="ROUTE_A"
+                    className="welfare-input"
+                    placeholder="例: ROUTE_A"
+                    required
                   />
-                  {errors.route_code && <p className="mt-1 text-sm text-red-500">{errors.route_code}</p>}
+                  {errors.route_code && (
+                    <p className="text-red-500 text-sm mt-1">{errors.route_code}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    表示順序
-                  </label>
+                <div className="welfare-filter-item">
+                  <label>📊 表示順序</label>
                   <input
                     type="number"
                     value={formData.display_order}
                     onChange={(e) => setFormData({...formData, display_order: parseInt(e.target.value) || 0})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-input"
                     placeholder="1"
                     min="0"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ステータス
-                  </label>
+                <div className="welfare-filter-item">
+                  <label>📈 ステータス</label>
                   <select
                     value={formData.is_active ? 'true' : 'false'}
                     onChange={(e) => setFormData({...formData, is_active: e.target.value === 'true'})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-select"
                   >
-                    <option value="true">アクティブ</option>
-                    <option value="false">非アクティブ</option>
+                    <option value="true">✅ アクティブ</option>
+                    <option value="false">❌ 非アクティブ</option>
                   </select>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 mt-6">
-                <button
-                  type="button"
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button" 
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                  className="welfare-button welfare-button-outline flex-1"
                 >
-                  キャンセル
+                  ❌ キャンセル
                 </button>
-                <button
+                <button 
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="welfare-button welfare-button-primary flex-1"
                 >
-                  {editingRoute ? '更新' : '登録'}
+                  {editingRoute ? '✏️ 更新' : '➕ 登録'}
                 </button>
               </div>
             </form>
@@ -305,96 +296,88 @@ export default function RoutesManagementPage() {
         )}
 
         {/* ルート一覧 */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">ルート一覧</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ルート名
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    開始地点
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    終了地点
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    予定時間
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    距離
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ステータス
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    登録日
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {routes.map((route) => (
-                  <tr key={route.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {route.route_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {route.route_code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {route.display_order}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        route.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {route.is_active ? 'アクティブ' : '非アクティブ'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(route.created_at).toLocaleDateString('ja-JP')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(route)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          編集
-                        </button>
-                        <button
-                          onClick={() => handleManageDestinations(route.id)}
-                          className="text-purple-600 hover:text-purple-900"
-                        >
-                          配送先
-                        </button>
-                        <button
-                          onClick={() => handleDelete(route.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          削除
-                        </button>
-                      </div>
-                    </td>
+        <div className="welfare-section">
+          <h2 className="welfare-section-title">
+            🛣️ ルート一覧 ({routes.length}件)
+          </h2>
+
+          {routes.length === 0 ? (
+            <div className="welfare-empty-state">
+              <div className="welfare-empty-icon">🛣️</div>
+              <h3 className="welfare-empty-title">ルートが登録されていません</h3>
+              <p className="welfare-empty-description">「新規登録」ボタンからルートを登録してください</p>
+              <button 
+                onClick={() => setShowForm(true)}
+                className="welfare-button welfare-button-primary"
+              >
+                🛣️ 最初のルートを登録
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="welfare-table">
+                <thead>
+                  <tr>
+                    <th>ルート名</th>
+                    <th>ルートコード</th>
+                    <th>表示順序</th>
+                    <th>ステータス</th>
+                    <th>登録日</th>
+                    <th>操作</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {routes.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">ルートが登録されていません</p>
-              </div>
-            )}
-          </div>
+                </thead>
+                <tbody>
+                  {routes.map((route) => (
+                    <tr key={route.id}>
+                      <td>
+                        <span className="welfare-badge bg-blue-100 text-blue-800">
+                          🛣️ {route.route_name}
+                        </span>
+                      </td>
+                      <td className="font-medium">{route.route_code}</td>
+                      <td className="text-center">
+                        <span className="welfare-badge bg-gray-100 text-gray-800">
+                          #{route.display_order}
+                        </span>
+                      </td>
+                      <td>
+                        {route.is_active ? (
+                          <span className="status-safe">アクティブ</span>
+                        ) : (
+                          <span className="status-danger">非アクティブ</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        {new Date(route.created_at).toLocaleDateString('ja-JP')}
+                      </td>
+                      <td>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleEdit(route)}
+                            className="welfare-button welfare-button-outline text-sm px-3 py-1"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => handleManageDestinations(route.id)}
+                            className="welfare-button welfare-button-secondary text-sm px-3 py-1"
+                          >
+                            📍
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(route.id)}
+                            className="welfare-button welfare-button-danger text-sm px-3 py-1"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

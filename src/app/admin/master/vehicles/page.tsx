@@ -5,16 +5,33 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Vehicle } from '@/types'
 
+interface VehicleFormData {
+  vehicle_no: string
+  vehicle_name: string
+  vehicle_type: string
+  capacity: string
+  fuel_type: string
+  wheelchair_accessible: boolean
+  current_odometer: number
+  last_oil_change_odometer: number
+  is_active: boolean
+}
+
 export default function VehiclesManagementPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<VehicleFormData>({
     vehicle_no: '',
-    is_active: true,
-    last_oil_change_odometer: '',
-    current_odometer: ''
+    vehicle_name: '',
+    vehicle_type: '',
+    capacity: '8',
+    fuel_type: 'ガソリン',
+    wheelchair_accessible: false,
+    current_odometer: 0,
+    last_oil_change_odometer: 0,
+    is_active: true
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   
@@ -45,26 +62,7 @@ export default function VehiclesManagementPage() {
         return
       }
 
-      // 各車両の最新走行距離を取得
-      const vehiclesWithOdometer = await Promise.all(
-        (data || []).map(async (vehicle) => {
-          const { data: lastRecord } = await supabase
-            .from('delivery_records')
-            .select('end_odometer')
-            .eq('vehicle_id', vehicle.id)
-            .not('end_odometer', 'is', null)
-            .order('delivery_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1)
-
-          return {
-            ...vehicle,
-            current_odometer: lastRecord?.[0]?.end_odometer || 0
-          }
-        })
-      )
-
-      setVehicles(vehiclesWithOdometer)
+      setVehicles(data || [])
     } catch (error) {
       console.error('車両取得エラー:', error)
     } finally {
@@ -79,12 +77,8 @@ export default function VehiclesManagementPage() {
       newErrors.vehicle_no = '車両番号は必須です'
     }
     
-    if (formData.current_odometer && isNaN(parseFloat(formData.current_odometer))) {
-      newErrors.current_odometer = '有効な数値を入力してください'
-    }
-    
-    if (formData.last_oil_change_odometer && isNaN(parseFloat(formData.last_oil_change_odometer))) {
-      newErrors.last_oil_change_odometer = '有効な数値を入力してください'
+    if (!formData.vehicle_name.trim()) {
+      newErrors.vehicle_name = '車両名は必須です'
     }
 
     setErrors(newErrors)
@@ -94,99 +88,51 @@ export default function VehiclesManagementPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('=== 更新処理開始 ===')
-    console.log('フォームデータ:', formData)
-    console.log('編集対象車両:', editingVehicle)
-    
-    if (!validateForm()) {
-      console.log('バリデーション失敗')
-      return
-    }
+    if (!validateForm()) return
 
     try {
       if (editingVehicle) {
         // 更新
-        console.log('車両更新開始')
         const { error } = await supabase
           .from('vehicles')
           .update({
             vehicle_no: formData.vehicle_no,
+            vehicle_name: formData.vehicle_name,
+            vehicle_type: formData.vehicle_type,
+            capacity: formData.capacity,
+            fuel_type: formData.fuel_type,
+            wheelchair_accessible: formData.wheelchair_accessible,
+            current_odometer: formData.current_odometer,
+            last_oil_change_odometer: formData.last_oil_change_odometer,
             is_active: formData.is_active,
-            last_oil_change_odometer: formData.last_oil_change_odometer ? parseFloat(formData.last_oil_change_odometer) : null,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingVehicle.id)
 
-        if (error) {
-          console.error('更新エラー:', error)
-          alert('更新に失敗しました: ' + error.message)
-          return
-        }
-        
-        console.log('車両更新成功')
-
-        // 現在の走行距離が変更された場合、配送記録を追加
-        const currentOdometer = formData.current_odometer ? parseFloat(formData.current_odometer) : 0
-        const originalOdometer = editingVehicle.current_odometer || 0
-        
-        if (currentOdometer !== originalOdometer && currentOdometer > 0) {
-          const today = new Date().toISOString().split('T')[0]
-          const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
-          
-          // 管理者による走行距離修正記録を作成
-          try {
-            const { error: recordError } = await supabase
-              .from('delivery_records')
-              .insert({
-                delivery_date: today,
-                driver_id: null, // 管理者による修正はnull
-                vehicle_id: editingVehicle.id,
-                route_id: null, // 管理者による修正はnull
-                start_odometer: originalOdometer,
-                end_odometer: currentOdometer,
-                start_time: currentTime,
-                end_time: currentTime,
-                status: 'completed',
-                gas_card_used: false
-              })
-
-            if (recordError) {
-              console.error('走行距離記録エラー:', recordError)
-              // 配送記録の作成に失敗しても、車両の更新は継続する
-            }
-          } catch (error) {
-            console.error('配送記録作成エラー:', error)
-          }
-        }
+        if (error) throw error
+        alert('車両情報を更新しました')
       } else {
         // 新規作成
         const { error } = await supabase
           .from('vehicles')
           .insert([{
             vehicle_no: formData.vehicle_no,
-            is_active: formData.is_active,
-            last_oil_change_odometer: formData.last_oil_change_odometer ? parseFloat(formData.last_oil_change_odometer) : null
+            vehicle_name: formData.vehicle_name,
+            vehicle_type: formData.vehicle_type,
+            capacity: formData.capacity,
+            fuel_type: formData.fuel_type,
+            wheelchair_accessible: formData.wheelchair_accessible,
+            current_odometer: formData.current_odometer,
+            last_oil_change_odometer: formData.last_oil_change_odometer,
+            is_active: formData.is_active
           }])
 
-        if (error) {
-          console.error('作成エラー:', error)
-          return
-        }
+        if (error) throw error
+        alert('新しい車両を登録しました')
       }
 
-      // フォームリセット
-      console.log('フォームリセット開始')
-      setFormData({
-        vehicle_no: '',
-        is_active: true,
-        last_oil_change_odometer: '',
-        current_odometer: ''
-      })
-      setEditingVehicle(null)
-      setShowForm(false)
-      console.log('車両リスト再取得開始')
-      fetchVehicles()
-      console.log('=== 更新処理完了 ===')
+      resetForm()
+      await fetchVehicles()
     } catch (error) {
       console.error('保存エラー:', error)
       alert('保存に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
@@ -197,17 +143,20 @@ export default function VehiclesManagementPage() {
     setEditingVehicle(vehicle)
     setFormData({
       vehicle_no: vehicle.vehicle_no,
-      is_active: vehicle.is_active,
-      last_oil_change_odometer: vehicle.last_oil_change_odometer?.toString() || '',
-      current_odometer: vehicle.current_odometer?.toString() || '0'
+      vehicle_name: vehicle.vehicle_name || '',
+      vehicle_type: vehicle.vehicle_type || '',
+      capacity: vehicle.capacity || '8',
+      fuel_type: vehicle.fuel_type || 'ガソリン',
+      wheelchair_accessible: vehicle.wheelchair_accessible,
+      current_odometer: vehicle.current_odometer || 0,
+      last_oil_change_odometer: vehicle.last_oil_change_odometer || 0,
+      is_active: vehicle.is_active
     })
     setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('この車両を削除してもよろしいですか？')) {
-      return
-    }
+    if (!confirm('この車両を削除してもよろしいですか？')) return
 
     try {
       const { error } = await supabase
@@ -215,161 +164,215 @@ export default function VehiclesManagementPage() {
         .delete()
         .eq('id', id)
 
-      if (error) {
-        console.error('削除エラー:', error)
-        if (error.code === '23503') {
-          alert('この車両は配送記録で使用されているため削除できません。')
-        } else {
-          alert('削除に失敗しました: ' + error.message)
-        }
-        return
-      }
-
-      alert('車両を削除しました。')
-      fetchVehicles()
+      if (error) throw error
+      alert('車両を削除しました')
+      await fetchVehicles()
     } catch (error) {
       console.error('削除エラー:', error)
-      alert('削除に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
+      alert('削除に失敗しました')
     }
   }
 
-  const handleCancel = () => {
+  const resetForm = () => {
     setFormData({
       vehicle_no: '',
-      is_active: true,
-      last_oil_change_odometer: '',
-      current_odometer: ''
+      vehicle_name: '',
+      vehicle_type: '',
+      capacity: '8',
+      fuel_type: 'ガソリン',
+      wheelchair_accessible: false,
+      current_odometer: 0,
+      last_oil_change_odometer: 0,
+      is_active: true
     })
     setEditingVehicle(null)
     setShowForm(false)
     setErrors({})
   }
 
+  const getFuelTypeIcon = (fuelType: string | null) => {
+    switch (fuelType) {
+      case 'ガソリン': return '⛽'
+      case 'ディーゼル': return '🛢️'
+      case 'ハイブリッド': return '🔋'
+      default: return '🚗'
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">車両情報を読み込み中...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">車両管理</h1>
-              <p className="text-sm text-gray-600">車両情報の登録・編集・削除</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+      {/* 統一ヘッダー */}
+      <div className="welfare-header">
+        <div className="welfare-header-content">
+          <div className="welfare-header-title">
+            <div className="welfare-header-icon">🚐</div>
+            <div className="welfare-header-text">
+              <h1>車両管理</h1>
+              <p>送迎車両の登録・編集・削除</p>
             </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => router.push('/admin/dashboard')}
-                className="text-gray-600 text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                ダッシュボードに戻る
-              </button>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-              >
-                新規登録
-              </button>
-            </div>
+          </div>
+          <div className="welfare-nav-buttons">
+            <a href="/admin/dashboard" className="welfare-button welfare-button-outline">
+              🏠 ダッシュボード
+            </a>
+            <button 
+              onClick={() => setShowForm(true)}
+              className="welfare-button welfare-button-primary"
+            >
+              ➕ 新規登録
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
-        {/* フォーム */}
+      <div className="welfare-content">
+        {/* 車両登録・編集フォーム */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">
-                {editingVehicle ? '車両編集' : '車両新規登録'}
-              </h2>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    車両番号 <span className="text-red-500">*</span>
-                  </label>
+          <div className="welfare-section fade-in">
+            <h2 className="welfare-section-title">
+              {editingVehicle ? '✏️ 車両情報の編集' : '🚐 新規車両登録'}
+            </h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="welfare-filter-grid">
+                <div className="welfare-filter-item">
+                  <label>🔢 車両番号 <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={formData.vehicle_no}
-                    onChange={(e) => setFormData({...formData, vehicle_no: e.target.value})}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.vehicle_no ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="V001"
+                    onChange={(e) => setFormData({ ...formData, vehicle_no: e.target.value })}
+                    className="welfare-input"
+                    placeholder="例: V001"
+                    required
                   />
-                  {errors.vehicle_no && <p className="mt-1 text-sm text-red-500">{errors.vehicle_no}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ステータス
-                  </label>
-                  <select
-                    value={formData.is_active ? 'true' : 'false'}
-                    onChange={(e) => setFormData({...formData, is_active: e.target.value === 'true'})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="true">アクティブ</option>
-                    <option value="false">非アクティブ</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    現在の走行距離 (km)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.current_odometer}
-                    onChange={(e) => setFormData({ ...formData, current_odometer: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="現在の走行距離を入力"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">最後の配送記録から自動入力されます（手動修正可能）</p>
-                  {errors.current_odometer && (
-                    <p className="mt-1 text-xs text-red-600">{errors.current_odometer}</p>
+                  {errors.vehicle_no && (
+                    <p className="text-red-500 text-sm mt-1">{errors.vehicle_no}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    オイル交換時の走行距離 (km)
-                  </label>
+                <div className="welfare-filter-item">
+                  <label>🚐 車両名 <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={formData.vehicle_name}
+                    onChange={(e) => setFormData({ ...formData, vehicle_name: e.target.value })}
+                    className="welfare-input"
+                    placeholder="例: ハイエース1号車"
+                    required
+                  />
+                  {errors.vehicle_name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.vehicle_name}</p>
+                  )}
+                </div>
+
+                <div className="welfare-filter-item">
+                  <label>🚗 車両タイプ</label>
+                  <select
+                    value={formData.vehicle_type}
+                    onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
+                    className="welfare-select"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="ハイエース">ハイエース</option>
+                    <option value="アルファード">アルファード</option>
+                    <option value="セレナ">セレナ</option>
+                    <option value="その他">その他</option>
+                  </select>
+                </div>
+
+                <div className="welfare-filter-item">
+                  <label>👥 乗車定員</label>
+                  <select
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                    className="welfare-select"
+                  >
+                    <option value="6">6名</option>
+                    <option value="7">7名</option>
+                    <option value="8">8名</option>
+                    <option value="9">9名</option>
+                    <option value="10">10名</option>
+                  </select>
+                </div>
+
+                <div className="welfare-filter-item">
+                  <label>⛽ 燃料タイプ</label>
+                  <select
+                    value={formData.fuel_type}
+                    onChange={(e) => setFormData({ ...formData, fuel_type: e.target.value })}
+                    className="welfare-select"
+                  >
+                    <option value="ガソリン">ガソリン</option>
+                    <option value="ディーゼル">ディーゼル</option>
+                    <option value="ハイブリッド">ハイブリッド</option>
+                  </select>
+                </div>
+
+                <div className="welfare-filter-item">
+                  <label>📊 現在走行距離 (km)</label>
                   <input
                     type="number"
-                    value={formData.last_oil_change_odometer}
-                    onChange={(e) => setFormData({...formData, last_oil_change_odometer: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="オイル交換時の走行距離を入力"
+                    value={formData.current_odometer}
+                    onChange={(e) => setFormData({ ...formData, current_odometer: parseInt(e.target.value) || 0 })}
+                    className="welfare-input"
+                    placeholder="0"
+                    min="0"
                   />
-                  <p className="mt-1 text-xs text-gray-500">オイル交換を実施した際の走行距離を入力してください</p>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 mt-6">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="wheelchair_accessible"
+                    checked={formData.wheelchair_accessible}
+                    onChange={(e) => setFormData({ ...formData, wheelchair_accessible: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="wheelchair_accessible" className="text-lg font-medium text-gray-900">
+                    ♿ 車椅子対応車両
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                  />
+                  <label htmlFor="is_active" className="text-lg font-medium text-gray-900">
+                    ✅ 使用可能
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button" 
+                  onClick={resetForm}
+                  className="welfare-button welfare-button-outline flex-1"
                 >
-                  キャンセル
+                  ❌ キャンセル
                 </button>
-                <button
+                <button 
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="welfare-button welfare-button-primary flex-1"
                 >
-                  {editingVehicle ? '更新' : '登録'}
+                  {editingVehicle ? '✏️ 更新' : '➕ 登録'}
                 </button>
               </div>
             </form>
@@ -377,105 +380,100 @@ export default function VehiclesManagementPage() {
         )}
 
         {/* 車両一覧 */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">車両一覧</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    車両番号
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    現在の走行距離 (km)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    オイル交換状況
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ステータス
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    登録日
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {vehicles.map((vehicle) => {
-                  const currentOdometer = vehicle.current_odometer || 0
-                  const lastOilChange = vehicle.last_oil_change_odometer || 0
-                  const nextOilChange = lastOilChange + 5000
-                  const oilChangeStatus = currentOdometer >= nextOilChange ? 'due' : 'ok'
-                  const remainingKm = Math.max(0, nextOilChange - currentOdometer)
-                  
-                  return (
+        <div className="welfare-section">
+          <h2 className="welfare-section-title">
+            🚐 車両一覧 ({vehicles.length}台)
+          </h2>
+
+          {vehicles.length === 0 ? (
+            <div className="welfare-empty-state">
+              <div className="welfare-empty-icon">🚐</div>
+              <h3 className="welfare-empty-title">車両が登録されていません</h3>
+              <p className="welfare-empty-description">「新規登録」ボタンから車両を登録してください</p>
+              <button 
+                onClick={() => setShowForm(true)}
+                className="welfare-button welfare-button-primary"
+              >
+                🚐 最初の車両を登録
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="welfare-table">
+                <thead>
+                  <tr>
+                    <th>車両番号</th>
+                    <th>車両名</th>
+                    <th>タイプ</th>
+                    <th>定員</th>
+                    <th>燃料</th>
+                    <th>車椅子対応</th>
+                    <th>走行距離</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicles.map((vehicle) => (
                     <tr key={vehicle.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {vehicle.vehicle_no}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {currentOdometer.toFixed(1)} km
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {lastOilChange > 0 ? (
-                          <div>
-                            <div className={`text-xs font-medium ${
-                              oilChangeStatus === 'due' ? 'text-red-600' : 'text-green-600'
-                            }`}>
-                              {oilChangeStatus === 'due' ? '交換時期' : `残り${remainingKm.toFixed(0)}km`}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              前回: {lastOilChange.toFixed(0)}km
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-500">未設定</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          vehicle.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {vehicle.is_active ? 'アクティブ' : '非アクティブ'}
+                      <td>
+                        <span className="welfare-badge bg-blue-100 text-blue-800">
+                          {vehicle.vehicle_no}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(vehicle.created_at).toLocaleDateString('ja-JP')}
+                      <td className="font-medium">{vehicle.vehicle_name}</td>
+                      <td>
+                        <span className="flex items-center gap-1">
+                          {getFuelTypeIcon(vehicle.fuel_type)}
+                          {vehicle.vehicle_type}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
+                      <td className="text-center">{vehicle.capacity}名</td>
+                      <td>
+                        <span className="flex items-center gap-1">
+                          {getFuelTypeIcon(vehicle.fuel_type)}
+                          {vehicle.fuel_type}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        {vehicle.wheelchair_accessible ? (
+                          <span className="wheelchair-badge">♿ 対応</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        {vehicle.current_odometer ? `${vehicle.current_odometer.toLocaleString()}km` : '-'}
+                      </td>
+                      <td>
+                        {vehicle.is_active ? (
+                          <span className="status-safe">使用可能</span>
+                        ) : (
+                          <span className="status-danger">使用停止</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="flex gap-2">
+                          <button 
                             onClick={() => handleEdit(vehicle)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="welfare-button welfare-button-outline text-sm px-3 py-1"
                           >
-                            編集
+                            ✏️
                           </button>
-                          <button
+                          <button 
                             onClick={() => handleDelete(vehicle.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="welfare-button welfare-button-danger text-sm px-3 py-1"
                           >
-                            削除
+                            🗑️
                           </button>
                         </div>
                       </td>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-            {vehicles.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">車両が登録されていません</p>
-              </div>
-            )}
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

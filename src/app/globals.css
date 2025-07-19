@@ -274,6 +274,172 @@ body {
   }
 }
 
+/* 統一ヘッダースタイル */
+.welfare-header {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-bottom: 4px solid var(--welfare-primary);
+}
+
+.welfare-header-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.welfare-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.welfare-header-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--welfare-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.welfare-header-text h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--welfare-text);
+  margin: 0;
+}
+
+.welfare-header-text p {
+  font-size: 18px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+.welfare-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 統一コンテンツエリア */
+.welfare-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.welfare-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.welfare-section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--welfare-text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welfare-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welfare-table th {
+  background: #f8fafc;
+  padding: 16px;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.welfare-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.welfare-table tr:hover {
+  background: #f9fafb;
+}
+
+/* フィルターコンテナ */
+.welfare-filter-container {
+  background: #f8fafc;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.welfare-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.welfare-filter-item label {
+  display: block;
+  font-weight: 600;
+  color: var(--welfare-text);
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+/* 空状態表示 */
+.welfare-empty-state {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.welfare-empty-icon {
+  width: 120px;
+  height: 120px;
+  background: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 48px;
+  color: #9ca3af;
+}
+
+.welfare-empty-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--welfare-text);
+  margin-bottom: 12px;
+}
+
+.welfare-empty-description {
+  font-size: 18px;
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
   :root {
@@ -290,5 +456,46 @@ body {
     width: 64px;
     height: 64px;
     font-size: 20px;
+  }
+
+  .welfare-header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .welfare-header-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .welfare-header-text h1 {
+    font-size: 24px;
+  }
+
+  .welfare-nav-buttons {
+    justify-content: center;
+  }
+
+  .welfare-content {
+    padding: 16px;
+  }
+
+  .welfare-section {
+    padding: 20px;
+  }
+
+  .welfare-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .welfare-table {
+    font-size: 14px;
+  }
+
+  .welfare-table th,
+  .welfare-table td {
+    padding: 12px 8px;
   }
 }

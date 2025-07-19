@@ -279,10 +279,10 @@ export default function TransportationRecordsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">送迎記録を読み込み中...</p>
         </div>
       </div>
     )
@@ -290,63 +290,61 @@ export default function TransportationRecordsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
-        {/* ヘッダー */}
-        <div className="bg-white shadow">
-          <div className="px-4 py-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">送迎記録</h1>
-                <p className="text-sm text-gray-600">送迎記録の一覧と詳細確認</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+        {/* 統一ヘッダー */}
+        <div className="welfare-header">
+          <div className="welfare-header-content">
+            <div className="welfare-header-title">
+              <div className="welfare-header-icon">📊</div>
+              <div className="welfare-header-text">
+                <h1>送迎記録</h1>
+                <p>送迎記録の一覧と詳細確認</p>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleCSVExport}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-                >
-                  CSV出力
-                </button>
-                <button
-                  onClick={() => router.push('/admin/dashboard')}
-                  className="text-gray-600 text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  ダッシュボードに戻る
-                </button>
-              </div>
+            </div>
+            <div className="welfare-nav-buttons">
+              <button
+                onClick={handleCSVExport}
+                className="welfare-button welfare-button-secondary"
+              >
+                📈 CSV出力
+              </button>
+              <a href="/admin/dashboard" className="welfare-button welfare-button-outline">
+                🏠 ダッシュボード
+              </a>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="welfare-content">
           {/* フィルター */}
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">フィルター</h2>
+          <div className="welfare-section">
+            <h2 className="welfare-section-title">
+              🔍 フィルター検索
+            </h2>
+            
+            <div className="mb-6 flex gap-4">
+              <button
+                onClick={handleTodayFilter}
+                className="welfare-button welfare-button-primary"
+              >
+                📅 本日
+              </button>
+              <button
+                onClick={fetchRecords}
+                className="welfare-button welfare-button-secondary"
+              >
+                🔄 更新
+              </button>
             </div>
-            <div className="p-6">
-              <div className="mb-4 flex space-x-2">
-                <button
-                  onClick={handleTodayFilter}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  本日
-                </button>
-                <button
-                  onClick={fetchRecords}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  更新
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ドライバー名
-                  </label>
+            
+            <div className="welfare-filter-container">
+              <div className="welfare-filter-grid">
+                <div className="welfare-filter-item">
+                  <label>🚗 ドライバー名</label>
                   <select
                     value={filterDriver}
                     onChange={(e) => setFilterDriver(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-select"
                   >
                     <option value="all">すべて</option>
                     {drivers.map((driver) => (
@@ -356,14 +354,13 @@ export default function TransportationRecordsPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    車両
-                  </label>
+                
+                <div className="welfare-filter-item">
+                  <label>🚐 車両</label>
                   <select
                     value={filterVehicle}
                     onChange={(e) => setFilterVehicle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-select"
                   >
                     <option value="all">すべて</option>
                     {vehicles.map((vehicle) => (
@@ -373,14 +370,13 @@ export default function TransportationRecordsPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ルート名
-                  </label>
+                
+                <div className="welfare-filter-item">
+                  <label>🛣️ ルート名</label>
                   <select
                     value={filterRoute}
                     onChange={(e) => setFilterRoute(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-select"
                   >
                     <option value="all">すべて</option>
                     {routes.map((route) => (
@@ -390,14 +386,13 @@ export default function TransportationRecordsPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    送迎タイプ
-                  </label>
+                
+                <div className="welfare-filter-item">
+                  <label>👥 送迎タイプ</label>
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-select"
                   >
                     <option value="all">すべて</option>
                     <option value="regular">通所支援</option>
@@ -406,29 +401,28 @@ export default function TransportationRecordsPage() {
                     <option value="outing">外出支援</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    送迎日（開始）
-                  </label>
+                
+                <div className="welfare-filter-item">
+                  <label>📅 送迎日（開始）</label>
                   <input
                     type="date"
                     value={filterDateFrom}
                     onChange={(e) => setFilterDateFrom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-input"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    送迎日（終了）
-                  </label>
+                
+                <div className="welfare-filter-item">
+                  <label>📅 送迎日（終了）</label>
                   <input
                     type="date"
                     value={filterDateTo}
                     onChange={(e) => setFilterDateTo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="welfare-input"
                   />
                 </div>
-                <div className="flex items-end">
+                
+                <div className="welfare-filter-item flex items-end">
                   <button
                     onClick={() => {
                       setFilterDriver('all')
@@ -438,9 +432,9 @@ export default function TransportationRecordsPage() {
                       setFilterDateFrom('')
                       setFilterDateTo('')
                     }}
-                    className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                    className="welfare-button welfare-button-outline w-full"
                   >
-                    クリア
+                    🗑️ クリア
                   </button>
                 </div>
               </div>
@@ -448,87 +442,94 @@ export default function TransportationRecordsPage() {
           </div>
 
           {/* 送迎記録一覧 */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">
-                送迎記録一覧 ({filteredRecords.length}件)
-              </h2>
-            </div>
+          <div className="welfare-section">
+            <h2 className="welfare-section-title">
+              📊 送迎記録一覧 ({filteredRecords.length}件)
+            </h2>
             
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      日付
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ドライバー / 車両 / ルート
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      送迎タイプ
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      乗車人数
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      走行距離
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      操作
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRecords.map((record) => (
-                    <tr key={(record as any).id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date((record as any).transportation_date).toLocaleDateString('ja-JP')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        <div className="space-y-1">
-                          <div className="font-medium text-gray-900">{record.drivers?.name || '-'}</div>
-                          <div className="text-xs">{record.vehicles?.vehicle_no || '-'} / {record.routes?.route_name || '-'}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {getTransportationTypeLabel((record as any).transportation_type)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-blue-600">
-                        {(record as any).passenger_count || 0}人
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-purple-600">
-                        {(record as any).start_odometer && (record as any).end_odometer
-                          ? `${(record as any).end_odometer - (record as any).start_odometer}km`
-                          : '-'
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                        <button
-                          onClick={() => handleViewDetails(record)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          詳細
-                        </button>
-                        <button
-                          onClick={() => handleDelete((record as any).id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          削除
-                        </button>
-                      </td>
+            {filteredRecords.length === 0 ? (
+              <div className="welfare-empty-state">
+                <div className="welfare-empty-icon">📊</div>
+                <h3 className="welfare-empty-title">送迎記録がありません</h3>
+                <p className="welfare-empty-description">フィルター条件を変更して再度検索してください</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="welfare-table">
+                  <thead>
+                    <tr>
+                      <th>日付</th>
+                      <th>ドライバー / 車両 / ルート</th>
+                      <th>送迎タイプ</th>
+                      <th>乗車人数</th>
+                      <th>走行距離</th>
+                      <th>操作</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredRecords.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">送迎記録がありません</p>
-                </div>
-              )}
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.map((record) => (
+                      <tr key={(record as any).id}>
+                        <td className="text-center">
+                          <span className="welfare-badge bg-blue-100 text-blue-800">
+                            📅 {new Date((record as any).transportation_date).toLocaleDateString('ja-JP')}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">🚗 {record.drivers?.name || '-'}</div>
+                            <div className="text-sm text-gray-500">🚐 {record.vehicles?.vehicle_no || '-'} / 🛣️ {record.routes?.route_name || '-'}</div>
+                          </div>
+                        </td>
+                        <td className="text-center">
+                          {(record as any).transportation_type === 'regular' && (
+                            <span className="welfare-badge bg-green-100 text-green-800">🏠 通所支援</span>
+                          )}
+                          {(record as any).transportation_type === 'medical' && (
+                            <span className="medical-badge">🏥 医療送迎</span>
+                          )}
+                          {(record as any).transportation_type === 'emergency' && (
+                            <span className="welfare-badge bg-red-100 text-red-800">🚨 緊急送迎</span>
+                          )}
+                          {(record as any).transportation_type === 'outing' && (
+                            <span className="assistance-badge">🌅 外出支援</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          <span className="welfare-badge bg-purple-100 text-purple-800">
+                            👥 {(record as any).passenger_count || 0}人
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          {(record as any).start_odometer && (record as any).end_odometer ? (
+                            <span className="welfare-badge bg-yellow-100 text-yellow-800">
+                              🚗 {(record as any).end_odometer - (record as any).start_odometer}km
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleViewDetails(record)}
+                              className="welfare-button welfare-button-outline text-sm px-3 py-1"
+                            >
+                              🔍
+                            </button>
+                            <button
+                              onClick={() => handleDelete((record as any).id)}
+                              className="welfare-button welfare-button-danger text-sm px-3 py-1"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
