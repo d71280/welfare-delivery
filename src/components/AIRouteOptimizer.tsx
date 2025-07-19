@@ -139,7 +139,7 @@ export default function AIRouteOptimizer({ users, vehicles, onOptimize, classNam
     })
     
     const stops = []
-    let currentTime = new Date()
+    const currentTime = new Date()
     currentTime.setHours(8, 0, 0, 0) // 8:00 AMから開始
     
     // お迎えルートの生成
@@ -157,7 +157,8 @@ export default function AIRouteOptimizer({ users, vehicles, onOptimize, classNam
     })
     
     // お送りルートの生成（逆順）
-    [...sortedUsers].reverse().forEach((user, index) => {
+    const reversedUsers = [...sortedUsers].reverse()
+    reversedUsers.forEach((user) => {
       currentTime.setMinutes(currentTime.getMinutes() + 10)
       stops.push({
         order: stops.length + 1,
