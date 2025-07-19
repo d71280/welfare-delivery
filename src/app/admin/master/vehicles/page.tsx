@@ -5,15 +5,11 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Vehicle } from '@/types'
 
-interface VehicleWithOdometer extends Vehicle {
-  current_odometer?: number
-}
-
 export default function VehiclesManagementPage() {
-  const [vehicles, setVehicles] = useState<VehicleWithOdometer[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingVehicle, setEditingVehicle] = useState<VehicleWithOdometer | null>(null)
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [formData, setFormData] = useState({
     vehicle_no: '',
     is_active: true,
@@ -197,7 +193,7 @@ export default function VehiclesManagementPage() {
     }
   }
 
-  const handleEdit = (vehicle: VehicleWithOdometer) => {
+  const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle)
     setFormData({
       vehicle_no: vehicle.vehicle_no,

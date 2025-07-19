@@ -138,7 +138,15 @@ export default function AIRouteOptimizer({ users, vehicles, onOptimize, classNam
       return priorityOrder[b.priority] - priorityOrder[a.priority]
     })
     
-    const stops = []
+    const stops: Array<{
+      order: number
+      userId: string
+      userName: string
+      address: string
+      type: 'pickup' | 'dropoff'
+      estimatedTime: string
+      specialInstructions?: string
+    }> = []
     const currentTime = new Date()
     currentTime.setHours(8, 0, 0, 0) // 8:00 AMから開始
     

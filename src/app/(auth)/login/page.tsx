@@ -101,9 +101,48 @@ export default function LoginPage() {
           { id: '3', name: '山田次郎', employee_no: 'D003', email: '', pin_code: '9012', is_active: true, created_at: '', updated_at: '' }
         ])
         setVehicles([
-          { id: '1', vehicle_no: 'V001', vehicle_type: '小型トラック', capacity: '2t', fuel_type: 'ガソリン', last_oil_change_odometer: null, is_active: true, created_at: '', updated_at: '' },
-          { id: '2', vehicle_no: 'V002', vehicle_type: '中型トラック', capacity: '4t', fuel_type: '軽油', last_oil_change_odometer: null, is_active: true, created_at: '', updated_at: '' },
-          { id: '3', vehicle_no: 'V003', vehicle_type: '軽バン', capacity: '500kg', fuel_type: 'ガソリン', last_oil_change_odometer: null, is_active: true, created_at: '', updated_at: '' }
+          { 
+            id: '1', 
+            vehicle_no: 'V001', 
+            vehicle_name: 'ハイエース1号車',
+            vehicle_type: 'ハイエース', 
+            capacity: '8', 
+            fuel_type: 'ガソリン', 
+            wheelchair_accessible: false,
+            current_odometer: 15000,
+            last_oil_change_odometer: 12000, 
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          },
+          { 
+            id: '2', 
+            vehicle_no: 'V002', 
+            vehicle_name: 'ハイエース2号車',
+            vehicle_type: 'ハイエース', 
+            capacity: '8', 
+            fuel_type: 'ガソリン', 
+            wheelchair_accessible: true,
+            current_odometer: 12000,
+            last_oil_change_odometer: 10000, 
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          },
+          { 
+            id: '3', 
+            vehicle_no: 'V003', 
+            vehicle_name: 'セレナ1号車',
+            vehicle_type: 'セレナ', 
+            capacity: '8', 
+            fuel_type: 'ガソリン', 
+            wheelchair_accessible: false,
+            current_odometer: 8000,
+            last_oil_change_odometer: 7000, 
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          }
         ])
         
         // デモルートデータ（上記の完全版を使用）
