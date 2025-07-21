@@ -510,13 +510,18 @@ export default function DriverPage() {
       // 全完了チェック（時刻更新後）
       setTimeout(() => {
         setDeliveries(currentDeliveries => {
+          console.log('完了チェック実行中:', currentDeliveries)
           const completed = currentDeliveries.every(item => {
             // 複数利用者の場合は、すべての利用者の出発時間が記録されているかチェック
             if (item.detail) {
-              return item.detail.departure_time !== null && item.detail.departure_time !== undefined
+              const hasArrival = item.detail.arrival_time && item.detail.arrival_time.trim() !== ''
+              const hasDeparture = item.detail.departure_time && item.detail.departure_time.trim() !== ''
+              console.log(`利用者 ${item.user?.name || item.user?.id}: 到着時刻=${item.detail.arrival_time}, 出発時刻=${item.detail.departure_time}, 完了=${hasArrival && hasDeparture}`)
+              return hasArrival && hasDeparture
             }
             return item.record.status === 'completed'
           })
+          console.log('全完了判定:', completed)
           setAllCompleted(completed)
           return currentDeliveries
         })
@@ -1114,9 +1119,11 @@ export default function DriverPage() {
                 }`}
               >
                 {allCompleted ? '本日の送迎を終了する' : `送迎完了待ち (${deliveries.filter(d => {
-                  // 複数利用者の場合は、出発時間が記録されているかチェック
+                  // 複数利用者の場合は、到着・出発時間の両方が記録されているかチェック
                   if (d.detail) {
-                    return d.detail.departure_time !== null && d.detail.departure_time !== undefined
+                    const hasArrival = d.detail.arrival_time && d.detail.arrival_time.trim() !== ''
+                    const hasDeparture = d.detail.departure_time && d.detail.departure_time.trim() !== ''
+                    return hasArrival && hasDeparture
                   }
                   return d.record.status === 'completed'
                 }).length}/${deliveries.length})`}
