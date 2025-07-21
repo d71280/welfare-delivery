@@ -14,6 +14,7 @@ export default function DriversManagementPage() {
     name: '',
     employee_no: '',
     email: '',
+    driver_license_number: '',
     is_active: true,
     management_code_id: ''
   })
@@ -149,6 +150,7 @@ export default function DriversManagementPage() {
             name: formData.name,
             employee_no: formData.employee_no,
             email: formData.email || null,
+            driver_license_number: formData.driver_license_number || null,
             is_active: formData.is_active,
             updated_at: new Date().toISOString()
           })
@@ -168,6 +170,7 @@ export default function DriversManagementPage() {
             name: formData.name,
             employee_no: formData.employee_no,
             email: formData.email || null,
+            driver_license_number: formData.driver_license_number || null,
             is_active: formData.is_active,
             management_code_id: formData.management_code_id
           }])
@@ -191,6 +194,7 @@ export default function DriversManagementPage() {
         name: '',
         employee_no: '',
         email: '',
+        driver_license_number: '',
         is_active: true,
         management_code_id: ''
       })
@@ -209,6 +213,7 @@ export default function DriversManagementPage() {
       name: driver.name,
       employee_no: driver.employee_no,
       email: driver.email || '',
+      driver_license_number: driver.driver_license_number || '',
       is_active: driver.is_active,
       management_code_id: driver.management_code_id || ''
     })
@@ -245,6 +250,7 @@ export default function DriversManagementPage() {
       name: '',
       employee_no: '',
       email: '',
+      driver_license_number: '',
       is_active: true,
       management_code_id: ''
     })
@@ -365,6 +371,20 @@ export default function DriversManagementPage() {
                 </div>
 
                 <div className="welfare-filter-item">
+                  <label>🪪 運転免許証番号</label>
+                  <input
+                    type="text"
+                    value={formData.driver_license_number}
+                    onChange={(e) => setFormData({...formData, driver_license_number: e.target.value})}
+                    className="welfare-input"
+                    placeholder="例: 123456789012"
+                  />
+                  {errors.driver_license_number && (
+                    <p className="text-red-500 text-sm mt-1">{errors.driver_license_number}</p>
+                  )}
+                </div>
+
+                <div className="welfare-filter-item">
                   <label>📈 ステータス</label>
                   <select
                     value={formData.is_active ? 'true' : 'false'}
@@ -421,6 +441,7 @@ export default function DriversManagementPage() {
                   <tr>
                     <th>名前</th>
                     <th>社員番号</th>
+                    <th>運転免許証番号</th>
                     <th>メールアドレス</th>
                     <th>ステータス</th>
                     <th>登録日</th>
@@ -436,6 +457,15 @@ export default function DriversManagementPage() {
                         </span>
                       </td>
                       <td className="font-medium">{driver.employee_no}</td>
+                      <td className="text-center">
+                        {driver.driver_license_number ? (
+                          <span className="welfare-badge bg-purple-100 text-purple-800">
+                            🪪 {driver.driver_license_number}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="text-center">
                         {driver.email ? (
                           <span className="welfare-badge bg-green-100 text-green-800">

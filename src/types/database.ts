@@ -245,9 +245,12 @@ export interface Database {
           dropoff_address: string | null
           
           // 安全管理に関する記録
-          safety_check_boarding: string | null
-          safety_check_alighting: string | null
-          wheelchair_security_status: string | null
+          safety_check_boarding: 'no_problem' | 'problem' | null
+          safety_check_boarding_details: string | null
+          safety_check_alighting: 'no_problem' | 'problem' | null
+          safety_check_alighting_details: string | null
+          wheelchair_security_status: 'no_problem' | 'problem' | null
+          wheelchair_security_details: string | null
           companion_present: boolean | null
           companion_name: string | null
           companion_relationship: string | null
@@ -279,9 +282,12 @@ export interface Database {
           dropoff_address?: string | null
           
           // 安全管理に関する記録
-          safety_check_boarding?: string | null
-          safety_check_alighting?: string | null
-          wheelchair_security_status?: string | null
+          safety_check_boarding?: 'no_problem' | 'problem' | null
+          safety_check_boarding_details?: string | null
+          safety_check_alighting?: 'no_problem' | 'problem' | null
+          safety_check_alighting_details?: string | null
+          wheelchair_security_status?: 'no_problem' | 'problem' | null
+          wheelchair_security_details?: string | null
           companion_present?: boolean | null
           companion_name?: string | null
           companion_relationship?: string | null
@@ -313,9 +319,12 @@ export interface Database {
           dropoff_address?: string | null
           
           // 安全管理に関する記録
-          safety_check_boarding?: string | null
-          safety_check_alighting?: string | null
-          wheelchair_security_status?: string | null
+          safety_check_boarding?: 'no_problem' | 'problem' | null
+          safety_check_boarding_details?: string | null
+          safety_check_alighting?: 'no_problem' | 'problem' | null
+          safety_check_alighting_details?: string | null
+          wheelchair_security_status?: 'no_problem' | 'problem' | null
+          wheelchair_security_details?: string | null
           companion_present?: boolean | null
           companion_name?: string | null
           companion_relationship?: string | null

@@ -28,6 +28,19 @@ export default function DriverPage() {
   const [editingTimes, setEditingTimes] = useState<{[key: string]: {arrival?: string, departure?: string}}>({})
   const [endOdometers, setEndOdometers] = useState<{[key: string]: number}>({})
   const [allCompleted, setAllCompleted] = useState(false)
+  
+  const [safetyData, setSafetyData] = useState<{[key: string]: {
+    boarding: 'no_problem' | 'problem' | '',
+    boardingDetails: string,
+    alighting: 'no_problem' | 'problem' | '',
+    alightingDetails: string,
+    wheelchairSecurity: 'no_problem' | 'problem' | '',
+    wheelchairDetails: string,
+    companionPresent: boolean,
+    companionName: string,
+    companionRelationship: string
+  }}>({})
+  const [showSafetyForm, setShowSafetyForm] = useState<{[key: string]: boolean}>({})
 
   const router = useRouter()
   const supabase = createClient()
@@ -231,6 +244,76 @@ export default function DriverPage() {
       console.error('時刻更新エラー:', err)
       alert('時刻の更新に失敗しました')
     }
+  }
+
+  const handleSaveSafetyData = async (recordId: string) => {
+    const safety = safetyData[recordId]
+    if (!safety) return
+
+    try {
+      const updateData = {
+        safety_check_boarding: safety.boarding || null,
+        safety_check_boarding_details: safety.boarding === 'problem' ? safety.boardingDetails : null,
+        safety_check_alighting: safety.alighting || null,
+        safety_check_alighting_details: safety.alighting === 'problem' ? safety.alightingDetails : null,
+        wheelchair_security_status: safety.wheelchairSecurity || null,
+        wheelchair_security_details: safety.wheelchairSecurity === 'problem' ? safety.wheelchairDetails : null,
+        companion_present: safety.companionPresent,
+        companion_name: safety.companionPresent ? safety.companionName : null,
+        companion_relationship: safety.companionPresent ? safety.companionRelationship : null,
+        updated_at: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('transportation_records')
+        .update(updateData)
+        .eq('id', recordId)
+
+      if (error) throw error
+
+      // フォームを閉じる
+      setShowSafetyForm(prev => ({ ...prev, [recordId]: false }))
+      
+      // 状態を更新
+      setDeliveries(prev => 
+        prev.map(item => 
+          item.record.id === recordId 
+            ? { ...item, record: { ...item.record, ...updateData }}
+            : item
+        )
+      )
+
+    } catch (err) {
+      console.error('安全管理データ保存エラー:', err)
+      alert('安全管理データの保存に失敗しました')
+    }
+  }
+
+  const initializeSafetyData = (recordId: string) => {
+    if (!safetyData[recordId]) {
+      setSafetyData(prev => ({
+        ...prev,
+        [recordId]: {
+          boarding: '',
+          boardingDetails: '',
+          alighting: '',
+          alightingDetails: '',
+          wheelchairSecurity: '',
+          wheelchairDetails: '',
+          companionPresent: false,
+          companionName: '',
+          companionRelationship: ''
+        }
+      }))
+    }
+  }
+
+  const handleToggleSafetyForm = (recordId: string) => {
+    initializeSafetyData(recordId)
+    setShowSafetyForm(prev => ({
+      ...prev,
+      [recordId]: !prev[recordId]
+    }))
   }
 
   const handleCompleteAllDeliveries = async () => {
@@ -525,6 +608,224 @@ export default function DriverPage() {
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* 安全管理記録 */}
+                  {(delivery.record.arrival_time && delivery.record.departure_time) && (
+                    <div className="border-t pt-4 mt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-700">🛡️ 安全管理記録</h4>
+                        <button
+                          onClick={() => handleToggleSafetyForm(delivery.record.id)}
+                          className="text-blue-600 text-sm hover:underline"
+                        >
+                          {showSafetyForm[delivery.record.id] ? '閉じる' : '記録する'}
+                        </button>
+                      </div>
+
+                      {showSafetyForm[delivery.record.id] && (
+                        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                          {/* 乗降時の安全確認 */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">乗車時の安全確認</label>
+                              <div className="space-y-1">
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`boarding-${delivery.record.id}`}
+                                    value="no_problem"
+                                    checked={safetyData[delivery.record.id]?.boarding === 'no_problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], boarding: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ✅ 問題なし
+                                </label>
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`boarding-${delivery.record.id}`}
+                                    value="problem"
+                                    checked={safetyData[delivery.record.id]?.boarding === 'problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], boarding: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ⚠️ 問題あり
+                                </label>
+                              </div>
+                              {safetyData[delivery.record.id]?.boarding === 'problem' && (
+                                <textarea
+                                  value={safetyData[delivery.record.id]?.boardingDetails || ''}
+                                  onChange={(e) => setSafetyData(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], boardingDetails: e.target.value }
+                                  }))}
+                                  placeholder="問題の詳細を入力"
+                                  className="mt-2 w-full px-2 py-1 border rounded text-sm"
+                                  rows={2}
+                                />
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">降車時の安全確認</label>
+                              <div className="space-y-1">
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`alighting-${delivery.record.id}`}
+                                    value="no_problem"
+                                    checked={safetyData[delivery.record.id]?.alighting === 'no_problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], alighting: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ✅ 問題なし
+                                </label>
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`alighting-${delivery.record.id}`}
+                                    value="problem"
+                                    checked={safetyData[delivery.record.id]?.alighting === 'problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], alighting: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ⚠️ 問題あり
+                                </label>
+                              </div>
+                              {safetyData[delivery.record.id]?.alighting === 'problem' && (
+                                <textarea
+                                  value={safetyData[delivery.record.id]?.alightingDetails || ''}
+                                  onChange={(e) => setSafetyData(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], alightingDetails: e.target.value }
+                                  }))}
+                                  placeholder="問題の詳細を入力"
+                                  className="mt-2 w-full px-2 py-1 border rounded text-sm"
+                                  rows={2}
+                                />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 車椅子等の固定状況 */}
+                          {delivery.user?.wheelchair_user && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">♿ 車椅子・福祉用具の固定状況</label>
+                              <div className="space-y-1">
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`wheelchair-${delivery.record.id}`}
+                                    value="no_problem"
+                                    checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'no_problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], wheelchairSecurity: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ✅ 問題なし（適切に固定済み）
+                                </label>
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="radio"
+                                    name={`wheelchair-${delivery.record.id}`}
+                                    value="problem"
+                                    checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'problem'}
+                                    onChange={(e) => setSafetyData(prev => ({
+                                      ...prev,
+                                      [delivery.record.id]: { ...prev[delivery.record.id], wheelchairSecurity: e.target.value as any }
+                                    }))}
+                                    className="mr-2"
+                                  />
+                                  ⚠️ 問題あり（固定不良等）
+                                </label>
+                              </div>
+                              {safetyData[delivery.record.id]?.wheelchairSecurity === 'problem' && (
+                                <textarea
+                                  value={safetyData[delivery.record.id]?.wheelchairDetails || ''}
+                                  onChange={(e) => setSafetyData(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], wheelchairDetails: e.target.value }
+                                  }))}
+                                  placeholder="固定に関する問題の詳細を入力"
+                                  className="mt-2 w-full px-2 py-1 border rounded text-sm"
+                                  rows={2}
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          {/* 同乗者情報 */}
+                          <div>
+                            <label className="flex items-center text-sm">
+                              <input
+                                type="checkbox"
+                                checked={safetyData[delivery.record.id]?.companionPresent || false}
+                                onChange={(e) => setSafetyData(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: { ...prev[delivery.record.id], companionPresent: e.target.checked }
+                                }))}
+                                className="mr-2"
+                              />
+                              👥 同乗者がいる
+                            </label>
+                            {safetyData[delivery.record.id]?.companionPresent && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 ml-6">
+                                <input
+                                  type="text"
+                                  value={safetyData[delivery.record.id]?.companionName || ''}
+                                  onChange={(e) => setSafetyData(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], companionName: e.target.value }
+                                  }))}
+                                  placeholder="同乗者氏名"
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <input
+                                  type="text"
+                                  value={safetyData[delivery.record.id]?.companionRelationship || ''}
+                                  onChange={(e) => setSafetyData(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], companionRelationship: e.target.value }
+                                  }))}
+                                  placeholder="続柄・関係（例: 母親）"
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-3 pt-3">
+                            <button
+                              onClick={() => handleSaveSafetyData(delivery.record.id)}
+                              className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                            >
+                              💾 保存
+                            </button>
+                            <button
+                              onClick={() => setShowSafetyForm(prev => ({ ...prev, [delivery.record.id]: false }))}
+                              className="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

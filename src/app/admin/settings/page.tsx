@@ -200,23 +200,53 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">事業者設定</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+      {/* 統一ヘッダー */}
+      <div className="welfare-header">
+        <div className="welfare-header-content">
+          <div className="welfare-header-title">
+            <div className="welfare-header-icon">⚙️</div>
+            <div className="welfare-header-text">
+              <h1>事業者設定</h1>
+              <p>組織情報と管理コードの設定</p>
+            </div>
+          </div>
+          <div className="welfare-nav-buttons">
+            <a href="/admin/dashboard" className="welfare-button welfare-button-outline">
+              🏠 ダッシュボード
+            </a>
             <button
-              onClick={() => router.push('/admin/dashboard')}
-              className="welfare-button welfare-button-outline"
+              onClick={() => {
+                // CSV出力機能（組織情報と管理コードの出力）
+                const orgData = organization ? [{
+                  組織名: organization.name,
+                  代表者名: organization.representative_name || '',
+                  住所: organization.address || '',
+                  電話番号: organization.phone || '',
+                  メールアドレス: organization.email || '',
+                  事業種別: organization.business_type || '',
+                  許可番号: organization.license_number || ''
+                }] : []
+                
+                const csvContent = 'data:text/csv;charset=utf-8,\ufeff' + 
+                  '組織名,代表者名,住所,電話番号,メールアドレス,事業種別,許可番号\n' +
+                  orgData.map(row => Object.values(row).map(field => `"${field}"`).join(',')).join('\n')
+                
+                const link = document.createElement('a')
+                link.setAttribute('href', csvContent)
+                link.setAttribute('download', `組織情報_${new Date().toISOString().split('T')[0]}.csv`)
+                link.click()
+              }}
+              className="welfare-button welfare-button-secondary"
             >
-              ← ダッシュボードに戻る
+              📈 CSV出力
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="welfare-content"
+>
         {/* エラー・成功メッセージ */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -231,9 +261,9 @@ export default function SettingsPage() {
         )}
 
         {/* 事業者情報 */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="welfare-section">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">事業者情報</h2>
+            <h2 className="welfare-section-title">⚙️ 事業者情報</h2>
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
@@ -366,8 +396,8 @@ export default function SettingsPage() {
         </div>
 
         {/* 管理コード管理 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">管理コード管理</h2>
+        <div className="welfare-section">
+          <h2 className="welfare-section-title">🔑 管理コード管理</h2>
           
           {/* 新しい管理コード作成 */}
           <div className="mb-6 p-4 bg-blue-50 rounded-lg">
