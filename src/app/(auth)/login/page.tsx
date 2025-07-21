@@ -316,13 +316,14 @@ export default function LoginPage() {
         driverId: selectedDriver,
         vehicleId: selectedVehicle,
         routeId: selectedRoute,
-        deliveryDate: new Date().toISOString().split('T')[0],
+        transportationDate: new Date().toISOString().split('T')[0],
+        transportationType: 'regular' as const,
         gasCardUsed: false
       }
 
       console.log('配送データ:', deliveryData)
 
-      const result = await createDeliveryRecord(deliveryData as any)
+      const result = await createDeliveryRecord(deliveryData)
       
       console.log('配送記録作成結果:', result)
       
