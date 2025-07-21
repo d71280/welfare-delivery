@@ -105,7 +105,11 @@ function TransportationCompleteContent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">送迎タイプ</label>
                   <p className="text-gray-900">
-                    {transportationData.trip_type === 'round_trip' ? '往復送迎' : '片道送迎'}
+                    {transportationData.transportation_type === 'round_trip' ? '往復送迎' : 
+                     transportationData.transportation_type === 'individual' ? '個別送迎' :
+                     transportationData.transportation_type === 'medical' ? '医療送迎' :
+                     transportationData.transportation_type === 'emergency' ? '緊急送迎' :
+                     transportationData.transportation_type === 'outing' ? '外出送迎' : '通常送迎'}
                   </p>
                 </div>
               </div>

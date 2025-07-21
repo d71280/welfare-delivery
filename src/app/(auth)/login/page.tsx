@@ -233,7 +233,7 @@ export default function LoginPage() {
         driverId: selectedDriver,
         vehicleId: selectedVehicle,
         transportationDate: new Date().toISOString().split('T')[0],
-        transportationType: 'regular' as const, // 往復送迎はregularで登録（暫定）
+        transportationType: 'round_trip' as const,
         passengerCount: selectedUsers.length,
         specialNotes: `往復送迎 - 利用者${selectedUsers.length}名`,
         managementCodeId: currentManagementCodeId,
