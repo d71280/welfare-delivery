@@ -592,9 +592,6 @@ export default function TransportationRecordsPage() {
     }
   }
 
-    }
-  }
-
   const getTransportationTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       regular: '通所支援',
