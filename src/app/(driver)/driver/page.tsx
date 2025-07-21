@@ -340,9 +340,19 @@ export default function DriverPage() {
           .eq('id', session.vehicleId)
       }
 
-      // セッション情報をクリアしてログインページに戻る
-      localStorage.removeItem('driverSession')
-      router.push('/login')
+      // 送迎完了ページにリダイレクト
+      const firstDelivery = deliveries[0]
+      const recordId = firstDelivery?.record?.id
+      
+      if (recordId) {
+        console.log('送迎完了ページに遷移します。記録ID:', recordId)
+        // セッション情報はクリアせずに完了ページで表示用に保持
+        router.push(`/transportation-complete?recordId=${recordId}`)
+      } else {
+        console.log('記録IDが取得できないため、ログインページに戻ります')
+        localStorage.removeItem('driverSession')
+        router.push('/login')
+      }
     } catch (err) {
       console.error('車両走行距離更新エラー:', err)
       alert('車両走行距離の更新に失敗しました')

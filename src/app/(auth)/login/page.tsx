@@ -282,15 +282,9 @@ export default function LoginPage() {
       console.log('=== ログイン時セッションデータ作成終了 ===')
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
       
-      // 送迎完了ページにリダイレクト
-      const recordId = firstResult.data?.id
-      if (recordId) {
-        console.log('送迎完了ページに遷移します。記録ID:', recordId)
-        router.push(`/transportation-complete?recordId=${recordId}`)
-      } else {
-        console.log('記録IDが取得できないため、ドライバー画面に遷移します')
-        router.push('/driver')
-      }
+      // ドライバー画面に遷移（送迎詳細入力のため）
+      console.log('ドライバー画面に遷移します')
+      router.push('/driver')
     } catch (error) {
       console.error('送迎開始エラー:', error)
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
