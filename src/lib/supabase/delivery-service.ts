@@ -158,7 +158,6 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
         const detailData = {
           transportation_record_id: data.id,
           user_id: userId,
-          destination_id: null, // 往復送迎では目的地は未設定
           pickup_time: null,
           arrival_time: null,
           departure_time: null,

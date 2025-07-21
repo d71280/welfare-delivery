@@ -117,14 +117,13 @@ export default function DriverPage() {
               // 対応する詳細記録を探す
               let detail = details?.find(d => d.user_id === userId)
               
-              // 詳細記録が存在しない場合は作成
+              // 詳細記録が存在しない場合は作成（destination_idをスキップ）
               if (!detail) {
                 console.log('詳細記録が見つからないため作成:', { recordId: record.id, userId })
                 
                 const detailData = {
                   transportation_record_id: record.id,
                   user_id: userId,
-                  destination_id: null,
                   pickup_time: null,
                   arrival_time: null,
                   departure_time: null,
@@ -771,7 +770,7 @@ export default function DriverPage() {
                               </>
                             )}
                           </div>
-                        ) : (
+                        ) : delivery.user?.id ? (
                           <button
                             onClick={() => {
                               console.log('到着記録ボタンクリック:', { recordId: delivery.record.id, userId: delivery.user?.id, userName: delivery.user?.name })
@@ -781,6 +780,8 @@ export default function DriverPage() {
                           >
                             到着記録
                           </button>
+                        ) : (
+                          <div className="text-red-500 text-sm">利用者IDエラー</div>
                         )
                       ) : (
                         /* 従来の単一利用者送迎の場合 */
@@ -903,13 +904,17 @@ export default function DriverPage() {
                               </>
                             )}
                           </div>
-                        ) : delivery.detail.arrival_time ? (
-                          <button
-                            onClick={() => handleDepartureTime(delivery.record.id, delivery.user?.id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
-                          >
-                            出発記録
-                          </button>
+                        ) : delivery.detail?.arrival_time ? (
+                          delivery.user?.id ? (
+                            <button
+                              onClick={() => handleDepartureTime(delivery.record.id, delivery.user?.id)}
+                              className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                            >
+                              出発記録
+                            </button>
+                          ) : (
+                            <div className="text-red-500 text-sm">利用者IDエラー</div>
+                          )
                         ) : (
                           <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
                         )
