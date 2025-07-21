@@ -119,8 +119,10 @@ export default function DriversManagementPage() {
       newErrors.employee_no = '社員番号は必須です'
     }
     
-    if (!formData.management_code_id) {
+    if (!formData.management_code_id && availableManagementCodes.length > 0) {
       newErrors.management_code_id = '管理コードは必須です'
+    } else if (availableManagementCodes.length === 0) {
+      newErrors.management_code_id = '管理コードが見つかりません。システム管理者にお問い合わせください'
     }
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
