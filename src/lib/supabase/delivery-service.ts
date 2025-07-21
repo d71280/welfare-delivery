@@ -101,7 +101,7 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     )
     
     if (existingCheck.exists) {
-      console.log('既存の送迎記録が見つかりました:', existingCheck.record)
+      console.log('既存の送迎記録が見つかりました:', JSON.stringify(existingCheck.record, null, 2))
       return { 
         data: null, 
         error: { 

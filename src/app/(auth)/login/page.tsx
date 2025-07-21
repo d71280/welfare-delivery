@@ -269,7 +269,7 @@ export default function LoginPage() {
       const result = await createDeliveryRecord(deliveryData)
       
       if (result.error) {
-        console.error('送迎記録作成エラー:', result.error)
+        console.error('送迎記録作成エラー:', JSON.stringify(result.error, null, 2))
         
         // 重複レコードの場合は既存のレコードを使用
         const errorObj = result.error as any
