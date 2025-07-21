@@ -100,24 +100,26 @@ export default function DriverPage() {
 
   const fetchTodayDeliveries = async (driverId: string) => {
     try {
-      const today = new Date().toISOString().split('T')[0]
+      const sessionData = localStorage.getItem('driverSession')
+      const currentSession = sessionData ? JSON.parse(sessionData) as DriverSession : null
+      
+      // セッション情報から送迎記録IDを取得
+      if (!currentSession?.deliveryRecordIds || currentSession.deliveryRecordIds.length === 0) {
+        console.log('セッション情報に送迎記録IDが見つかりません')
+        setDeliveries([])
+        return
+      }
       
       const { data: records, error } = await supabase
         .from('transportation_records')
         .select('*')
-        .eq('driver_id', driverId)
-        .eq('transportation_date', today)
-        .in('transportation_type', ['individual', 'regular', 'round_trip'])
+        .in('id', currentSession.deliveryRecordIds)
         .order('created_at', { ascending: true })
 
       if (error) throw error
 
       // 各送迎記録に対応する利用者詳細情報を取得
       const deliveryItems: DeliveryItem[] = []
-      
-      // セッション情報を再取得
-      const sessionData = localStorage.getItem('driverSession')
-      const currentSession = sessionData ? JSON.parse(sessionData) as DriverSession : null
       
       for (const record of records || []) {
         // transportation_detailsから利用者情報を取得
