@@ -313,12 +313,54 @@ export default function DriverPage() {
         updated_at: new Date().toISOString()
       }
 
-      const { error } = await supabase
-        .from('transportation_records')
-        .update(updateData)
-        .eq('id', recordId)
-
-      if (error) throw error
+      // 現在の配送アイテムを取得
+      const currentItem = deliveries.find(item => item.record.id === recordId)
+      
+      if (currentItem?.detail?.id) {
+        // transportation_detailsテーブルに安全管理データを保存
+        const { error } = await supabase
+          .from('transportation_details')
+          .update({
+            // 安全管理データをremarksフィールドにJSON形式で保存
+            remarks: JSON.stringify({
+              safety_check_boarding: safety.boarding || null,
+              safety_check_boarding_details: safety.boarding === 'problem' ? safety.boardingDetails : null,
+              safety_check_alighting: safety.alighting || null,
+              safety_check_alighting_details: safety.alighting === 'problem' ? safety.alightingDetails : null,
+              wheelchair_security_status: safety.wheelchairSecurity || null,
+              wheelchair_security_details: safety.wheelchairSecurity === 'problem' ? safety.wheelchairDetails : null,
+              companion_present: safety.companionPresent,
+              companion_name: safety.companionPresent ? safety.companionName : null,
+              companion_relationship: safety.companionPresent ? safety.companionRelationship : null
+            }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentItem.detail.id)
+          
+        if (error) throw error
+      } else {
+        // 詳細記録がない場合は特記事項に保存
+        const { data: currentRecord } = await supabase
+          .from('transportation_records')
+          .select('special_notes')
+          .eq('id', recordId)
+          .single()
+        
+        const { error } = await supabase
+          .from('transportation_records')
+          .update({
+            special_notes: (currentRecord?.special_notes || '') + '\n安全管理記録: ' + JSON.stringify({
+              boarding: safety.boarding,
+              alighting: safety.alighting,
+              wheelchair: safety.wheelchairSecurity,
+              companion: safety.companionPresent ? safety.companionName : null
+            }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', recordId)
+          
+        if (error) throw error
+      }
 
       // フォームを閉じる
       setShowSafetyForm(prev => ({ ...prev, [recordId]: false }))
@@ -334,7 +376,12 @@ export default function DriverPage() {
 
     } catch (err) {
       console.error('安全管理データ保存エラー:', err)
-      alert('安全管理データの保存に失敗しました')
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'object' && err !== null
+          ? JSON.stringify(err, null, 2)
+          : String(err)
+      alert(`安全管理データの保存に失敗しました:\n${errorMessage}`)
     }
   }
 
