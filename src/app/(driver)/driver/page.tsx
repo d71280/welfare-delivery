@@ -240,8 +240,18 @@ export default function DriverPage() {
 
       setDeliveries(deliveryItems)
       
-      // 全ての送迎が完了しているかチェック
-      const completed = deliveryItems.every(item => item.record.status === 'completed')
+      // 全ての送迎が完了しているかチェック（複数利用者対応）
+      const completed = deliveryItems.every(item => {
+        // 複数利用者の場合は、到着・出発時間の両方が記録されているかチェック
+        if (item.detail) {
+          const hasArrival = item.detail.arrival_time && item.detail.arrival_time.trim() !== ''
+          const hasDeparture = item.detail.departure_time && item.detail.departure_time.trim() !== ''
+          console.log(`初期完了チェック - 利用者 ${item.user?.name || item.user?.id}: 到着時刻=${item.detail.arrival_time}, 出発時刻=${item.detail.departure_time}, 完了=${hasArrival && hasDeparture}`)
+          return hasArrival && hasDeparture
+        }
+        return item.record.status === 'completed'
+      })
+      console.log('初期全完了判定:', completed, 'deliveryItems:', deliveryItems.length)
       setAllCompleted(completed)
     } catch (err) {
       console.error('送迎記録取得エラー:', err)
