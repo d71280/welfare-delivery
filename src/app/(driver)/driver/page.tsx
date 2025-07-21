@@ -25,6 +25,9 @@ export default function DriverPage() {
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState('')
+  const [editingTimes, setEditingTimes] = useState<{[key: string]: {arrival?: string, departure?: string}}>({})
+  const [endOdometers, setEndOdometers] = useState<{[key: string]: number}>({})
+  const [allCompleted, setAllCompleted] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -94,10 +97,162 @@ export default function DriverPage() {
       }
 
       setDeliveries(deliveryItems)
+      
+      // 全ての配送が完了しているかチェック
+      const completed = deliveryItems.every(item => item.record.status === 'completed')
+      setAllCompleted(completed)
     } catch (err) {
       console.error('配送記録取得エラー:', err)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleArrivalTime = async (recordId: string) => {
+    const currentTimeStr = new Date().toTimeString().substring(0, 5)
+    
+    try {
+      const { data, error } = await supabase
+        .from('transportation_records')
+        .update({
+          arrival_time: currentTimeStr + ':00',
+          status: 'in_progress',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', recordId)
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      // 状態を更新
+      setDeliveries(prev => 
+        prev.map(item => 
+          item.record.id === recordId 
+            ? { ...item, record: { ...item.record, arrival_time: currentTimeStr + ':00', status: 'in_progress' }}
+            : item
+        )
+      )
+      
+      alert('到着時刻を記録しました')
+    } catch (err) {
+      console.error('到着時刻記録エラー:', err)
+      alert('到着時刻の記録に失敗しました')
+    }
+  }
+
+  const handleDepartureTime = async (recordId: string) => {
+    const endOdometer = endOdometers[recordId]
+    if (!endOdometer) {
+      alert('終了時走行距離を入力してください')
+      return
+    }
+
+    const currentTimeStr = new Date().toTimeString().substring(0, 5)
+    
+    try {
+      const { data, error } = await supabase
+        .from('transportation_records')
+        .update({
+          departure_time: currentTimeStr + ':00',
+          end_odometer: endOdometer,
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', recordId)
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      // 状態を更新
+      setDeliveries(prev => 
+        prev.map(item => 
+          item.record.id === recordId 
+            ? { ...item, record: { ...item.record, departure_time: currentTimeStr + ':00', end_odometer: endOdometer, status: 'completed' }}
+            : item
+        )
+      )
+      
+      // 車両の走行距離を更新
+      if (session) {
+        await supabase
+          .from('vehicles')
+          .update({
+            current_odometer: endOdometer,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.vehicleId)
+      }
+      
+      // 全完了チェック
+      const updatedDeliveries = deliveries.map(item => 
+        item.record.id === recordId 
+          ? { ...item, record: { ...item.record, status: 'completed' }}
+          : item
+      )
+      const completed = updatedDeliveries.every(item => item.record.status === 'completed')
+      setAllCompleted(completed)
+      
+      alert('出発時刻を記録しました')
+    } catch (err) {
+      console.error('出発時刻記録エラー:', err)
+      alert('出発時刻の記録に失敗しました')
+    }
+  }
+
+  const handleTimeEdit = async (recordId: string, type: 'arrival' | 'departure', time: string) => {
+    try {
+      const updateData = type === 'arrival' 
+        ? { arrival_time: time + ':00' }
+        : { departure_time: time + ':00' }
+
+      const { data, error } = await supabase
+        .from('transportation_records')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', recordId)
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      // 状態を更新
+      setDeliveries(prev => 
+        prev.map(item => 
+          item.record.id === recordId 
+            ? { ...item, record: { ...item.record, ...updateData }}
+            : item
+        )
+      )
+      
+      // 編集状態をクリア
+      setEditingTimes(prev => ({
+        ...prev,
+        [recordId]: {
+          ...prev[recordId],
+          [type]: undefined
+        }
+      }))
+      
+      alert('時刻を更新しました')
+    } catch (err) {
+      console.error('時刻更新エラー:', err)
+      alert('時刻の更新に失敗しました')
+    }
+  }
+
+  const handleCompleteAllDeliveries = async () => {
+    if (!allCompleted) {
+      alert('すべての配送を完了してください')
+      return
+    }
+
+    if (confirm('本日の配送をすべて終了しますか？')) {
+      alert('お疲れさまでした！配送が完了しました。')
+      // 必要に応じて追加の処理（ログアウトなど）
     }
   }
 
@@ -184,78 +339,229 @@ export default function DriverPage() {
             <p className="text-gray-600">本日の配送はすべて完了しているか、まだ配送が登録されていません。</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {deliveries.map((delivery) => (
-              <div
-                key={delivery.record.id}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => router.push(`/driver/delivery/${delivery.record.id}`)}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {delivery.user ? delivery.user.name : '利用者不明'}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {delivery.user ? `利用者番号: ${delivery.user.user_no}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                  {getStatusBadge(delivery.record.status)}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <span className="text-sm text-gray-600">開始時刻:</span>
-                    <p className="font-medium">
-                      {delivery.record.start_time 
-                        ? delivery.record.start_time.substring(0, 5)
-                        : '未設定'
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">終了時刻:</span>
-                    <p className="font-medium">
-                      {delivery.record.end_time 
-                        ? delivery.record.end_time.substring(0, 5)
-                        : '未設定'
-                      }
-                    </p>
-                  </div>
-                </div>
-
-                {delivery.user && (
-                  <div className="border-t pt-4">
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <span className="text-sm text-gray-600">住所:</span>
-                        <p className="text-sm">{delivery.user.address}</p>
+          <>
+            <div className="space-y-6">
+              {deliveries.map((delivery) => (
+                <div
+                  key={delivery.record.id}
+                  className="bg-white rounded-lg shadow p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                       </div>
-                      {delivery.user.wheelchair_user && (
-                        <div className="flex items-center">
-                          <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-sm text-orange-600 font-medium">車椅子利用</span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {delivery.user ? delivery.user.name : '利用者不明'}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {delivery.user ? `利用者番号: ${delivery.user.user_no}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(delivery.record.status)}
+                  </div>
+
+                  {/* 到着・出発時刻 */}
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 block mb-2">到着時刻:</span>
+                      {delivery.record.arrival_time ? (
+                        <div className="flex items-center space-x-2">
+                          {editingTimes[delivery.record.id]?.arrival !== undefined ? (
+                            <>
+                              <input
+                                type="time"
+                                value={editingTimes[delivery.record.id]?.arrival || delivery.record.arrival_time?.substring(0, 5) || ''}
+                                onChange={(e) => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: {
+                                    ...prev[delivery.record.id],
+                                    arrival: e.target.value
+                                  }
+                                }))}
+                                className="px-2 py-1 border rounded text-sm"
+                              />
+                              <button
+                                onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[delivery.record.id]?.arrival || '')}
+                                className="text-blue-600 text-sm"
+                              >
+                                保存
+                              </button>
+                              <button
+                                onClick={() => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: { ...prev[delivery.record.id], arrival: undefined }
+                                }))}
+                                className="text-gray-600 text-sm"
+                              >
+                                キャンセル
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-mono text-lg font-bold text-blue-600">
+                                {delivery.record.arrival_time?.substring(0, 5)}
+                              </span>
+                              <button
+                                onClick={() => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: {
+                                    ...prev[delivery.record.id],
+                                    arrival: delivery.record.arrival_time?.substring(0, 5) || ''
+                                  }
+                                }))}
+                                className="text-gray-500 text-sm underline"
+                              >
+                                修正
+                              </button>
+                            </>
+                          )}
                         </div>
+                      ) : (
+                        <button
+                          onClick={() => handleArrivalTime(delivery.record.id)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                        >
+                          到着記録
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 block mb-2">出発時刻:</span>
+                      {delivery.record.departure_time ? (
+                        <div className="flex items-center space-x-2">
+                          {editingTimes[delivery.record.id]?.departure !== undefined ? (
+                            <>
+                              <input
+                                type="time"
+                                value={editingTimes[delivery.record.id]?.departure || delivery.record.departure_time?.substring(0, 5) || ''}
+                                onChange={(e) => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: {
+                                    ...prev[delivery.record.id],
+                                    departure: e.target.value
+                                  }
+                                }))}
+                                className="px-2 py-1 border rounded text-sm"
+                              />
+                              <button
+                                onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[delivery.record.id]?.departure || '')}
+                                className="text-blue-600 text-sm"
+                              >
+                                保存
+                              </button>
+                              <button
+                                onClick={() => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: { ...prev[delivery.record.id], departure: undefined }
+                                }))}
+                                className="text-gray-600 text-sm"
+                              >
+                                キャンセル
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-mono text-lg font-bold text-green-600">
+                                {delivery.record.departure_time?.substring(0, 5)}
+                              </span>
+                              <button
+                                onClick={() => setEditingTimes(prev => ({
+                                  ...prev,
+                                  [delivery.record.id]: {
+                                    ...prev[delivery.record.id],
+                                    departure: delivery.record.departure_time?.substring(0, 5) || ''
+                                  }
+                                }))}
+                                className="text-gray-500 text-sm underline"
+                              >
+                                修正
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : delivery.record.arrival_time ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={endOdometers[delivery.record.id] || ''}
+                            onChange={(e) => setEndOdometers(prev => ({
+                              ...prev,
+                              [delivery.record.id]: parseInt(e.target.value) || 0
+                            }))}
+                            placeholder="終了時走行距離"
+                            className="px-2 py-1 border rounded text-sm w-32"
+                          />
+                          <button
+                            onClick={() => handleDepartureTime(delivery.record.id)}
+                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                          >
+                            出発記録
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
                       )}
                     </div>
                   </div>
-                )}
 
-                <div className="mt-4 text-right">
-                  <span className="text-blue-600 text-sm font-medium">詳細を見る →</span>
+                  {/* 利用者情報 */}
+                  {delivery.user && (
+                    <div className="border-t pt-4">
+                      <div className="grid grid-cols-1 gap-2">
+                        <div>
+                          <span className="text-sm text-gray-600">住所:</span>
+                          <p className="text-sm">{delivery.user.address}</p>
+                        </div>
+                        {delivery.user.wheelchair_user && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm text-orange-600 font-medium">車椅子利用</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 text-right">
+                    <button
+                      onClick={() => router.push(`/driver/delivery/${delivery.record.id}`)}
+                      className="text-blue-600 text-sm font-medium hover:underline"
+                    >
+                      詳細を見る →
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* 配送終了ボタン */}
+            <div className="mt-8 bg-white rounded-lg shadow p-6">
+              <button
+                onClick={handleCompleteAllDeliveries}
+                disabled={!allCompleted}
+                className={`w-full py-4 rounded-lg font-medium text-lg transition-colors ${
+                  allCompleted
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {allCompleted ? '本日の配送を終了する' : `配送完了待ち (${deliveries.filter(d => d.record.status === 'completed').length}/${deliveries.length})`}
+              </button>
+              {!allCompleted && (
+                <p className="text-sm text-gray-600 text-center mt-2">
+                  すべての利用者の配送を完了してから終了してください
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
