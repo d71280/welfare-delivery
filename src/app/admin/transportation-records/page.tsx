@@ -560,7 +560,7 @@ export default function TransportationRecordsPage() {
   }
 
   const handleViewDetails = (record: TransportationRecordWithDetails) => {
-    setSelectedRecord(record)
+    setSelectedRecords([record.id])
     setShowDetails(true)
   }
 
