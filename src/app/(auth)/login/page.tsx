@@ -270,39 +270,6 @@ export default function LoginPage() {
       
       if (result.error) {
         console.error('送迎記録作成エラー:', JSON.stringify(result.error, null, 2))
-        
-        // 重複レコードの場合は既存のレコードを使用
-        const errorObj = result.error as any
-        if (errorObj?.code === 'DUPLICATE_DELIVERY' && errorObj?.existingRecord) {
-          console.log('既存の送迎記録を使用します:', errorObj.existingRecord)
-          // 既存の記録を使用してセッションを作成
-          const existingRecord = errorObj.existingRecord
-          const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
-          const selectedUserNames = selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
-          
-          const sessionData = {
-            driverId: selectedDriver,
-            driverName: drivers.find(d => d.id === selectedDriver)?.name || '',
-            vehicleId: selectedVehicle,
-            vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no || '',
-            selectedUsers,
-            userNames: selectedUserNames,
-            selectedAddresses,
-            deliveryRecordIds: [existingRecord.id],
-            startOdometer: existingRecord.start_odometer,
-            loginTime: new Date().toISOString(),
-            startTime: startTime || currentTime,
-            endTime: null
-          }
-          
-          console.log('既存記録を使用したセッションデータ:', sessionData)
-          localStorage.setItem('driverSession', JSON.stringify(sessionData))
-          
-          // ドライバー画面に遷移
-          router.push('/driver')
-          return
-        }
-        
         const errorMessage = typeof result.error === 'string' 
           ? result.error 
           : (result.error as any)?.message || JSON.stringify(result.error, null, 2)

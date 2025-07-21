@@ -93,24 +93,24 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
     console.log('送迎記録作成開始:', formData)
     
-    // 重複チェック（往復送迎の場合も実行）
-    const existingCheck = await checkExistingDeliveryRecord(
-      formData.transportationDate,
-      formData.driverId,
-      formData.vehicleId // ルートIDの代わりに車両IDを使用
-    )
-    
-    if (existingCheck.exists) {
-      console.log('既存の送迎記録が見つかりました:', JSON.stringify(existingCheck.record, null, 2))
-      return { 
-        data: null, 
-        error: { 
-          message: '同じ日付・ドライバー・車両の送迎記録が既に存在します',
-          code: 'DUPLICATE_DELIVERY',
-          existingRecord: existingCheck.record
-        }
-      }
-    }
+    // 重複チェックを無効化：同じ日付・ドライバーでも複数の送迎記録を作成可能にする
+    // const existingCheck = await checkExistingDeliveryRecord(
+    //   formData.transportationDate,
+    //   formData.driverId,
+    //   formData.vehicleId
+    // )
+    // 
+    // if (existingCheck.exists) {
+    //   console.log('既存の送迎記録が見つかりました:', JSON.stringify(existingCheck.record, null, 2))
+    //   return { 
+    //     data: null, 
+    //     error: { 
+    //       message: '同じ日付・ドライバー・車両の送迎記録が既に存在します',
+    //       code: 'DUPLICATE_DELIVERY',
+    //       existingRecord: existingCheck.record
+    //     }
+    //   }
+    // }
     
     // 車両の現在走行距離を取得して開始走行距離として設定
     const currentOdometer = await getVehicleCurrentOdometer(formData.vehicleId)
