@@ -679,6 +679,19 @@ export default function DriverPage() {
     }
 
     try {
+      // 送迎記録の終了時走行距離を更新
+      const recordIds = deliveries.map(d => d.record.id)
+      if (recordIds.length > 0) {
+        await supabase
+          .from('transportation_records')
+          .update({
+            end_odometer: finalOdometer,
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .in('id', recordIds)
+      }
+
       // 車両の走行距離を更新
       if (session) {
         await supabase
