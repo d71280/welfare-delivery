@@ -269,6 +269,38 @@ export default function LoginPage() {
       
       if (result.error) {
         console.error('送迎記録作成エラー:', result.error)
+        
+        // 重複レコードの場合は既存のレコードを使用
+        if (result.error?.code === 'DUPLICATE_DELIVERY' && result.error?.existingRecord) {
+          console.log('既存の送迎記録を使用します:', result.error.existingRecord)
+          // 既存の記録を使用してセッションを作成
+          const existingRecord = result.error.existingRecord
+          const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
+          const selectedUserNames = selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
+          
+          const sessionData = {
+            driverId: selectedDriver,
+            driverName: drivers.find(d => d.id === selectedDriver)?.name || '',
+            vehicleId: selectedVehicle,
+            vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no || '',
+            selectedUsers,
+            userNames: selectedUserNames,
+            selectedAddresses,
+            deliveryRecordIds: [existingRecord.id],
+            startOdometer: existingRecord.start_odometer,
+            loginTime: new Date().toISOString(),
+            startTime: startTime || currentTime,
+            endTime: null
+          }
+          
+          console.log('既存記録を使用したセッションデータ:', sessionData)
+          localStorage.setItem('driverSession', JSON.stringify(sessionData))
+          
+          // ドライバー画面に遷移
+          router.push('/driver')
+          return
+        }
+        
         const errorMessage = typeof result.error === 'string' 
           ? result.error 
           : result.error?.message || (result.error?.code ? `データベースエラー (${result.error.code}): ${result.error.message}` : JSON.stringify(result.error, null, 2))
@@ -313,7 +345,13 @@ export default function LoginPage() {
     } catch (error) {
       console.error('送迎開始エラー:', error)
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
-      setError(`送迎開始に失敗しました: ${errorMessage}`)
+      
+      // 重複エラーの場合はより分かりやすいメッセージに変更
+      if (errorMessage.includes('同じ日付・ドライバー・車両の送迎記録が既に存在します')) {
+        setError('本日の送迎記録は既に作成済みです。ドライバー画面から送迎を継続してください。')
+      } else {
+        setError(`送迎開始に失敗しました: ${errorMessage}`)
+      }
     } finally {
       setIsLoading(false)
     }
