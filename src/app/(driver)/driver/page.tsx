@@ -184,31 +184,61 @@ export default function DriverPage() {
     }
   }
 
-  const handleArrivalTime = async (recordId: string) => {
+  const handleArrivalTime = async (recordId: string, userId?: string) => {
     const currentTimeStr = new Date().toTimeString().substring(0, 5)
     
     try {
-      const { data, error } = await supabase
-        .from('transportation_records')
-        .update({
-          arrival_time: currentTimeStr + ':00',
-          status: 'in_progress',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', recordId)
-        .select()
-        .single()
+      // 複数利用者送迎の場合は個別の詳細記録に時間を記録
+      if (userId) {
+        const { error: detailError } = await supabase
+          .from('transportation_details')
+          .update({
+            arrival_time: currentTimeStr + ':00',
+            updated_at: new Date().toISOString()
+          })
+          .eq('transportation_record_id', recordId)
+          .eq('user_id', userId)
 
-      if (error) throw error
-      
-      // 状態を更新
-      setDeliveries(prev => 
-        prev.map(item => 
-          item.record.id === recordId 
-            ? { ...item, record: { ...item.record, arrival_time: currentTimeStr + ':00', status: 'in_progress' }}
-            : item
+        if (detailError) throw detailError
+
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId && item.user?.id === userId
+              ? { 
+                  ...item, 
+                  detail: { 
+                    ...item.detail, 
+                    arrival_time: currentTimeStr + ':00' 
+                  }
+                }
+              : item
+          )
         )
-      )
+      } else {
+        // 従来の方法（単一利用者の場合）
+        const { data, error } = await supabase
+          .from('transportation_records')
+          .update({
+            arrival_time: currentTimeStr + ':00',
+            status: 'in_progress',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', recordId)
+          .select()
+          .single()
+
+        if (error) throw error
+        
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId 
+              ? { ...item, record: { ...item.record, arrival_time: currentTimeStr + ':00', status: 'in_progress' }}
+              : item
+          )
+        )
+      }
       
     } catch (err) {
       console.error('到着時刻記録エラー:', err)
@@ -216,39 +246,75 @@ export default function DriverPage() {
     }
   }
 
-  const handleDepartureTime = async (recordId: string) => {
+  const handleDepartureTime = async (recordId: string, userId?: string) => {
     const currentTimeStr = new Date().toTimeString().substring(0, 5)
     
     try {
-      const { data, error } = await supabase
-        .from('transportation_records')
-        .update({
-          departure_time: currentTimeStr + ':00',
-          status: 'completed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', recordId)
-        .select()
-        .single()
+      // 複数利用者送迎の場合は個別の詳細記録に時間を記録
+      if (userId) {
+        const { error: detailError } = await supabase
+          .from('transportation_details')
+          .update({
+            departure_time: currentTimeStr + ':00',
+            updated_at: new Date().toISOString()
+          })
+          .eq('transportation_record_id', recordId)
+          .eq('user_id', userId)
 
-      if (error) throw error
-      
-      // 状態を更新
-      setDeliveries(prev => 
-        prev.map(item => 
-          item.record.id === recordId 
-            ? { ...item, record: { ...item.record, departure_time: currentTimeStr + ':00', status: 'completed' }}
-            : item
+        if (detailError) throw detailError
+
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId && item.user?.id === userId
+              ? { 
+                  ...item, 
+                  detail: { 
+                    ...item.detail, 
+                    departure_time: currentTimeStr + ':00' 
+                  }
+                }
+              : item
+          )
         )
-      )
+      } else {
+        // 従来の方法（単一利用者の場合）
+        const { data, error } = await supabase
+          .from('transportation_records')
+          .update({
+            departure_time: currentTimeStr + ':00',
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', recordId)
+          .select()
+          .single()
+
+        if (error) throw error
+        
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId 
+              ? { ...item, record: { ...item.record, departure_time: currentTimeStr + ':00', status: 'completed' }}
+              : item
+          )
+        )
+      }
       
       // 全完了チェック
       const updatedDeliveries = deliveries.map(item => 
-        item.record.id === recordId 
+        item.record.id === recordId && (!userId || item.user?.id === userId)
           ? { ...item, record: { ...item.record, status: 'completed' }}
           : item
       )
-      const completed = updatedDeliveries.every(item => item.record.status === 'completed')
+      const completed = updatedDeliveries.every(item => {
+        // 複数利用者の場合は、すべての利用者の出発時間が記録されているかチェック
+        if (item.detail) {
+          return item.detail.departure_time !== null && item.detail.departure_time !== undefined
+        }
+        return item.record.status === 'completed'
+      })
       setAllCompleted(completed)
       
     } catch (err) {
@@ -257,41 +323,80 @@ export default function DriverPage() {
     }
   }
 
-  const handleTimeEdit = async (recordId: string, type: 'arrival' | 'departure', time: string) => {
+  const handleTimeEdit = async (recordId: string, type: 'arrival' | 'departure', time: string, userId?: string) => {
     try {
       const updateData = type === 'arrival' 
         ? { arrival_time: time + ':00' }
         : { departure_time: time + ':00' }
 
-      const { data, error } = await supabase
-        .from('transportation_records')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', recordId)
-        .select()
-        .single()
+      // 複数利用者送迎の場合は個別の詳細記録を更新
+      if (userId) {
+        const { error } = await supabase
+          .from('transportation_details')
+          .update({
+            ...updateData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('transportation_record_id', recordId)
+          .eq('user_id', userId)
 
-      if (error) throw error
-      
-      // 状態を更新
-      setDeliveries(prev => 
-        prev.map(item => 
-          item.record.id === recordId 
-            ? { ...item, record: { ...item.record, ...updateData }}
-            : item
+        if (error) throw error
+        
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId && item.user?.id === userId
+              ? { 
+                  ...item, 
+                  detail: { 
+                    ...item.detail, 
+                    ...updateData 
+                  }
+                }
+              : item
+          )
         )
-      )
-      
-      // 編集状態をクリア
-      setEditingTimes(prev => ({
-        ...prev,
-        [recordId]: {
-          ...prev[recordId],
-          [type]: undefined
-        }
-      }))
+        
+        // 編集状態をクリア
+        setEditingTimes(prev => ({
+          ...prev,
+          [`${recordId}-${userId}`]: {
+            ...prev[`${recordId}-${userId}`],
+            [type]: undefined
+          }
+        }))
+      } else {
+        // 従来の方法（単一利用者の場合）
+        const { data, error } = await supabase
+          .from('transportation_records')
+          .update({
+            ...updateData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', recordId)
+          .select()
+          .single()
+
+        if (error) throw error
+        
+        // 状態を更新
+        setDeliveries(prev => 
+          prev.map(item => 
+            item.record.id === recordId 
+              ? { ...item, record: { ...item.record, ...updateData }}
+              : item
+          )
+        )
+        
+        // 編集状態をクリア
+        setEditingTimes(prev => ({
+          ...prev,
+          [recordId]: {
+            ...prev[recordId],
+            [type]: undefined
+          }
+        }))
+      }
       
     } catch (err) {
       console.error('時刻更新エラー:', err)
@@ -531,131 +636,263 @@ export default function DriverPage() {
                   <div className="grid grid-cols-2 gap-6 mb-6">
                     <div>
                       <span className="text-sm font-medium text-gray-700 block mb-2">到着時刻:</span>
-                      {delivery.record.arrival_time ? (
-                        <div className="flex items-center space-x-2">
-                          {editingTimes[delivery.record.id]?.arrival !== undefined ? (
-                            <>
-                              <input
-                                type="time"
-                                value={editingTimes[delivery.record.id]?.arrival || delivery.record.arrival_time?.substring(0, 5) || ''}
-                                onChange={(e) => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    arrival: e.target.value
-                                  }
-                                }))}
-                                className="px-2 py-1 border rounded text-sm"
-                              />
-                              <button
-                                onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[delivery.record.id]?.arrival || '')}
-                                className="text-blue-600 text-sm"
-                              >
-                                保存
-                              </button>
-                              <button
-                                onClick={() => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: { ...prev[delivery.record.id], arrival: undefined }
-                                }))}
-                                className="text-gray-600 text-sm"
-                              >
-                                キャンセル
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-mono text-lg font-bold text-blue-600">
-                                {delivery.record.arrival_time?.substring(0, 5)}
-                              </span>
-                              <button
-                                onClick={() => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    arrival: delivery.record.arrival_time?.substring(0, 5) || ''
-                                  }
-                                }))}
-                                className="text-gray-500 text-sm underline"
-                              >
-                                修正
-                              </button>
-                            </>
-                          )}
-                        </div>
+                      {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
+                      {delivery.detail ? (
+                        delivery.detail.arrival_time ? (
+                          <div className="flex items-center space-x-2">
+                            {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival !== undefined ? (
+                              <>
+                                <input
+                                  type="time"
+                                  value={editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival || delivery.detail.arrival_time?.substring(0, 5) || ''}
+                                  onChange={(e) => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: {
+                                      ...prev[`${delivery.record.id}-${delivery.user?.id}`],
+                                      arrival: e.target.value
+                                    }
+                                  }))}
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival || '', delivery.user?.id)}
+                                  className="text-blue-600 text-sm"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: { ...prev[`${delivery.record.id}-${delivery.user?.id}`], arrival: undefined }
+                                  }))}
+                                  className="text-gray-600 text-sm"
+                                >
+                                  キャンセル
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-mono text-lg font-bold text-blue-600">
+                                  {delivery.detail.arrival_time?.substring(0, 5)}
+                                </span>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: {
+                                      ...prev[`${delivery.record.id}-${delivery.user?.id}`],
+                                      arrival: delivery.detail.arrival_time?.substring(0, 5) || ''
+                                    }
+                                  }))}
+                                  className="text-gray-500 text-sm underline"
+                                >
+                                  修正
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleArrivalTime(delivery.record.id, delivery.user?.id)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                          >
+                            到着記録
+                          </button>
+                        )
                       ) : (
-                        <button
-                          onClick={() => handleArrivalTime(delivery.record.id)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
-                        >
-                          到着記録
-                        </button>
+                        /* 従来の単一利用者送迎の場合 */
+                        delivery.record.arrival_time ? (
+                          <div className="flex items-center space-x-2">
+                            {editingTimes[delivery.record.id]?.arrival !== undefined ? (
+                              <>
+                                <input
+                                  type="time"
+                                  value={editingTimes[delivery.record.id]?.arrival || delivery.record.arrival_time?.substring(0, 5) || ''}
+                                  onChange={(e) => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: {
+                                      ...prev[delivery.record.id],
+                                      arrival: e.target.value
+                                    }
+                                  }))}
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[delivery.record.id]?.arrival || '')}
+                                  className="text-blue-600 text-sm"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], arrival: undefined }
+                                  }))}
+                                  className="text-gray-600 text-sm"
+                                >
+                                  キャンセル
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-mono text-lg font-bold text-blue-600">
+                                  {delivery.record.arrival_time?.substring(0, 5)}
+                                </span>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: {
+                                      ...prev[delivery.record.id],
+                                      arrival: delivery.record.arrival_time?.substring(0, 5) || ''
+                                    }
+                                  }))}
+                                  className="text-gray-500 text-sm underline"
+                                >
+                                  修正
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleArrivalTime(delivery.record.id)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                          >
+                            到着記録
+                          </button>
+                        )
                       )}
                     </div>
 
                     <div>
                       <span className="text-sm font-medium text-gray-700 block mb-2">出発時刻:</span>
-                      {delivery.record.departure_time ? (
-                        <div className="flex items-center space-x-2">
-                          {editingTimes[delivery.record.id]?.departure !== undefined ? (
-                            <>
-                              <input
-                                type="time"
-                                value={editingTimes[delivery.record.id]?.departure || delivery.record.departure_time?.substring(0, 5) || ''}
-                                onChange={(e) => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    departure: e.target.value
-                                  }
-                                }))}
-                                className="px-2 py-1 border rounded text-sm"
-                              />
-                              <button
-                                onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[delivery.record.id]?.departure || '')}
-                                className="text-blue-600 text-sm"
-                              >
-                                保存
-                              </button>
-                              <button
-                                onClick={() => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: { ...prev[delivery.record.id], departure: undefined }
-                                }))}
-                                className="text-gray-600 text-sm"
-                              >
-                                キャンセル
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-mono text-lg font-bold text-green-600">
-                                {delivery.record.departure_time?.substring(0, 5)}
-                              </span>
-                              <button
-                                onClick={() => setEditingTimes(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    departure: delivery.record.departure_time?.substring(0, 5) || ''
-                                  }
-                                }))}
-                                className="text-gray-500 text-sm underline"
-                              >
-                                修正
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      ) : delivery.record.arrival_time ? (
-                        <button
-                          onClick={() => handleDepartureTime(delivery.record.id)}
-                          className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
-                        >
-                          出発記録
-                        </button>
+                      {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
+                      {delivery.detail ? (
+                        delivery.detail.departure_time ? (
+                          <div className="flex items-center space-x-2">
+                            {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure !== undefined ? (
+                              <>
+                                <input
+                                  type="time"
+                                  value={editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure || delivery.detail.departure_time?.substring(0, 5) || ''}
+                                  onChange={(e) => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: {
+                                      ...prev[`${delivery.record.id}-${delivery.user?.id}`],
+                                      departure: e.target.value
+                                    }
+                                  }))}
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure || '', delivery.user?.id)}
+                                  className="text-blue-600 text-sm"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: { ...prev[`${delivery.record.id}-${delivery.user?.id}`], departure: undefined }
+                                  }))}
+                                  className="text-gray-600 text-sm"
+                                >
+                                  キャンセル
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-mono text-lg font-bold text-green-600">
+                                  {delivery.detail.departure_time?.substring(0, 5)}
+                                </span>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [`${delivery.record.id}-${delivery.user?.id}`]: {
+                                      ...prev[`${delivery.record.id}-${delivery.user?.id}`],
+                                      departure: delivery.detail.departure_time?.substring(0, 5) || ''
+                                    }
+                                  }))}
+                                  className="text-gray-500 text-sm underline"
+                                >
+                                  修正
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : delivery.detail.arrival_time ? (
+                          <button
+                            onClick={() => handleDepartureTime(delivery.record.id, delivery.user?.id)}
+                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                          >
+                            出発記録
+                          </button>
+                        ) : (
+                          <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
+                        )
                       ) : (
-                        <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
+                        /* 従来の単一利用者送迎の場合 */
+                        delivery.record.departure_time ? (
+                          <div className="flex items-center space-x-2">
+                            {editingTimes[delivery.record.id]?.departure !== undefined ? (
+                              <>
+                                <input
+                                  type="time"
+                                  value={editingTimes[delivery.record.id]?.departure || delivery.record.departure_time?.substring(0, 5) || ''}
+                                  onChange={(e) => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: {
+                                      ...prev[delivery.record.id],
+                                      departure: e.target.value
+                                    }
+                                  }))}
+                                  className="px-2 py-1 border rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[delivery.record.id]?.departure || '')}
+                                  className="text-blue-600 text-sm"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: { ...prev[delivery.record.id], departure: undefined }
+                                  }))}
+                                  className="text-gray-600 text-sm"
+                                >
+                                  キャンセル
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-mono text-lg font-bold text-green-600">
+                                  {delivery.record.departure_time?.substring(0, 5)}
+                                </span>
+                                <button
+                                  onClick={() => setEditingTimes(prev => ({
+                                    ...prev,
+                                    [delivery.record.id]: {
+                                      ...prev[delivery.record.id],
+                                      departure: delivery.record.departure_time?.substring(0, 5) || ''
+                                    }
+                                  }))}
+                                  className="text-gray-500 text-sm underline"
+                                >
+                                  修正
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : delivery.record.arrival_time ? (
+                          <button
+                            onClick={() => handleDepartureTime(delivery.record.id)}
+                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                          >
+                            出発記録
+                          </button>
+                        ) : (
+                          <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
+                        )
                       )}
                     </div>
                   </div>
@@ -681,7 +918,8 @@ export default function DriverPage() {
                   )}
 
                   {/* 安全管理記録 */}
-                  {(delivery.record.arrival_time && delivery.record.departure_time) && (
+                  {((delivery.detail && delivery.detail.arrival_time && delivery.detail.departure_time) || 
+                    (!delivery.detail && delivery.record.arrival_time && delivery.record.departure_time)) && (
                     <div className="border-t pt-4 mt-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-medium text-gray-700">🛡️ 安全管理記録</h4>
