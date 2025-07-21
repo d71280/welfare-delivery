@@ -582,7 +582,22 @@ export default function DriverPage() {
   }
 
   const handleToggleSafetyForm = (recordId: string) => {
-    initializeSafetyData(recordId)
+    // 安全確認データを強制的に初期化
+    setSafetyData(prev => ({
+      ...prev,
+      [recordId]: prev[recordId] || {
+        boarding: '',
+        boardingDetails: '',
+        alighting: '',
+        alightingDetails: '',
+        wheelchairSecurity: '',
+        wheelchairDetails: '',
+        companionPresent: false,
+        companionName: '',
+        companionRelationship: ''
+      }
+    }))
+    
     setShowSafetyForm(prev => ({
       ...prev,
       [recordId]: !prev[recordId]
@@ -1065,7 +1080,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`boarding-${delivery.record.id}`}
                                     value="no_problem"
-                                    checked={safetyData[delivery.record.id]?.boarding === 'no_problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).boarding === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boarding: e.target.value as any }
@@ -1079,7 +1094,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`boarding-${delivery.record.id}`}
                                     value="problem"
-                                    checked={safetyData[delivery.record.id]?.boarding === 'problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).boarding === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boarding: e.target.value as any }
@@ -1089,9 +1104,9 @@ export default function DriverPage() {
                                   ⚠️ 問題あり
                                 </label>
                               </div>
-                              {safetyData[delivery.record.id]?.boarding === 'problem' && (
+                              {(safetyData[delivery.record.id] || {}).boarding === 'problem' && (
                                 <textarea
-                                  value={safetyData[delivery.record.id]?.boardingDetails || ''}
+                                  value={(safetyData[delivery.record.id] || {}).boardingDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
                                     [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boardingDetails: e.target.value }
@@ -1111,7 +1126,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`alighting-${delivery.record.id}`}
                                     value="no_problem"
-                                    checked={safetyData[delivery.record.id]?.alighting === 'no_problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).alighting === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alighting: e.target.value as any }
@@ -1125,7 +1140,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`alighting-${delivery.record.id}`}
                                     value="problem"
-                                    checked={safetyData[delivery.record.id]?.alighting === 'problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).alighting === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alighting: e.target.value as any }
@@ -1135,9 +1150,9 @@ export default function DriverPage() {
                                   ⚠️ 問題あり
                                 </label>
                               </div>
-                              {safetyData[delivery.record.id]?.alighting === 'problem' && (
+                              {(safetyData[delivery.record.id] || {}).alighting === 'problem' && (
                                 <textarea
-                                  value={safetyData[delivery.record.id]?.alightingDetails || ''}
+                                  value={(safetyData[delivery.record.id] || {}).alightingDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
                                     [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alightingDetails: e.target.value }
@@ -1160,7 +1175,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`wheelchair-${delivery.record.id}`}
                                     value="no_problem"
-                                    checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'no_problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).wheelchairSecurity === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairSecurity: e.target.value as any }
@@ -1174,7 +1189,7 @@ export default function DriverPage() {
                                     type="radio"
                                     name={`wheelchair-${delivery.record.id}`}
                                     value="problem"
-                                    checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'problem'}
+                                    checked={(safetyData[delivery.record.id] || {}).wheelchairSecurity === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
                                       [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairSecurity: e.target.value as any }
@@ -1184,9 +1199,9 @@ export default function DriverPage() {
                                   ⚠️ 問題あり（固定不良等）
                                 </label>
                               </div>
-                              {safetyData[delivery.record.id]?.wheelchairSecurity === 'problem' && (
+                              {(safetyData[delivery.record.id] || {}).wheelchairSecurity === 'problem' && (
                                 <textarea
-                                  value={safetyData[delivery.record.id]?.wheelchairDetails || ''}
+                                  value={(safetyData[delivery.record.id] || {}).wheelchairDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
                                     [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairDetails: e.target.value }
@@ -1204,7 +1219,7 @@ export default function DriverPage() {
                             <label className="flex items-center text-sm">
                               <input
                                 type="checkbox"
-                                checked={safetyData[delivery.record.id]?.companionPresent || false}
+                                checked={(safetyData[delivery.record.id] || {}).companionPresent || false}
                                 onChange={(e) => setSafetyData(prev => ({
                                   ...prev,
                                   [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionPresent: e.target.checked }
@@ -1213,11 +1228,11 @@ export default function DriverPage() {
                               />
                               👥 同乗者がいる
                             </label>
-                            {safetyData[delivery.record.id]?.companionPresent && (
+                            {(safetyData[delivery.record.id] || {}).companionPresent && (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 ml-6">
                                 <input
                                   type="text"
-                                  value={safetyData[delivery.record.id]?.companionName || ''}
+                                  value={(safetyData[delivery.record.id] || {}).companionName || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
                                     [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionName: e.target.value }
@@ -1227,7 +1242,7 @@ export default function DriverPage() {
                                 />
                                 <input
                                   type="text"
-                                  value={safetyData[delivery.record.id]?.companionRelationship || ''}
+                                  value={(safetyData[delivery.record.id] || {}).companionRelationship || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
                                     [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionRelationship: e.target.value }
