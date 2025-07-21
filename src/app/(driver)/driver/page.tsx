@@ -515,7 +515,13 @@ export default function DriverPage() {
 
   const handleSaveSafetyData = async (recordId: string) => {
     const safety = safetyData[recordId]
-    if (!safety) return
+    console.log('安全管理データ保存開始:', { recordId, safety, safetyData })
+    
+    if (!safety) {
+      console.error('安全管理データが見つかりません:', recordId)
+      alert('安全管理データが見つかりません')
+      return
+    }
 
     try {
       const updateData = {
@@ -531,13 +537,19 @@ export default function DriverPage() {
         updated_at: new Date().toISOString()
       }
 
+      console.log('データベース更新データ:', updateData)
+
       // transportation_recordsテーブルに直接安全管理データを保存
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('transportation_records')
         .update(updateData)
         .eq('id', recordId)
+        .select()
         
       if (error) throw error
+
+      console.log('安全管理データ保存成功:', data)
+      alert('安全管理データが保存されました')
 
       // フォームを閉じる
       setShowSafetyForm(prev => ({ ...prev, [recordId]: false }))
