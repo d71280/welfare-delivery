@@ -268,15 +268,8 @@ export default function LoginPage() {
       console.log('送迎データ:', deliveryData)
       const result = await createDeliveryRecord(deliveryData)
       
-      if (result.error) {
-        console.error('送迎記録作成エラー:', JSON.stringify(result.error, null, 2))
-        const errorMessage = typeof result.error === 'string' 
-          ? result.error 
-          : (result.error as any)?.message || JSON.stringify(result.error, null, 2)
-        throw new Error(`送迎記録の作成に失敗しました: ${errorMessage}`)
-      }
-
       if (!result.data) {
+        console.error('送迎記録作成エラー:', result)
         throw new Error('送迎記録の作成に失敗しました: データが取得できませんでした')
       }
 
