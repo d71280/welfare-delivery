@@ -136,24 +136,24 @@ export default function AdminDashboardPage() {
 
         </div>
 
-        {/* 利用者選択配送システム */}
+        {/* 利用者選択送迎システム */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">配送管理システム</h2>
-            <p className="text-sm text-gray-600 mt-1">利用者を選択して個別配送を開始</p>
+            <h2 className="text-lg font-medium text-gray-900">送迎管理システム</h2>
+            <p className="text-sm text-gray-600 mt-1">利用者を選択して個別送迎を開始</p>
           </div>
           <div className="p-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🚐</span>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">配送開始</h3>
-              <p className="text-gray-600 mb-4">ドライバーログインページから利用者を選択して配送を開始してください</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">送迎開始</h3>
+              <p className="text-gray-600 mb-4">ドライバーログインページから利用者を選択して送迎を開始してください</p>
               <button
                 onClick={() => router.push('/login')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
               >
-                🚐 配送開始ページへ
+                🚐 送迎開始ページへ
               </button>
             </div>
           </div>

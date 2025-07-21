@@ -259,16 +259,16 @@ export default function ReportsPage() {
 
   const exportToCsv = () => {
     const csvContent = [
-      ['配送統計レポート'],
+      ['送迎統計レポート'],
       [''],
       ['基本統計'],
-      ['総配送数', reportData.totalDeliveries],
+      ['総送迎数', reportData.totalDeliveries],
       ['完了', reportData.completedDeliveries],
       ['進行中', reportData.inProgressDeliveries],
       ['待機中', reportData.pendingDeliveries],
       [''],
       ['ドライバー別統計'],
-      ['ドライバー名', '総配送数', '完了数', '完了率(%)'],
+      ['ドライバー名', '総送迎数', '完了数', '完了率(%)'],
       ...reportData.driverStats.map(stat => [
         stat.driver_name,
         stat.total_deliveries,
@@ -309,7 +309,7 @@ export default function ReportsPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-xl font-bold text-gray-900">レポート</h1>
-              <p className="text-sm text-gray-600">配送実績の確認とデータ出力</p>
+              <p className="text-sm text-gray-600">送迎実績の確認とデータ出力</p>
             </div>
             <div className="flex space-x-2">
               <button
@@ -387,7 +387,7 @@ export default function ReportsPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">総配送数</p>
+                <p className="text-sm font-medium text-gray-600">総送迎数</p>
                 <p className="text-2xl font-bold text-gray-900">{reportData.totalDeliveries}</p>
               </div>
             </div>
@@ -449,7 +449,7 @@ export default function ReportsPage() {
                     ドライバー名
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    総配送数
+                    総送迎数
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     完了数
@@ -499,7 +499,7 @@ export default function ReportsPage() {
                     車両番号
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    総配送数
+                    総送迎数
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     完了数
@@ -549,7 +549,7 @@ export default function ReportsPage() {
                     ルート名
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    総配送数
+                    総送迎数
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     完了数

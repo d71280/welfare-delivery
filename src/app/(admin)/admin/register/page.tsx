@@ -36,8 +36,15 @@ export default function AdminRegisterPage() {
   }
 
   const validateForm = () => {
-    if (!formData.adminUsername || !formData.adminPassword || !formData.organizationName) {
+    if (!formData.adminUsername || !formData.adminPassword || !formData.organizationName || !formData.organizationEmail) {
       setError('必須項目を入力してください')
+      return false
+    }
+
+    // メールアドレス形式チェック
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.organizationEmail)) {
+      setError('正しいメールアドレスを入力してください')
       return false
     }
 
@@ -85,6 +92,7 @@ export default function AdminRegisterPage() {
         .insert({
           username: formData.adminUsername,
           password: formData.adminPassword,
+          email: formData.organizationEmail,
           organization_id: organization.id
         })
         .select()
@@ -225,7 +233,7 @@ export default function AdminRegisterPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  メールアドレス
+                  メールアドレス <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -234,6 +242,7 @@ export default function AdminRegisterPage() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="info@example.com"
+                  required
                 />
               </div>
               <div>

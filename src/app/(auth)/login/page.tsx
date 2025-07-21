@@ -199,7 +199,7 @@ export default function LoginPage() {
     })
   }
 
-  // 配送開始処理
+  // 送迎開始処理
   const handleStartDeliveryWithRecord = async () => {
     if (!selectedDriver || !selectedVehicle || selectedUsers.length === 0) {
       setError('ドライバー、車両、利用者を選択してください')
@@ -210,13 +210,13 @@ export default function LoginPage() {
     setError('')
 
     try {
-      console.log('配送開始処理開始')
+      console.log('送迎開始処理開始')
       console.log('選択されたドライバー:', selectedDriver)
       console.log('選択された車両:', selectedVehicle)
       console.log('選択された利用者:', selectedUsers)
       console.log('開始走行距離:', startOdometer)
 
-      // 複数利用者に対して個別の配送記録を作成
+      // 複数利用者に対して個別の送迎記録を作成
       const deliveryResults = []
       
       for (let i = 0; i < selectedUsers.length; i++) {
@@ -231,22 +231,22 @@ export default function LoginPage() {
           managementCodeId: currentManagementCodeId
         }
 
-        console.log('配送データ:', deliveryData)
+        console.log('送迎データ:', deliveryData)
         const result = await createDeliveryRecord(deliveryData)
         deliveryResults.push(result)
       }
 
-      // すべての配送記録作成が成功したかチェック
+      // すべての送迎記録作成が成功したかチェック
       const hasError = deliveryResults.some(result => result.error)
       if (hasError) {
         const errors = deliveryResults.filter(result => result.error).map(result => result.error)
-        console.error('配送記録作成エラー:', errors)
-        throw new Error(`配送記録の作成に失敗しました: ${JSON.stringify(errors)}`)
+        console.error('送迎記録作成エラー:', errors)
+        throw new Error(`送迎記録の作成に失敗しました: ${JSON.stringify(errors)}`)
       }
 
       const firstResult = deliveryResults[0]
       
-      console.log('配送記録作成結果:', firstResult)
+      console.log('送迎記録作成結果:', firstResult)
 
       // セッション情報を保存（複数利用者の情報を含める）
       const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
@@ -277,15 +277,15 @@ export default function LoginPage() {
       console.log('ドライバー画面に遷移します')
       router.push('/driver')
     } catch (error) {
-      console.error('配送開始エラー:', error)
+      console.error('送迎開始エラー:', error)
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
-      setError(`配送開始に失敗しました: ${errorMessage}`)
+      setError(`送迎開始に失敗しました: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // 既存の配送記録を削除して新しく作成
+  // 既存の送迎記録を削除して新しく作成
   const handleDeleteAndRecreate = async () => {
     setIsLoading(true)
     setError('')
@@ -297,14 +297,14 @@ export default function LoginPage() {
       }
       const deleteResult = await deleteDeliveryRecord(duplicateRecord.id)
       if (!deleteResult.success) {
-        throw new Error('既存の配送記録の削除に失敗しました')
+        throw new Error('既存の送迎記録の削除に失敗しました')
       }
       
       // ダイアログを閉じる
       setShowDuplicateDialog(false)
       setDuplicateRecord(null)
       
-      // 新しい配送記録を作成
+      // 新しい送迎記録を作成
       await handleStartDeliveryWithRecord()
     } catch (error) {
       console.error('削除・再作成エラー:', error)
@@ -748,10 +748,10 @@ export default function LoginPage() {
       {showDuplicateDialog && duplicateRecord && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">配送記録が既に存在します</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">送迎記録が既に存在します</h3>
             <div className="space-y-2 mb-6">
               <p className="text-sm text-gray-600">
-                同じ日付・ドライバー・ルートの配送記録が既に存在します。
+                同じ日付・ドライバー・ルートの送迎記録が既に存在します。
               </p>
               <div className="bg-gray-50 p-3 rounded text-sm">
                 <p><strong>日付:</strong> {duplicateRecord.delivery_date}</p>

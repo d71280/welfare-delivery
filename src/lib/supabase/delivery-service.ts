@@ -4,7 +4,7 @@ import type { TransportationRecordForm, TransportationDetailForm } from '@/types
 const supabase = createClient()
 
 /**
- * 既存の配送記録をチェック
+ * 既存の送迎記録をチェック
  */
 export async function checkExistingDeliveryRecord(
   transportationDate: string,
@@ -13,7 +13,7 @@ export async function checkExistingDeliveryRecord(
   routeId?: string
 ) {
   try {
-    console.log('既存配送記録チェック開始:', { transportationDate, driverId, userId, routeId })
+    console.log('既存送迎記録チェック開始:', { transportationDate, driverId, userId, routeId })
     
     let query = supabase
       .from('transportation_records')
@@ -29,30 +29,30 @@ export async function checkExistingDeliveryRecord(
     else if (userId) {
       query = query.like('special_notes', `%利用者ID: ${userId}%`)
     }
-    // 個別配送で複数利用者の場合は、同じ日付・ドライバーでも別レコードとして許可
+    // 個別送迎で複数利用者の場合は、同じ日付・ドライバーでも別レコードとして許可
     else {
-      // routeIdもuserIdもない場合は、個別配送として扱い重複チェックをスキップ
-      console.log('個別配送のため重複チェックをスキップ')
+      // routeIdもuserIdもない場合は、個別送迎として扱い重複チェックをスキップ
+      console.log('個別送迎のため重複チェックをスキップ')
       return { exists: false, record: null, error: null }
     }
 
     const { data, error } = await query.maybeSingle()
 
     if (error) {
-      console.error('既存配送記録チェックエラー:', error)
+      console.error('既存送迎記録チェックエラー:', error)
       return { exists: false, record: null, error }
     }
 
-    console.log('既存配送記録チェック結果:', { exists: !!data, record: data })
+    console.log('既存送迎記録チェック結果:', { exists: !!data, record: data })
     return { exists: !!data, record: data, error: null }
   } catch (error) {
-    console.error('既存配送記録チェックでエラー:', error)
+    console.error('既存送迎記録チェックでエラー:', error)
     return { exists: false, record: null, error }
   }
 }
 
 /**
- * 配送記録を削除
+ * 送迎記録を削除
  */
 export async function deleteDeliveryRecord(deliveryRecordId: string) {
   try {
@@ -62,14 +62,14 @@ export async function deleteDeliveryRecord(deliveryRecordId: string) {
       .eq('id', deliveryRecordId)
 
     if (error) {
-      console.error('配送記録削除エラー:', error)
+      console.error('送迎記録削除エラー:', error)
       return { success: false, error }
     }
 
-    console.log('配送記録削除成功:', deliveryRecordId)
+    console.log('送迎記録削除成功:', deliveryRecordId)
     return { success: true, error: null }
   } catch (error) {
-    console.error('配送記録削除でエラー:', error)
+    console.error('送迎記録削除でエラー:', error)
     return { success: false, error }
   }
 }
@@ -98,17 +98,17 @@ export async function getVehicleCurrentOdometer(vehicleId: string): Promise<numb
 }
 
 /**
- * 配送記録を作成（開始走行距離を自動設定）
+ * 送迎記録を作成（開始走行距離を自動設定）
  */
 export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
-    console.log('配送記録作成開始:', formData)
+    console.log('送迎記録作成開始:', formData)
     
-    // 個別配送の場合は重複チェックをスキップ
+    // 個別送迎の場合は重複チェックをスキップ
     if (formData.transportationType === 'individual') {
-      console.log('個別配送のため重複チェックをスキップします')
+      console.log('個別送迎のため重複チェックをスキップします')
     } else {
-      // 既存の配送記録をチェック
+      // 既存の送迎記録をチェック
       const existingCheck = await checkExistingDeliveryRecord(
         formData.transportationDate,
         formData.driverId,
@@ -117,11 +117,11 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       )
       
       if (existingCheck.exists) {
-        console.log('既存の配送記録が見つかりました:', existingCheck.record)
+        console.log('既存の送迎記録が見つかりました:', existingCheck.record)
         return { 
           data: null, 
           error: { 
-            message: '同じ日付・ドライバー・ルートの配送記録が既に存在します',
+            message: '同じ日付・ドライバー・ルートの送迎記録が既に存在します',
             code: 'DUPLICATE_DELIVERY',
             existingRecord: existingCheck.record
           }
@@ -147,12 +147,12 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       status: 'pending'
     }
 
-    // route_idは個別配送では省略
+    // route_idは個別送迎では省略
     if (formData.routeId) {
       deliveryData.route_id = formData.routeId
     }
 
-    console.log('挿入する配送データ:', deliveryData)
+    console.log('挿入する送迎データ:', deliveryData)
 
     const { data, error } = await supabase
       .from('transportation_records')
@@ -165,16 +165,16 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       throw error
     }
     
-    console.log('配送記録作成成功:', data)
+    console.log('送迎記録作成成功:', data)
     return { data, error: null }
   } catch (error) {
-    console.error('配送記録の作成に失敗:', error)
+    console.error('送迎記録の作成に失敗:', error)
     return { data: null, error }
   }
 }
 
 /**
- * 配送記録を完了し、車両の現在走行距離を更新
+ * 送迎記録を完了し、車両の現在走行距離を更新
  */
 export async function completeDeliveryRecord(
   deliveryRecordId: string, 
@@ -207,13 +207,13 @@ export async function completeDeliveryRecord(
 
     return { data: deliveryData, error: null }
   } catch (error) {
-    console.error('配送記録の完了処理に失敗:', error)
+    console.error('送迎記録の完了処理に失敗:', error)
     return { data: null, error }
   }
 }
 
 /**
- * 配送記録の走行距離を更新
+ * 送迎記録の走行距離を更新
  */
 export async function updateDeliveryOdometer(
   deliveryRecordId: string,
@@ -241,7 +241,7 @@ export async function updateDeliveryOdometer(
 }
 
 /**
- * 配送詳細を作成
+ * 送迎詳細を作成
  */
 export async function createDeliveryDetails(
   deliveryRecordId: string,
@@ -270,7 +270,7 @@ export async function createDeliveryDetails(
     if (error) throw error
     return { data, error: null }
   } catch (error) {
-    console.error('配送詳細の作成に失敗:', error)
+    console.error('送迎詳細の作成に失敗:', error)
     return { data: null, error }
   }
 }
@@ -305,7 +305,7 @@ export async function updateVehicleOdometer(
 }
 
 /**
- * 配送記録に時間を記録
+ * 送迎記録に時間を記録
  */
 export async function updateDeliveryTime(
   deliveryRecordId: string,
@@ -348,7 +348,7 @@ export async function updateDeliveryTime(
     if (error) throw error
     return { data, error: null }
   } catch (error) {
-    console.error('配送時間の更新に失敗:', error)
+    console.error('送迎時間の更新に失敗:', error)
     return { data: null, error }
   }
 } 

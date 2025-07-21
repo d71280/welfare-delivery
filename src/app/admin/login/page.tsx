@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState('')
+  const [loginInput, setLoginInput] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,16 +19,16 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
-      // データベースで管理者認証
+      // メールアドレスまたはユーザー名でログインを試行
       const { data: admin, error: adminError } = await supabase
         .from('admins')
-        .select('id, username, password, organization_id')
-        .eq('username', username)
+        .select('id, username, email, password, organization_id')
+        .or(`username.eq.${loginInput},email.eq.${loginInput}`)
         .eq('password', password)
         .single()
 
       if (adminError || !admin) {
-        throw new Error('ユーザー名またはパスワードが正しくありません')
+        throw new Error('メールアドレス/ユーザー名またはパスワードが正しくありません')
       }
 
       // セッション情報をローカルストレージに保存
@@ -36,6 +36,7 @@ export default function AdminLoginPage() {
         adminId: admin.id,
         role: 'admin',
         username: admin.username,
+        email: admin.email,
         organizationId: admin.organization_id,
         loginTime: new Date().toISOString()
       }
@@ -58,23 +59,23 @@ export default function AdminLoginPage() {
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            配送管理システム
+            送迎管理システム
           </h1>
           <p className="text-gray-600">管理者ログイン</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* ユーザー名入力 */}
+          {/* メールアドレス/ユーザー名入力 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ユーザー名
+              メールアドレス / ユーザー名
             </label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={loginInput}
+              onChange={(e) => setLoginInput(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="管理者ユーザー名を入力"
+              placeholder="メールアドレスまたはユーザー名を入力"
               required
             />
           </div>
@@ -104,7 +105,7 @@ export default function AdminLoginPage() {
           {/* ログインボタン */}
           <button
             type="submit"
-            disabled={isLoading || !username || !password}
+            disabled={isLoading || !loginInput || !password}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
           >
             {isLoading ? '処理中...' : 'ログイン'}

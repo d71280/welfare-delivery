@@ -59,7 +59,7 @@ export default function DeliveryDetailPage() {
       minute: '2-digit' 
     }))
 
-    // 配送記録を取得
+    // 送迎記録を取得
     fetchDeliveryRecord()
   }, [router, deliveryId])
 
@@ -104,7 +104,7 @@ export default function DeliveryDetailPage() {
         fetchOrganization(record.management_code_id)
       ])
     } catch (err) {
-      console.error('配送記録取得エラー:', err)
+      console.error('送迎記録取得エラー:', err)
     } finally {
       setIsLoading(false)
     }
@@ -371,9 +371,9 @@ export default function DeliveryDetailPage() {
           </div>
         )}
 
-        {/* 配送ステータス */}
+        {/* 送迎ステータス */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">配送ステータス</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">送迎ステータス</h2>
           
           {/* 開始セクション */}
           <div className="border-b pb-4 mb-4">
@@ -382,7 +382,7 @@ export default function DeliveryDetailPage() {
                 <div className={`w-4 h-4 rounded-full mr-3 ${
                   isStarted ? 'bg-green-500' : 'bg-gray-300'
                 }`}></div>
-                <span className="text-gray-900 font-medium">配送開始</span>
+                <span className="text-gray-900 font-medium">送迎開始</span>
               </div>
               {startTime && (
                 <span className="text-lg font-mono font-bold text-blue-600">
