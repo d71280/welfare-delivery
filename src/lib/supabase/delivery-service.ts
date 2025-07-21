@@ -29,6 +29,12 @@ export async function checkExistingDeliveryRecord(
     else if (userId) {
       query = query.like('special_notes', `%利用者ID: ${userId}%`)
     }
+    // 個別配送で複数利用者の場合は、同じ日付・ドライバーでも別レコードとして許可
+    else {
+      // routeIdもuserIdもない場合は、個別配送として扱い重複チェックをスキップ
+      console.log('個別配送のため重複チェックをスキップ')
+      return { exists: false, record: null, error: null }
+    }
 
     const { data, error } = await query.maybeSingle()
 
