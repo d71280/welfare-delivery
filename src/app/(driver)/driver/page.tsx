@@ -13,6 +13,7 @@ interface DriverSession {
   loginTime: string
   selectedUsers?: string[]
   userNames?: string
+  selectedAddresses?: {[userId: string]: string}
 }
 
 interface DeliveryItem {
@@ -42,6 +43,7 @@ export default function DriverPage() {
     companionRelationship: string
   }}>({})
   const [showSafetyForm, setShowSafetyForm] = useState<{[key: string]: boolean}>({})
+  const [userAddressNames, setUserAddressNames] = useState<{[addressId: string]: string}>({})
 
   const router = useRouter()
   const supabase = createClient()
@@ -67,7 +69,34 @@ export default function DriverPage() {
 
     // 今日の送迎記録を取得
     fetchTodayDeliveries(parsedSession.driverId)
+    
+    // 選択された住所の名前を取得
+    if (parsedSession.selectedAddresses) {
+      fetchAddressNames(parsedSession.selectedAddresses)
+    }
   }, [router])
+
+  const fetchAddressNames = async (selectedAddresses: {[userId: string]: string}) => {
+    try {
+      const addressIds = Object.values(selectedAddresses)
+      if (addressIds.length === 0) return
+
+      const { data: addresses } = await supabase
+        .from('user_addresses')
+        .select('id, address_name, address')
+        .in('id', addressIds)
+
+      if (addresses) {
+        const addressNameMap: {[addressId: string]: string} = {}
+        addresses.forEach(addr => {
+          addressNameMap[addr.id] = `${addr.address_name}: ${addr.address}`
+        })
+        setUserAddressNames(addressNameMap)
+      }
+    } catch (error) {
+      console.error('住所名取得エラー:', error)
+    }
+  }
 
   const fetchTodayDeliveries = async (driverId: string) => {
     try {
@@ -992,7 +1021,11 @@ export default function DriverPage() {
                       <div className="grid grid-cols-1 gap-2">
                         <div>
                           <span className="text-sm text-gray-600">住所:</span>
-                          <p className="text-sm">{delivery.user.address}</p>
+                          <p className="text-sm">
+                            {session?.selectedAddresses && delivery.user?.id && session.selectedAddresses[delivery.user.id] 
+                              ? userAddressNames[session.selectedAddresses[delivery.user.id]] || '選択された住所'
+                              : delivery.user?.address || '住所不明'}
+                          </p>
                         </div>
                         {delivery.user.wheelchair_user && (
                           <div className="flex items-center">

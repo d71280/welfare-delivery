@@ -20,6 +20,8 @@ export default function LoginPage() {
   const [currentTime, setCurrentTime] = useState('')
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [userAddresses, setUserAddresses] = useState<{[userId: string]: any[]}>({})
+  const [selectedAddresses, setSelectedAddresses] = useState<{[userId: string]: string}>({})
   const [managementCode, setManagementCode] = useState('')
   const [codeVerified, setCodeVerified] = useState(false)
   const [currentManagementCodeId, setCurrentManagementCodeId] = useState<string | null>(null)
@@ -46,7 +48,29 @@ export default function LoginPage() {
         
         if (driversRes.data) setDrivers(driversRes.data)
         if (vehiclesRes.data) setVehicles(vehiclesRes.data)
-        if (usersRes.data) setUsers(usersRes.data)
+        if (usersRes.data) {
+          setUsers(usersRes.data)
+          
+          // 各利用者の住所情報を取得
+          const addressPromises = usersRes.data.map(async (user: User) => {
+            const { data: addresses } = await supabase
+              .from('user_addresses')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('is_active', true)
+              .order('display_order')
+            return { userId: user.id, addresses: addresses || [] }
+          })
+          
+          const addressResults = await Promise.all(addressPromises)
+          const addressMap: {[userId: string]: any[]} = {}
+          
+          addressResults.forEach(({ userId, addresses }) => {
+            addressMap[userId] = addresses
+          })
+          
+          setUserAddresses(addressMap)
+        }
       } catch (err) {
         console.error('データ取得エラー:', err)
         // エラー時はダミーデータを設定
@@ -268,6 +292,7 @@ export default function LoginPage() {
         vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no || '',
         selectedUsers,
         userNames: selectedUserNames,
+        selectedAddresses,
         deliveryRecordIds,
         startOdometer,
         loginTime: new Date().toISOString(),
@@ -345,7 +370,8 @@ export default function LoginPage() {
         loginTime: new Date().toISOString(),
         startTime: startTime,
         selectedUsers: selectedUsers,
-        userNames: selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
+        userNames: selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', '),
+        selectedAddresses
       }
       
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
@@ -610,16 +636,19 @@ export default function LoginPage() {
               </label>
               <div className="grid gap-4">
                 {users.map((user) => (
-                  <button
+                  <div
                     key={user.id}
-                    type="button"
-                    onClick={() => handleUserSelect(user.id)}
-                    className={`p-4 border-2 rounded-xl text-left transition-all ${
+                    className={`p-4 border-2 rounded-xl transition-all ${
                       selectedUsers.includes(user.id)
                         ? 'border-blue-500 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                        : 'border-gray-200 bg-white'
                     }`}
                   >
+                    <button
+                      type="button"
+                      onClick={() => handleUserSelect(user.id)}
+                      className="w-full text-left"
+                    >
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                         user.wheelchair_user ? 'bg-purple-100' : 'bg-blue-100'
@@ -649,7 +678,33 @@ export default function LoginPage() {
                         </div>
                       )}
                     </div>
-                  </button>
+                    </button>
+                    
+                    {/* 住所選択（選択された利用者のみ表示） */}
+                    {selectedUsers.includes(user.id) && userAddresses[user.id] && userAddresses[user.id].length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <label className="block text-sm font-medium text-blue-800 mb-2">
+                          📍 送迎住所を選択:
+                        </label>
+                        <select
+                          value={selectedAddresses[user.id] || ''}
+                          onChange={(e) => setSelectedAddresses(prev => ({
+                            ...prev,
+                            [user.id]: e.target.value
+                          }))}
+                          className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">住所を選択してください</option>
+                          {userAddresses[user.id].map((address) => (
+                            <option key={address.id} value={address.id}>
+                              {address.address_name}: {address.address}
+                              {address.is_primary && ' (メイン)'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
               <p className="text-gray-600 text-sm mt-4">⚠️ 複数の利用者様を選択できます。体調と安全を最優先にお送りください</p>
