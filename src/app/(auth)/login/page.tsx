@@ -276,6 +276,10 @@ export default function LoginPage() {
         throw new Error(`送迎記録の作成に失敗しました: ${errorMessage}`)
       }
 
+      if (!result.data) {
+        throw new Error('送迎記録の作成に失敗しました: データが取得できませんでした')
+      }
+
       const deliveryResults = [result]
       const firstResult = result
       
