@@ -109,6 +109,7 @@ export interface TransportationRecordForm {
   specialNotes?: string
   managementCodeId?: string | null
   selectedUsers?: string[] // 往復送迎で選択された利用者リスト
+  selectedAddresses?: {[userId: string]: string} // 選択された住所情報 (利用者ID -> 住所ID)
   
   // 基本的な記録事項
   departureTime?: string  // 出発時刻
