@@ -9,11 +9,10 @@ const supabase = createClient()
 export async function checkExistingDeliveryRecord(
   transportationDate: string,
   driverId: string,
-  userId?: string,
-  routeId?: string
+  vehicleId?: string
 ) {
   try {
-    console.log('既存送迎記録チェック開始:', { transportationDate, driverId, userId, routeId })
+    console.log('既存送迎記録チェック開始:', { transportationDate, driverId, vehicleId })
     
     let query = supabase
       .from('transportation_records')
@@ -21,19 +20,9 @@ export async function checkExistingDeliveryRecord(
       .eq('transportation_date', transportationDate)
       .eq('driver_id', driverId)
 
-    // route-based delivery の場合
-    if (routeId) {
-      query = query.eq('route_id', routeId)
-    }
-    // user-based delivery の場合は、special_notesで判定（簡易的な実装）
-    else if (userId) {
-      query = query.like('special_notes', `%利用者ID: ${userId}%`)
-    }
-    // 個別送迎で複数利用者の場合は、同じ日付・ドライバーでも別レコードとして許可
-    else {
-      // routeIdもuserIdもない場合は、個別送迎として扱い重複チェックをスキップ
-      console.log('個別送迎のため重複チェックをスキップ')
-      return { exists: false, record: null, error: null }
+    // 車両IDでの重複チェック
+    if (vehicleId) {
+      query = query.eq('vehicle_id', vehicleId)
     }
 
     const { data, error } = await query.maybeSingle()
@@ -104,27 +93,21 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
     console.log('送迎記録作成開始:', formData)
     
-    // 個別送迎の場合は重複チェックをスキップ
-    if (formData.transportationType === 'individual') {
-      console.log('個別送迎のため重複チェックをスキップします')
-    } else {
-      // 既存の送迎記録をチェック
-      const existingCheck = await checkExistingDeliveryRecord(
-        formData.transportationDate,
-        formData.driverId,
-        formData.userId,
-        formData.routeId
-      )
-      
-      if (existingCheck.exists) {
-        console.log('既存の送迎記録が見つかりました:', existingCheck.record)
-        return { 
-          data: null, 
-          error: { 
-            message: '同じ日付・ドライバー・ルートの送迎記録が既に存在します',
-            code: 'DUPLICATE_DELIVERY',
-            existingRecord: existingCheck.record
-          }
+    // 重複チェック（往復送迎の場合も実行）
+    const existingCheck = await checkExistingDeliveryRecord(
+      formData.transportationDate,
+      formData.driverId,
+      formData.vehicleId // ルートIDの代わりに車両IDを使用
+    )
+    
+    if (existingCheck.exists) {
+      console.log('既存の送迎記録が見つかりました:', existingCheck.record)
+      return { 
+        data: null, 
+        error: { 
+          message: '同じ日付・ドライバー・車両の送迎記録が既に存在します',
+          code: 'DUPLICATE_DELIVERY',
+          existingRecord: existingCheck.record
         }
       }
     }

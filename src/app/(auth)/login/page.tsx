@@ -207,6 +207,12 @@ export default function LoginPage() {
 
   // 送迎開始処理
   const handleStartDeliveryWithRecord = async () => {
+    // 既に処理中の場合は何もしない（重複クリック防止）
+    if (isLoading) {
+      console.log('既に処理中のため、リクエストを無視します')
+      return
+    }
+
     if (!selectedDriver || !selectedVehicle || selectedUsers.length === 0) {
       setError('ドライバー、車両、利用者を選択してください')
       return
@@ -222,35 +228,28 @@ export default function LoginPage() {
       console.log('選択された利用者:', selectedUsers)
       console.log('開始走行距離:', startOdometer)
 
-      // 複数利用者に対して個別の送迎記録を作成
-      const deliveryResults = []
+      // 1件の往復送迎記録として作成
+      const deliveryData = {
+        driverId: selectedDriver,
+        vehicleId: selectedVehicle,
+        transportationDate: new Date().toISOString().split('T')[0],
+        transportationType: 'round_trip' as const,
+        passengerCount: selectedUsers.length,
+        specialNotes: `往復送迎 - 利用者${selectedUsers.length}名`,
+        managementCodeId: currentManagementCodeId,
+        selectedUsers: selectedUsers // 利用者リストを渡す
+      }
+
+      console.log('送迎データ:', deliveryData)
+      const result = await createDeliveryRecord(deliveryData)
       
-      for (let i = 0; i < selectedUsers.length; i++) {
-        const userId = selectedUsers[i]
-        const deliveryData = {
-          driverId: selectedDriver,
-          vehicleId: selectedVehicle,
-          transportationDate: new Date().toISOString().split('T')[0],
-          transportationType: 'individual' as const,
-          passengerCount: 1,
-          specialNotes: `利用者ID: ${userId} - 複数利用者送迎 (${selectedUsers.length}名中の${i + 1}番目)`,
-          managementCodeId: currentManagementCodeId
-        }
-
-        console.log('送迎データ:', deliveryData)
-        const result = await createDeliveryRecord(deliveryData)
-        deliveryResults.push(result)
+      if (result.error) {
+        console.error('送迎記録作成エラー:', result.error)
+        throw new Error(`送迎記録の作成に失敗しました: ${result.error}`)
       }
 
-      // すべての送迎記録作成が成功したかチェック
-      const hasError = deliveryResults.some(result => result.error)
-      if (hasError) {
-        const errors = deliveryResults.filter(result => result.error).map(result => result.error)
-        console.error('送迎記録作成エラー:', errors)
-        throw new Error(`送迎記録の作成に失敗しました: ${JSON.stringify(errors)}`)
-      }
-
-      const firstResult = deliveryResults[0]
+      const deliveryResults = [result]
+      const firstResult = result
       
       console.log('送迎記録作成結果:', firstResult)
 
@@ -280,8 +279,15 @@ export default function LoginPage() {
       console.log('=== ログイン時セッションデータ作成終了 ===')
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
       
-      console.log('ドライバー画面に遷移します')
-      router.push('/driver')
+      // 送迎完了ページにリダイレクト
+      const recordId = firstResult.data?.id
+      if (recordId) {
+        console.log('送迎完了ページに遷移します。記録ID:', recordId)
+        router.push(`/transportation-complete?recordId=${recordId}`)
+      } else {
+        console.log('記録IDが取得できないため、ドライバー画面に遷移します')
+        router.push('/driver')
+      }
     } catch (error) {
       console.error('送迎開始エラー:', error)
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'

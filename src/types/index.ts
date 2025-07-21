@@ -60,13 +60,14 @@ export interface TransportationRecordForm {
   routeId?: string
   userId?: string
   transportationDate: string
-  transportationType: 'regular' | 'medical' | 'emergency' | 'outing' | 'individual'
+  transportationType: 'regular' | 'medical' | 'emergency' | 'outing' | 'individual' | 'round_trip'
   startOdometer?: number
   endOdometer?: number
   passengerCount?: number
   weatherCondition?: string
   specialNotes?: string
   managementCodeId?: string | null
+  selectedUsers?: string[] // 往復送迎で選択された利用者リスト
   
   // 基本的な記録事項
   departureTime?: string  // 出発時刻
