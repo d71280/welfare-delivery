@@ -172,7 +172,13 @@ export default function DriversManagementPage() {
 
         if (error) {
           console.error('作成エラー:', error)
-          alert('登録に失敗しました: ' + (error.message || String(error)))
+          if (error.code === '23505' && error.message.includes('employee_no')) {
+            alert('この社員番号は既に使用されています。別の社員番号を入力してください。')
+          } else if (error.message.includes('management_code_id')) {
+            alert('管理コードの設定に問題があります。システム管理者にお問い合わせください。')
+          } else {
+            alert('登録に失敗しました: ' + (error.message || String(error)))
+          }
           return
         }
         alert('新しいドライバーを登録しました')
