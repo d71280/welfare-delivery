@@ -18,6 +18,7 @@ interface DriverSession {
 interface DeliveryItem {
   record: TransportationRecord
   user: User | null
+  detail?: any // transportation_details record
 }
 
 export default function DriverPage() {
@@ -76,37 +77,57 @@ export default function DriverPage() {
         .select('*')
         .eq('driver_id', driverId)
         .eq('transportation_date', today)
-        .eq('transportation_type', 'individual')
+        .in('transportation_type', ['individual', 'regular', 'round_trip'])
         .order('created_at', { ascending: true })
 
       if (error) throw error
 
-      // 各送迎記録に対応する利用者情報を取得
+      // 各送迎記録に対応する利用者詳細情報を取得
       const deliveryItems: DeliveryItem[] = []
       
       for (const record of records || []) {
-        let user: User | null = null
+        // transportation_detailsから利用者情報を取得
+        const { data: details } = await supabase
+          .from('transportation_details')
+          .select(`
+            *,
+            users (*)
+          `)
+          .eq('transportation_record_id', record.id)
         
-        // special_notesから利用者IDを抽出
-        if (record.special_notes) {
-          const match = record.special_notes.match(/利用者ID: ([a-f0-9-]+)/)
-          if (match) {
-            const userId = match[1]
-            try {
-              const { data: userData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single()
-              
-              user = userData
-            } catch (userErr) {
-              console.error('利用者取得エラー:', userErr)
+        if (details && details.length > 0) {
+          // 各詳細記録を個別の配送アイテムとして追加
+          for (const detail of details) {
+            deliveryItems.push({ 
+              record, 
+              user: detail.users as User | null,
+              detail: detail
+            })
+          }
+        } else {
+          // 詳細記録がない場合（旧形式）はspecial_notesから取得
+          let user: User | null = null
+          
+          if (record.special_notes) {
+            const match = record.special_notes.match(/利用者ID: ([a-f0-9-]+)/)
+            if (match) {
+              const userId = match[1]
+              try {
+                const { data: userData } = await supabase
+                  .from('users')
+                  .select('*')
+                  .eq('id', userId)
+                  .single()
+                
+                user = userData
+              } catch (userErr) {
+                console.error('利用者取得エラー:', userErr)
+              }
             }
           }
+          
+          deliveryItems.push({ record, user })
         }
-        
-        deliveryItems.push({ record, user })
       }
 
       // 選択順序で並び替え（special_notesの番号を使用）

@@ -149,6 +149,37 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     }
     
     console.log('送迎記録作成成功:', data)
+    
+    // 往復送迎の場合、選択された利用者の詳細記録を作成
+    if (formData.selectedUsers && formData.selectedUsers.length > 0) {
+      console.log('利用者詳細記録を作成中:', formData.selectedUsers)
+      
+      for (const userId of formData.selectedUsers) {
+        const detailData = {
+          transportation_record_id: data.id,
+          user_id: userId,
+          destination_id: null, // 往復送迎では目的地は未設定
+          pickup_time: null,
+          arrival_time: null,
+          departure_time: null,
+          drop_off_time: null,
+          health_condition: null,
+          behavior_notes: null,
+          assistance_required: null,
+          remarks: null
+        }
+        
+        const { error: detailError } = await supabase
+          .from('transportation_details')
+          .insert([detailData])
+        
+        if (detailError) {
+          console.error('利用者詳細記録作成エラー:', detailError)
+          // エラーがあっても継続（部分的成功）
+        }
+      }
+    }
+    
     return { data, error: null }
   } catch (error) {
     console.error('送迎記録の作成に失敗:', error)
