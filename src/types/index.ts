@@ -66,7 +66,7 @@ export interface TransportationRecordForm {
   passengerCount?: number
   weatherCondition?: string
   specialNotes?: string
-  managementCodeId?: string
+  managementCodeId?: string | null
   
   // 基本的な記録事項
   departureTime?: string  // 出発時刻
