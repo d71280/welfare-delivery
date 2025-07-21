@@ -17,6 +17,7 @@ export interface Database {
           email: string | null
           pin_code: string | null
           driver_license_number: string | null
+          management_code_id: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -28,6 +29,7 @@ export interface Database {
           email?: string | null
           pin_code?: string | null
           driver_license_number?: string | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -39,6 +41,7 @@ export interface Database {
           email?: string | null
           pin_code?: string | null
           driver_license_number?: string | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -55,6 +58,7 @@ export interface Database {
           wheelchair_accessible: boolean
           current_odometer: number | null
           last_oil_change_odometer: number | null
+          management_code_id: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -69,6 +73,7 @@ export interface Database {
           wheelchair_accessible?: boolean
           current_odometer?: number | null
           last_oil_change_odometer?: number | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -83,6 +88,7 @@ export interface Database {
           wheelchair_accessible?: boolean
           current_odometer?: number | null
           last_oil_change_odometer?: number | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -175,6 +181,7 @@ export interface Database {
           emergency_phone: string | null
           wheelchair_user: boolean
           special_notes: string | null
+          management_code_id: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -189,6 +196,7 @@ export interface Database {
           emergency_phone?: string | null
           wheelchair_user?: boolean
           special_notes?: string | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -203,6 +211,7 @@ export interface Database {
           emergency_phone?: string | null
           wheelchair_user?: boolean
           special_notes?: string | null
+          management_code_id?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string

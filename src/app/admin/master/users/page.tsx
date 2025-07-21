@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { User, UserInsert, UserUpdate } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 
@@ -18,39 +19,135 @@ export default function UsersPage() {
     emergency_phone: '',
     wheelchair_user: false,
     special_notes: '',
+    management_code_id: '',
     is_active: true
   })
 
+  const [availableManagementCodes, setAvailableManagementCodes] = useState<{id: string, code: string, name: string}[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  
+  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
+    // 管理者セッション確認
+    const sessionData = localStorage.getItem('adminSession')
+    if (!sessionData) {
+      router.push('/admin/login')
+      return
+    }
+    
     fetchUsers()
-  }, [])
+    fetchManagementCodes()
+  }, [router])
+
+  const fetchManagementCodes = async () => {
+    try {
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) return
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      const { data, error } = await supabase
+        .from('management_codes')
+        .select('id, code, name')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .order('name')
+      
+      if (error) {
+        console.error('管理コード取得エラー:', error)
+        return
+      }
+      
+      setAvailableManagementCodes(data || [])
+    } catch (error) {
+      console.error('管理コード取得エラー:', error)
+    }
+  }
 
   const fetchUsers = async () => {
     try {
+      setLoading(true)
+      
+      // 管理者セッションから管理コードIDを取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) {
+        router.push('/admin/login')
+        return
+      }
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      // 管理コードIDを取得
+      const { data: managementCodes, error: mgmtError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+      
+      if (mgmtError || !managementCodes?.length) {
+        console.error('管理コード取得エラー:', mgmtError)
+        setUsers([])
+        return
+      }
+      
+      const managementCodeIds = managementCodes.map(code => code.id)
+      
+      // 管理コードでフィルタリングして利用者を取得
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .order('user_no')
+        .in('management_code_id', managementCodeIds)
+        .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('利用者取得エラー:', error)
+        return
+      }
+
       setUsers(data || [])
     } catch (error) {
-      console.error('利用者の取得に失敗しました:', error)
+      console.error('利用者取得エラー:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+    
+    if (!formData.user_no?.trim()) {
+      newErrors.user_no = '利用者番号は必須です'
+    }
+    
+    if (!formData.name?.trim()) {
+      newErrors.name = '名前は必須です'
+    }
+    
+    if (!formData.management_code_id) {
+      newErrors.management_code_id = '管理コードは必須です'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
     
     try {
       if (editingUser) {
         const { error } = await supabase
           .from('users')
-          .update(formData as UserUpdate)
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString()
+          } as UserUpdate)
           .eq('id', editingUser.id)
         
         if (error) {
@@ -91,6 +188,7 @@ export default function UsersPage() {
       emergency_phone: user.emergency_phone || '',
       wheelchair_user: user.wheelchair_user,
       special_notes: user.special_notes || '',
+      management_code_id: user.management_code_id || '',
       is_active: user.is_active
     })
     setIsFormOpen(true)
@@ -128,10 +226,12 @@ export default function UsersPage() {
       emergency_phone: '',
       wheelchair_user: false,
       special_notes: '',
+      management_code_id: '',
       is_active: true
     })
     setEditingUser(null)
     setIsFormOpen(false)
+    setErrors({})
   }
 
   if (loading) {
@@ -183,6 +283,9 @@ export default function UsersPage() {
                     placeholder="例: U001"
                     required
                   />
+                  {errors.user_no && (
+                    <p className="text-red-500 text-sm mt-1">{errors.user_no}</p>
+                  )}
                 </div>
                 <div className="welfare-filter-item">
                   <label>👤 お名前 <span className="text-red-500">*</span></label>
@@ -194,6 +297,9 @@ export default function UsersPage() {
                     placeholder="例: 山田太郎"
                     required
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                  )}
                 </div>
                 <div className="welfare-filter-item">
                   <label>📞 電話番号</label>
@@ -234,6 +340,28 @@ export default function UsersPage() {
                     className="welfare-input"
                     placeholder="例: 山田花子（ご家族など）"
                   />
+                  {errors.emergency_phone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.emergency_phone}</p>
+                  )}
+                </div>
+                <div className="welfare-filter-item">
+                  <label>🔑 管理コード <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.management_code_id || ''}
+                    onChange={(e) => setFormData({ ...formData, management_code_id: e.target.value })}
+                    className="welfare-select"
+                    required
+                  >
+                    <option value="">管理コードを選択してください</option>
+                    {availableManagementCodes.map((code) => (
+                      <option key={code.id} value={code.id}>
+                        {code.code} - {code.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.management_code_id && (
+                    <p className="text-red-500 text-sm mt-1">{errors.management_code_id}</p>
+                  )}
                 </div>
               </div>
 

@@ -14,8 +14,10 @@ export default function DriversManagementPage() {
     name: '',
     employee_no: '',
     email: '',
-    is_active: true
+    is_active: true,
+    management_code_id: ''
   })
+  const [availableManagementCodes, setAvailableManagementCodes] = useState<{id: string, code: string, name: string}[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   
   const router = useRouter()
@@ -30,14 +32,67 @@ export default function DriversManagementPage() {
     }
     
     fetchDrivers()
+    fetchManagementCodes()
   }, [router])
+
+  const fetchManagementCodes = async () => {
+    try {
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) return
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      const { data, error } = await supabase
+        .from('management_codes')
+        .select('id, code, name')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .order('name')
+      
+      if (error) {
+        console.error('管理コード取得エラー:', error)
+        return
+      }
+      
+      setAvailableManagementCodes(data || [])
+    } catch (error) {
+      console.error('管理コード取得エラー:', error)
+    }
+  }
 
   const fetchDrivers = async () => {
     try {
       setIsLoading(true)
+      
+      // 管理者セッションから管理コードIDを取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) {
+        router.push('/admin/login')
+        return
+      }
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      // 管理コードIDを取得
+      const { data: managementCodes, error: mgmtError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+      
+      if (mgmtError || !managementCodes?.length) {
+        console.error('管理コード取得エラー:', mgmtError)
+        setDrivers([])
+        return
+      }
+      
+      const managementCodeIds = managementCodes.map(code => code.id)
+      
+      // 管理コードでフィルタリングしてドライバーを取得
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
+        .in('management_code_id', managementCodeIds)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -62,6 +117,10 @@ export default function DriversManagementPage() {
     
     if (!formData.employee_no.trim()) {
       newErrors.employee_no = '社員番号は必須です'
+    }
+    
+    if (!formData.management_code_id) {
+      newErrors.management_code_id = '管理コードは必須です'
     }
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -100,14 +159,15 @@ export default function DriversManagementPage() {
         }
         alert('ドライバー情報を更新しました')
       } else {
-        // 新規作成
+        // 新規作成 - 選択された管理コードを使用
         const { error } = await supabase
           .from('drivers')
           .insert([{
             name: formData.name,
             employee_no: formData.employee_no,
             email: formData.email || null,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            management_code_id: formData.management_code_id
           }])
 
         if (error) {
@@ -123,7 +183,8 @@ export default function DriversManagementPage() {
         name: '',
         employee_no: '',
         email: '',
-        is_active: true
+        is_active: true,
+        management_code_id: ''
       })
       setEditingDriver(null)
       setShowForm(false)
@@ -140,7 +201,8 @@ export default function DriversManagementPage() {
       name: driver.name,
       employee_no: driver.employee_no,
       email: driver.email || '',
-      is_active: driver.is_active
+      is_active: driver.is_active,
+      management_code_id: driver.management_code_id || ''
     })
     setShowForm(true)
   }
@@ -175,7 +237,8 @@ export default function DriversManagementPage() {
       name: '',
       employee_no: '',
       email: '',
-      is_active: true
+      is_active: true,
+      management_code_id: ''
     })
     setEditingDriver(null)
     setShowForm(false)
@@ -256,6 +319,26 @@ export default function DriversManagementPage() {
                   />
                   {errors.employee_no && (
                     <p className="text-red-500 text-sm mt-1">{errors.employee_no}</p>
+                  )}
+                </div>
+
+                <div className="welfare-filter-item">
+                  <label>🔑 管理コード <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.management_code_id}
+                    onChange={(e) => setFormData({...formData, management_code_id: e.target.value})}
+                    className="welfare-select"
+                    required
+                  >
+                    <option value="">管理コードを選択してください</option>
+                    {availableManagementCodes.map((code) => (
+                      <option key={code.id} value={code.id}>
+                        {code.code} - {code.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.management_code_id && (
+                    <p className="text-red-500 text-sm mt-1">{errors.management_code_id}</p>
                   )}
                 </div>
 

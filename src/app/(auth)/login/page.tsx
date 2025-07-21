@@ -51,9 +51,9 @@ export default function LoginPage() {
         console.error('データ取得エラー:', err)
         // エラー時はダミーデータを設定
         setDrivers([
-          { id: '1', name: '田中太郎', employee_no: 'D001', email: '', pin_code: '1234', driver_license_number: null, is_active: true, created_at: '', updated_at: '' },
-          { id: '2', name: '佐藤花子', employee_no: 'D002', email: '', pin_code: '5678', driver_license_number: null, is_active: true, created_at: '', updated_at: '' },
-          { id: '3', name: '山田次郎', employee_no: 'D003', email: '', pin_code: '9012', driver_license_number: null, is_active: true, created_at: '', updated_at: '' }
+          { id: '1', name: '田中太郎', employee_no: 'D001', email: '', pin_code: '1234', driver_license_number: null, management_code_id: null, is_active: true, created_at: '', updated_at: '' },
+          { id: '2', name: '佐藤花子', employee_no: 'D002', email: '', pin_code: '5678', driver_license_number: null, management_code_id: null, is_active: true, created_at: '', updated_at: '' },
+          { id: '3', name: '山田次郎', employee_no: 'D003', email: '', pin_code: '9012', driver_license_number: null, management_code_id: null, is_active: true, created_at: '', updated_at: '' }
         ])
         setVehicles([
           { 
@@ -65,7 +65,8 @@ export default function LoginPage() {
             fuel_type: 'ガソリン', 
             wheelchair_accessible: false,
             current_odometer: 15000,
-            last_oil_change_odometer: 12000, 
+            last_oil_change_odometer: 12000,
+            management_code_id: null, 
             is_active: true, 
             created_at: '', 
             updated_at: '' 
@@ -79,7 +80,8 @@ export default function LoginPage() {
             fuel_type: 'ガソリン', 
             wheelchair_accessible: true,
             current_odometer: 12000,
-            last_oil_change_odometer: 10000, 
+            last_oil_change_odometer: 10000,
+            management_code_id: null, 
             is_active: true, 
             created_at: '', 
             updated_at: '' 
@@ -93,7 +95,8 @@ export default function LoginPage() {
             fuel_type: 'ガソリン', 
             wheelchair_accessible: false,
             current_odometer: 8000,
-            last_oil_change_odometer: 7000, 
+            last_oil_change_odometer: 7000,
+            management_code_id: null, 
             is_active: true, 
             created_at: '', 
             updated_at: '' 
@@ -110,6 +113,7 @@ export default function LoginPage() {
             emergency_phone: '090-1234-5678',
             wheelchair_user: false,
             special_notes: '血圧の薬を服用中',
+            management_code_id: null,
             is_active: true, 
             created_at: '', 
             updated_at: '' 
@@ -124,6 +128,7 @@ export default function LoginPage() {
             emergency_phone: '090-2345-6789',
             wheelchair_user: true,
             special_notes: '車椅子利用、アレルギー：卵',
+            management_code_id: null,
             is_active: true, 
             created_at: '', 
             updated_at: '' 
@@ -138,6 +143,7 @@ export default function LoginPage() {
             emergency_phone: '090-3456-7890',
             wheelchair_user: false,
             special_notes: '膝が悪く、歩行に時間がかかる',
+            management_code_id: null,
             is_active: true, 
             created_at: '', 
             updated_at: '' 

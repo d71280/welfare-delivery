@@ -14,6 +14,7 @@ interface VehicleFormData {
   wheelchair_accessible: boolean
   current_odometer: number
   last_oil_change_odometer: number
+  management_code_id: string
   is_active: boolean
 }
 
@@ -31,8 +32,10 @@ export default function VehiclesManagementPage() {
     wheelchair_accessible: false,
     current_odometer: 0,
     last_oil_change_odometer: 0,
+    management_code_id: '',
     is_active: true
   })
+  const [availableManagementCodes, setAvailableManagementCodes] = useState<{id: string, code: string, name: string}[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   
   const router = useRouter()
@@ -47,14 +50,67 @@ export default function VehiclesManagementPage() {
     }
     
     fetchVehicles()
+    fetchManagementCodes()
   }, [router])
+
+  const fetchManagementCodes = async () => {
+    try {
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) return
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      const { data, error } = await supabase
+        .from('management_codes')
+        .select('id, code, name')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .order('name')
+      
+      if (error) {
+        console.error('管理コード取得エラー:', error)
+        return
+      }
+      
+      setAvailableManagementCodes(data || [])
+    } catch (error) {
+      console.error('管理コード取得エラー:', error)
+    }
+  }
 
   const fetchVehicles = async () => {
     try {
       setIsLoading(true)
+      
+      // 管理者セッションから管理コードIDを取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) {
+        router.push('/admin/login')
+        return
+      }
+      
+      const { organizationId } = JSON.parse(sessionData)
+      
+      // 管理コードIDを取得
+      const { data: managementCodes, error: mgmtError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+      
+      if (mgmtError || !managementCodes?.length) {
+        console.error('管理コード取得エラー:', mgmtError)
+        setVehicles([])
+        return
+      }
+      
+      const managementCodeIds = managementCodes.map(code => code.id)
+      
+      // 管理コードでフィルタリングして車両を取得
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
+        .in('management_code_id', managementCodeIds)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -79,6 +135,10 @@ export default function VehiclesManagementPage() {
     
     if (!formData.vehicle_name.trim()) {
       newErrors.vehicle_name = '車両名は必須です'
+    }
+    
+    if (!formData.management_code_id) {
+      newErrors.management_code_id = '管理コードは必須です'
     }
 
     setErrors(newErrors)
@@ -124,6 +184,7 @@ export default function VehiclesManagementPage() {
             wheelchair_accessible: formData.wheelchair_accessible,
             current_odometer: formData.current_odometer,
             last_oil_change_odometer: formData.last_oil_change_odometer,
+            management_code_id: formData.management_code_id,
             is_active: formData.is_active
           }])
 
@@ -150,6 +211,7 @@ export default function VehiclesManagementPage() {
       wheelchair_accessible: vehicle.wheelchair_accessible,
       current_odometer: vehicle.current_odometer || 0,
       last_oil_change_odometer: vehicle.last_oil_change_odometer || 0,
+      management_code_id: vehicle.management_code_id || '',
       is_active: vehicle.is_active
     })
     setShowForm(true)
@@ -183,6 +245,7 @@ export default function VehiclesManagementPage() {
       wheelchair_accessible: false,
       current_odometer: 0,
       last_oil_change_odometer: 0,
+      management_code_id: '',
       is_active: true
     })
     setEditingVehicle(null)
@@ -320,6 +383,26 @@ export default function VehiclesManagementPage() {
                 </div>
 
                 <div className="welfare-filter-item">
+                  <label>🔑 管理コード <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.management_code_id}
+                    onChange={(e) => setFormData({ ...formData, management_code_id: e.target.value })}
+                    className="welfare-select"
+                    required
+                  >
+                    <option value="">管理コードを選択してください</option>
+                    {availableManagementCodes.map((code) => (
+                      <option key={code.id} value={code.id}>
+                        {code.code} - {code.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.management_code_id && (
+                    <p className="text-red-500 text-sm mt-1">{errors.management_code_id}</p>
+                  )}
+                </div>
+
+                <div className="welfare-filter-item">
                   <label>📊 現在走行距離 (km)</label>
                   <input
                     type="number"
@@ -409,6 +492,7 @@ export default function VehiclesManagementPage() {
                     <th>燃料</th>
                     <th>車椅子対応</th>
                     <th>走行距離</th>
+                    <th>管理コード</th>
                     <th>ステータス</th>
                     <th>操作</th>
                   </tr>
@@ -444,6 +528,9 @@ export default function VehiclesManagementPage() {
                       </td>
                       <td className="text-center">
                         {vehicle.current_odometer ? `${vehicle.current_odometer.toLocaleString()}km` : '-'}
+                      </td>
+                      <td className="text-center">
+                        {availableManagementCodes.find(code => code.id === vehicle.management_code_id)?.code || '-'}
                       </td>
                       <td>
                         {vehicle.is_active ? (
