@@ -75,7 +75,24 @@ export default function DriverPage() {
     if (parsedSession.selectedAddresses) {
       fetchAddressNames(parsedSession.selectedAddresses)
     }
-  }, [router])
+
+    // デバッグ用：allCompletedの状態変化を監視
+    const debugInterval = setInterval(() => {
+      console.log('デバッグ - 定期チェック:', {
+        allCompleted,
+        deliveriesLength: deliveries.length,
+        endOdometerFinal: endOdometers['final'],
+        deliveriesDetail: deliveries.map(d => ({
+          user: d.user?.name,
+          arrival: d.detail?.arrival_time,
+          departure: d.detail?.departure_time,
+          hasDetail: !!d.detail
+        }))
+      })
+    }, 3000)
+
+    return () => clearInterval(debugInterval)
+  }, [router, allCompleted, deliveries, endOdometers])
 
   const fetchAddressNames = async (selectedAddresses: {[userId: string]: string}) => {
     try {
@@ -1136,10 +1153,12 @@ export default function DriverPage() {
                   if (d.detail) {
                     const hasArrival = d.detail.arrival_time && d.detail.arrival_time.trim() !== ''
                     const hasDeparture = d.detail.departure_time && d.detail.departure_time.trim() !== ''
+                    console.log(`完了カウント - ${d.user?.name}: 到着=${d.detail.arrival_time}, 出発=${d.detail.departure_time}, 完了=${hasArrival && hasDeparture}`)
                     return hasArrival && hasDeparture
                   }
+                  console.log(`完了カウント - レコードステータス: ${d.record.status}`)
                   return d.record.status === 'completed'
-                }).length}/${deliveries.length})`}
+                }).length}/${deliveries.length}) [allCompleted=${allCompleted}]`}
               </button>
               {!allCompleted && (
                 <p className="text-sm text-gray-600 text-center mt-2">
