@@ -208,7 +208,7 @@ export default function SettingsPage() {
             <h1 className="text-2xl font-bold text-gray-900">事業者設定</h1>
             <button
               onClick={() => router.push('/admin/dashboard')}
-              className="text-blue-600 hover:text-blue-700"
+              className="welfare-button welfare-button-outline"
             >
               ← ダッシュボードに戻る
             </button>

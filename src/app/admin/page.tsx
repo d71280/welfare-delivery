@@ -8,8 +8,8 @@ export default function AdminPage() {
           <a href="/admin/login" className="block text-blue-600 hover:underline font-medium">
             管理者ログイン
           </a>
-          <a href="/admin/dashboard" className="block text-blue-600 hover:underline font-medium">
-            ダッシュボード
+          <a href="/admin/dashboard" className="welfare-button welfare-button-outline">
+            🏠 ダッシュボード
           </a>
           <a href="/admin/master/users" className="block text-green-600 hover:underline">
             利用者管理

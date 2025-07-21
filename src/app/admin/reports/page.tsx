@@ -314,9 +314,9 @@ export default function ReportsPage() {
             <div className="flex space-x-2">
               <button
                 onClick={() => router.push('/admin/dashboard')}
-                className="text-gray-600 text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+                className="welfare-button welfare-button-outline"
               >
-                ダッシュボードに戻る
+                🏠 ダッシュボードに戻る
               </button>
               <button
                 onClick={exportToCsv}

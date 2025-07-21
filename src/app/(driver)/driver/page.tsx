@@ -144,7 +144,6 @@ export default function DriverPage() {
         )
       )
       
-      alert('到着時刻を記録しました')
     } catch (err) {
       console.error('到着時刻記録エラー:', err)
       alert('到着時刻の記録に失敗しました')
@@ -186,7 +185,6 @@ export default function DriverPage() {
       const completed = updatedDeliveries.every(item => item.record.status === 'completed')
       setAllCompleted(completed)
       
-      alert('出発時刻を記録しました')
     } catch (err) {
       console.error('出発時刻記録エラー:', err)
       alert('出発時刻の記録に失敗しました')
@@ -259,10 +257,9 @@ export default function DriverPage() {
           .eq('id', session.vehicleId)
       }
 
-      if (confirm('本日の送迎をすべて終了しますか？')) {
-        alert('お疲れさまでした！送迎が完了しました。')
-        // 必要に応じて追加の処理（ログアウトなど）
-      }
+      // セッション情報をクリアしてログインページに戻る
+      localStorage.removeItem('driverSession')
+      router.push('/login')
     } catch (err) {
       console.error('車両走行距離更新エラー:', err)
       alert('車両走行距離の更新に失敗しました')
@@ -371,7 +368,7 @@ export default function DriverPage() {
                           {delivery.user ? delivery.user.name : '利用者不明'}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {delivery.user ? `利用者番号: ${delivery.user.user_no}` : ''}
+                          {delivery.user ? delivery.user.user_no : ''}
                         </p>
                       </div>
                     </div>
