@@ -195,8 +195,6 @@ export default function UsersPage() {
                     required
                   />
                 </div>
-              </div>
-
                 <div className="welfare-filter-item">
                   <label>📞 電話番号</label>
                   <input
@@ -217,7 +215,6 @@ export default function UsersPage() {
                     placeholder="例: 080-1234-5678"
                   />
                 </div>
-
                 <div className="welfare-filter-item">
                   <label>🏠 ご住所</label>
                   <input
@@ -225,7 +222,7 @@ export default function UsersPage() {
                     value={formData.address || ''}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className="welfare-input"
-                    placeholder="例: 東京都〇〇区△△町1-2-3"
+                    placeholder="例: 東京都○○区△△町1-2-3"
                   />
                 </div>
                 <div className="welfare-filter-item">
@@ -241,7 +238,6 @@ export default function UsersPage() {
               </div>
 
               <div className="space-y-4">
-
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
