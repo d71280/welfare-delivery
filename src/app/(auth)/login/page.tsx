@@ -271,10 +271,11 @@ export default function LoginPage() {
         console.error('送迎記録作成エラー:', result.error)
         
         // 重複レコードの場合は既存のレコードを使用
-        if (result.error?.code === 'DUPLICATE_DELIVERY' && result.error?.existingRecord) {
-          console.log('既存の送迎記録を使用します:', result.error.existingRecord)
+        const errorObj = result.error as any
+        if (errorObj?.code === 'DUPLICATE_DELIVERY' && errorObj?.existingRecord) {
+          console.log('既存の送迎記録を使用します:', errorObj.existingRecord)
           // 既存の記録を使用してセッションを作成
-          const existingRecord = result.error.existingRecord
+          const existingRecord = errorObj.existingRecord
           const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
           const selectedUserNames = selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
           
@@ -303,7 +304,7 @@ export default function LoginPage() {
         
         const errorMessage = typeof result.error === 'string' 
           ? result.error 
-          : result.error?.message || (result.error?.code ? `データベースエラー (${result.error.code}): ${result.error.message}` : JSON.stringify(result.error, null, 2))
+          : (result.error as any)?.message || JSON.stringify(result.error, null, 2)
         throw new Error(`送迎記録の作成に失敗しました: ${errorMessage}`)
       }
 
