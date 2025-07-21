@@ -220,12 +220,10 @@ export default function LoginPage() {
         const deliveryData = {
           driverId: selectedDriver,
           vehicleId: selectedVehicle,
-          routeId: null, // 個別配送のためrouteIdはnull
           transportationDate: new Date().toISOString().split('T')[0],
           transportationType: 'individual' as const,
           passengerCount: 1,
-          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の1名)`,
-          gasCardUsed: false
+          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の1名)`
         }
 
         console.log('配送データ:', deliveryData)
