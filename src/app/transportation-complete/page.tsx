@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function TransportationCompletePage() {
+function TransportationCompleteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [recordId, setRecordId] = useState<string | null>(null)
@@ -132,7 +132,7 @@ export default function TransportationCompletePage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">利用者</label>
                   <div className="bg-gray-50 rounded p-3">
-                    {transportationData.transportation_details.map((detail: any, index: number) => (
+                    {transportationData.transportation_details.map((detail: any) => (
                       <div key={detail.id} className="flex justify-between items-center py-1">
                         <span className="text-gray-900">
                           {detail.users?.name} ({detail.users?.user_no})
@@ -215,5 +215,20 @@ export default function TransportationCompletePage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TransportationCompletePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">ページを読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <TransportationCompleteContent />
+    </Suspense>
   )
 }

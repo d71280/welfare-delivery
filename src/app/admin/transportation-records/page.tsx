@@ -579,7 +579,7 @@ export default function TransportationRecordsPage() {
         alert(`${result.message}`)
         await fetchRecords() // 記録を再読み込み
       } else {
-        alert('統合処理中にエラーが発生しました: ' + (result.error?.message || 'Unknown error'))
+        alert('統合処理中にエラーが発生しました: ' + (result.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error consolidating records:', error)

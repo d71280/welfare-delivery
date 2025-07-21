@@ -80,7 +80,7 @@ export async function consolidateDuplicateRecords() {
       const duplicateRecords = group.slice(1)
       
       // メインレコードを往復記録として更新
-      const totalPassengers = group.reduce((sum, record) => sum + (record.passenger_count || 0), 0)
+      const totalPassengers = group.reduce((sum: number, record: any) => sum + (record.passenger_count || 0), 0)
       
       await supabase
         .from('transportation_records')
