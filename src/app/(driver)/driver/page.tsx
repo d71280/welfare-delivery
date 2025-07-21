@@ -50,7 +50,7 @@ export default function DriverPage() {
       minute: '2-digit' 
     }))
 
-    // 今日の配送記録を取得
+    // 今日の送迎記録を取得
     fetchTodayDeliveries(parsedSession.driverId)
   }, [router])
 
@@ -68,7 +68,7 @@ export default function DriverPage() {
 
       if (error) throw error
 
-      // 各配送記録に対応する利用者情報を取得
+      // 各送迎記録に対応する利用者情報を取得
       const deliveryItems: DeliveryItem[] = []
       
       for (const record of records || []) {
@@ -108,11 +108,11 @@ export default function DriverPage() {
 
       setDeliveries(deliveryItems)
       
-      // 全ての配送が完了しているかチェック
+      // 全ての送迎が完了しているかチェック
       const completed = deliveryItems.every(item => item.record.status === 'completed')
       setAllCompleted(completed)
     } catch (err) {
-      console.error('配送記録取得エラー:', err)
+      console.error('送迎記録取得エラー:', err)
     } finally {
       setIsLoading(false)
     }
@@ -229,7 +229,6 @@ export default function DriverPage() {
         }
       }))
       
-      alert('時刻を更新しました')
     } catch (err) {
       console.error('時刻更新エラー:', err)
       alert('時刻の更新に失敗しました')
@@ -238,7 +237,7 @@ export default function DriverPage() {
 
   const handleCompleteAllDeliveries = async () => {
     if (!allCompleted) {
-      alert('すべての配送を完了してください')
+      alert('すべての送迎を完了してください')
       return
     }
 
@@ -260,8 +259,8 @@ export default function DriverPage() {
           .eq('id', session.vehicleId)
       }
 
-      if (confirm('本日の配送をすべて終了しますか？')) {
-        alert('お疲れさまでした！配送が完了しました。')
+      if (confirm('本日の送迎をすべて終了しますか？')) {
+        alert('お疲れさまでした！送迎が完了しました。')
         // 必要に応じて追加の処理（ログアウトなど）
       }
     } catch (err) {
@@ -275,7 +274,7 @@ export default function DriverPage() {
       case 'pending':
         return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">待機中</span>
       case 'in_progress':
-        return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">配送中</span>
+        return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">送迎中</span>
       case 'completed':
         return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">完了</span>
       default:
@@ -307,7 +306,7 @@ export default function DriverPage() {
           <div className="flex items-center justify-between">
             <div className="text-center flex-1">
               <h1 className="text-lg font-medium text-gray-900">
-                配送管理
+                送迎管理
               </h1>
               {session && (
                 <p className="text-sm text-gray-600">
@@ -333,7 +332,7 @@ export default function DriverPage() {
       {/* メインコンテンツ */}
       <div className="p-4 max-w-4xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">今日の配送一覧</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">今日の送迎一覧</h2>
           <p className="text-gray-600 text-sm">
             {new Date().toLocaleDateString('ja-JP', { 
               year: 'numeric', 
@@ -349,8 +348,8 @@ export default function DriverPage() {
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">配送予定がありません</h3>
-            <p className="text-gray-600">本日の配送はすべて完了しているか、まだ配送が登録されていません。</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">送迎予定がありません</h3>
+            <p className="text-gray-600">本日の送迎はすべて完了しているか、まだ送迎が登録されていません。</p>
           </div>
         ) : (
           <>
@@ -536,42 +535,40 @@ export default function DriverPage() {
               ))}
             </div>
 
-            {/* 配送終了ボタン */}
+            {/* 送迎終了ボタン */}
             <div className="mt-8 bg-white rounded-lg shadow p-6">
-              {allCompleted && (
-                <div className="mb-6">
-                  <label className="block text-lg font-medium text-gray-700 mb-3">
-                    終了時走行距離 (km)
-                  </label>
-                  <input
-                    type="number"
-                    value={endOdometers['final'] || ''}
-                    onChange={(e) => setEndOdometers(prev => ({
-                      ...prev,
-                      final: parseInt(e.target.value) || 0
-                    }))}
-                    placeholder="終了時走行距離を入力"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
+              <div className="mb-6">
+                <label className="block text-lg font-medium text-gray-700 mb-3">
+                  終了時走行距離 (km)
+                </label>
+                <input
+                  type="number"
+                  value={endOdometers['final'] || ''}
+                  onChange={(e) => setEndOdometers(prev => ({
+                    ...prev,
+                    final: parseInt(e.target.value) || 0
+                  }))}
+                  placeholder="終了時走行距離を入力"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
               <button
                 onClick={handleCompleteAllDeliveries}
-                disabled={!allCompleted || (allCompleted && !endOdometers['final'])}
+                disabled={!allCompleted || !endOdometers['final']}
                 className={`w-full py-4 rounded-lg font-medium text-lg transition-colors ${
                   allCompleted && endOdometers['final']
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {allCompleted ? '本日の配送を終了する' : `配送完了待ち (${deliveries.filter(d => d.record.status === 'completed').length}/${deliveries.length})`}
+                {allCompleted ? '本日の送迎を終了する' : `送迎完了待ち (${deliveries.filter(d => d.record.status === 'completed').length}/${deliveries.length})`}
               </button>
               {!allCompleted && (
                 <p className="text-sm text-gray-600 text-center mt-2">
-                  すべての利用者の配送を完了してから終了してください
+                  すべての利用者の送迎を完了してから終了してください
                 </p>
               )}
-              {allCompleted && !endOdometers['final'] && (
+              {!endOdometers['final'] && (
                 <p className="text-sm text-gray-600 text-center mt-2">
                   終了時走行距離を入力してください
                 </p>

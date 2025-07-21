@@ -143,6 +143,7 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       passenger_count: formData.passengerCount || 1,
       weather_condition: formData.weatherCondition,
       special_notes: formData.specialNotes,
+      management_code_id: formData.managementCodeId,
       status: 'pending'
     }
 

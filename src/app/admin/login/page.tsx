@@ -117,14 +117,23 @@ export default function AdminLoginPage() {
           <p className="text-blue-700 text-sm">パスワード: admin123</p>
         </div>
 
-        {/* ドライバーログインへのリンク */}
+        {/* 新規登録リンク */}
         <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push('/login')}
-            className="text-gray-500 text-sm hover:text-gray-700"
-          >
-            ドライバーログインに戻る
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => router.push('/admin/register')}
+              className="text-blue-600 text-sm hover:text-blue-700 font-medium"
+            >
+              新規事業者登録はこちら
+            </button>
+            <br />
+            <button
+              onClick={() => router.push('/login')}
+              className="text-gray-500 text-sm hover:text-gray-700"
+            >
+              ドライバーログインに戻る
+            </button>
+          </div>
         </div>
       </div>
     </div>

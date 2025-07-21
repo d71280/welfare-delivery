@@ -20,6 +20,9 @@ export default function LoginPage() {
   const [currentTime, setCurrentTime] = useState('')
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [managementCode, setManagementCode] = useState('')
+  const [codeVerified, setCodeVerified] = useState(false)
+  const [currentManagementCodeId, setCurrentManagementCodeId] = useState<string | null>(null)
   const [duplicateRecord, setDuplicateRecord] = useState<{
     id: string;
     delivery_date: string;
@@ -224,7 +227,8 @@ export default function LoginPage() {
           transportationDate: new Date().toISOString().split('T')[0],
           transportationType: 'individual' as const,
           passengerCount: 1,
-          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の${i + 1}番目)`
+          specialNotes: `利用者ID: ${userId} - 複数利用者送迎 (${selectedUsers.length}名中の${i + 1}番目)`,
+          managementCodeId: currentManagementCodeId
         }
 
         console.log('配送データ:', deliveryData)
@@ -347,6 +351,55 @@ export default function LoginPage() {
     }
   }
 
+  const verifyManagementCode = async () => {
+    if (managementCode.length !== 6) {
+      setError('管理コードは6桁で入力してください')
+      return
+    }
+
+    try {
+      const { data: codeData, error: codeError } = await supabase
+        .from('management_codes')
+        .select('id, organization_id, name, is_active')
+        .eq('code', managementCode)
+        .eq('is_active', true)
+        .single()
+
+      if (codeError || !codeData) {
+        setError('無効な管理コードです')
+        return
+      }
+
+      setCurrentManagementCodeId(codeData.id)
+      setCodeVerified(true)
+      setError('')
+      
+      // 管理コードに紐づいたデータを取得
+      await fetchFilteredData(codeData.id)
+      
+    } catch (err) {
+      console.error('管理コード確認エラー:', err)
+      setError('管理コードの確認に失敗しました')
+    }
+  }
+
+  const fetchFilteredData = async (managementCodeId: string) => {
+    try {
+      const [driversRes, vehiclesRes, usersRes] = await Promise.all([
+        supabase.from('drivers').select('*').eq('is_active', true).eq('management_code_id', managementCodeId),
+        supabase.from('vehicles').select('*').eq('is_active', true).eq('management_code_id', managementCodeId),
+        supabase.from('users').select('*').eq('is_active', true).eq('management_code_id', managementCodeId)
+      ])
+      
+      if (driversRes.data) setDrivers(driversRes.data)
+      if (vehiclesRes.data) setVehicles(vehiclesRes.data)
+      if (usersRes.data) setUsers(usersRes.data)
+    } catch (err) {
+      console.error('フィルタされたデータ取得エラー:', err)
+      setError('データの取得に失敗しました')
+    }
+  }
+
   const handleCancel = () => {
     setShowSelectionForm(false)
     setSelectedDriver('')
@@ -354,6 +407,9 @@ export default function LoginPage() {
     setError('')
     setStartTime('')
     setSelectedUsers([])
+    setManagementCode('')
+    setCodeVerified(false)
+    setCurrentManagementCodeId(null)
   }
 
   return (
@@ -446,6 +502,37 @@ export default function LoginPage() {
               </h2>
               <p className="text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
             </div>
+
+            {/* 管理コード入力 */}
+            {!codeVerified ? (
+              <div className="welfare-card border-l-4 border-orange-500">
+                <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  🔑 管理コード
+                </label>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={managementCode}
+                    onChange={(e) => setManagementCode(e.target.value.toUpperCase())}
+                    className="flex-1 welfare-input text-center text-2xl font-mono tracking-widest"
+                    placeholder="6桁の管理コードを入力"
+                    maxLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={verifyManagementCode}
+                    disabled={managementCode.length !== 6}
+                    className="bg-orange-600 text-white px-6 py-2 rounded font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    確認
+                  </button>
+                </div>
+                <p className="text-orange-600 text-sm mt-2">
+                  ⚠️ 管理者から発行された6桁の管理コードを入力してください
+                </p>
+              </div>
+            ) : (
 
             {/* ドライバー選択 */}
             <div className="welfare-card">
@@ -621,7 +708,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleStartDeliveryWithRecord}
-                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || selectedUsers.length === 0}
+                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || selectedUsers.length === 0 || !codeVerified}
                 className="welfare-button welfare-button-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -636,6 +723,7 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+            )}
             
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mt-6">
               <div className="flex items-center gap-2 mb-2">

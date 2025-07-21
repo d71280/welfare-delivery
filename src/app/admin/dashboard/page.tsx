@@ -126,6 +126,14 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600">送迎記録の一覧と詳細確認</p>
           </button>
 
+          <button
+            onClick={() => router.push('/admin/settings')}
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
+          >
+            <h3 className="text-lg font-medium text-gray-900 mb-2">事業者設定</h3>
+            <p className="text-gray-600">事業者情報・管理コード管理</p>
+          </button>
+
         </div>
 
         {/* 利用者選択配送システム */}

@@ -29,6 +29,12 @@ export default function DeliveryDetailPage() {
   const [pickupAddress, setPickupAddress] = useState('')
   const [dropoffAddress, setDropoffAddress] = useState('')
   const [safetyNotes, setSafetyNotes] = useState('')
+  const [wheelchairFixing, setWheelchairFixing] = useState('')
+  const [healthStatus, setHealthStatus] = useState('')
+  const [companions, setCompanions] = useState('')
+  const [transportDistance, setTransportDistance] = useState<number | null>(null)
+  const [duration, setDuration] = useState('')
+  const [organization, setOrganization] = useState<any>(null)
 
   const router = useRouter()
   const params = useParams()
@@ -74,6 +80,11 @@ export default function DeliveryDetailPage() {
       setPickupAddress(record.pickup_address || '')
       setDropoffAddress(record.dropoff_address || '')
       setSafetyNotes(record.safety_check_boarding || '')
+      setWheelchairFixing(record.wheelchair_fixing || '')
+      setHealthStatus(record.health_status || '')
+      setCompanions(record.companions || '')
+      setTransportDistance(record.transport_distance)
+      setDuration(record.duration || '')
 
       // 時刻の設定
       if (record.start_time) {
@@ -89,7 +100,8 @@ export default function DeliveryDetailPage() {
       await Promise.all([
         fetchDriver(record.driver_id),
         fetchVehicle(record.vehicle_id),
-        extractUserFromNotes(record.special_notes)
+        extractUserFromNotes(record.special_notes),
+        fetchOrganization(record.management_code_id)
       ])
     } catch (err) {
       console.error('配送記録取得エラー:', err)
@@ -150,6 +162,31 @@ export default function DeliveryDetailPage() {
     }
   }
 
+  const fetchOrganization = async (managementCodeId: string | null) => {
+    if (!managementCodeId) return
+
+    try {
+      const { data: mgmtCode, error: mgmtError } = await supabase
+        .from('management_codes')
+        .select('organization_id')
+        .eq('id', managementCodeId)
+        .single()
+
+      if (mgmtError) throw mgmtError
+
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', mgmtCode.organization_id)
+        .single()
+
+      if (orgError) throw orgError
+      setOrganization(orgData)
+    } catch (err) {
+      console.error('事業者情報取得エラー:', err)
+    }
+  }
+
   const handleStartDelivery = async () => {
     if (!deliveryRecord || !startOdometer) {
       alert('開始時の走行距離を入力してください')
@@ -167,6 +204,9 @@ export default function DeliveryDetailPage() {
           start_odometer: startOdometer,
           pickup_address: pickupAddress,
           safety_check_boarding: safetyNotes,
+          wheelchair_fixing: wheelchairFixing,
+          health_status: healthStatus,
+          companions: companions,
           updated_at: new Date().toISOString()
         })
         .eq('id', deliveryRecord.id)
@@ -177,10 +217,10 @@ export default function DeliveryDetailPage() {
       
       setDeliveryRecord(data)
       setStartTime(currentTimeStr)
-      alert('配送を開始しました')
+      alert('送迎を開始しました')
     } catch (err) {
-      console.error('配送開始エラー:', err)
-      alert('配送開始に失敗しました')
+      console.error('送迎開始エラー:', err)
+      alert('送迎開始に失敗しました')
     }
   }
 
@@ -202,6 +242,8 @@ export default function DeliveryDetailPage() {
           dropoff_address: dropoffAddress,
           special_notes: notes,
           safety_check_alighting: safetyNotes,
+          transport_distance: transportDistance,
+          duration: duration,
           updated_at: new Date().toISOString()
         })
         .eq('id', deliveryRecord.id)
@@ -222,10 +264,10 @@ export default function DeliveryDetailPage() {
         })
         .eq('id', deliveryRecord.vehicle_id)
 
-      alert('配送を完了しました')
+      alert('送迎を完了しました')
     } catch (err) {
-      console.error('配送完了エラー:', err)
-      alert('配送完了に失敗しました')
+      console.error('送迎完了エラー:', err)
+      alert('送迎完了に失敗しました')
     }
   }
 
@@ -248,7 +290,7 @@ export default function DeliveryDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">配送記録が見つかりません</p>
+          <p className="text-gray-600">送迎記録が見つかりません</p>
           <button
             onClick={handleBack}
             className="mt-4 text-blue-600 hover:underline"
@@ -277,7 +319,7 @@ export default function DeliveryDetailPage() {
             </button>
             <div className="text-center">
               <h1 className="text-lg font-medium text-gray-900">
-                配送詳細
+                送迎詳細
               </h1>
               <p className="text-sm text-gray-600">
                 {driver.name} / {vehicle.vehicle_no}
@@ -384,14 +426,50 @@ export default function DeliveryDetailPage() {
                     onChange={(e) => setSafetyNotes(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows={2}
-                    placeholder="安全確認状況を記録"
+                    placeholder="乗車時の安全確認状況"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    車椅子等福祉用具の固定状況
+                  </label>
+                  <textarea
+                    value={wheelchairFixing}
+                    onChange={(e) => setWheelchairFixing(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows={2}
+                    placeholder="車椅子や福祉用具の固定状況を記録"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    利用者の健康状態・特記事項
+                  </label>
+                  <textarea
+                    value={healthStatus}
+                    onChange={(e) => setHealthStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows={2}
+                    placeholder="健康状態や特記事項を記録"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    同乗者（介助者等）の有無と氏名
+                  </label>
+                  <input
+                    type="text"
+                    value={companions}
+                    onChange={(e) => setCompanions(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="同乗者の氏名（いない場合は「なし」）"
                   />
                 </div>
                 <button
                   onClick={handleStartDelivery}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
-                  配送開始
+                  送迎開始
                 </button>
               </div>
             )}
@@ -405,7 +483,7 @@ export default function DeliveryDetailPage() {
                   <div className={`w-4 h-4 rounded-full mr-3 ${
                     isCompleted ? 'bg-green-500' : 'bg-gray-300'
                   }`}></div>
-                  <span className="text-gray-900 font-medium">配送完了</span>
+                  <span className="text-gray-900 font-medium">送迎完了</span>
                 </div>
                 {endTime && (
                   <span className="text-lg font-mono font-bold text-green-600">
@@ -442,6 +520,31 @@ export default function DeliveryDetailPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      送迎距離 (km)
+                    </label>
+                    <input
+                      type="number"
+                      value={transportDistance || ''}
+                      onChange={(e) => setTransportDistance(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="送迎距離を入力"
+                      step="0.1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      所要時間
+                    </label>
+                    <input
+                      type="text"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="例：30分、1時間15分"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       特記事項・メモ
                     </label>
                     <textarea
@@ -449,14 +552,14 @@ export default function DeliveryDetailPage() {
                       onChange={(e) => setNotes(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                       rows={3}
-                      placeholder="配送に関するメモ"
+                      placeholder="送迎に関するメモ"
                     />
                   </div>
                   <button
                     onClick={handleCompleteDelivery}
                     className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
                   >
-                    配送完了
+                    送迎完了
                   </button>
                 </div>
               )}
@@ -493,6 +596,43 @@ export default function DeliveryDetailPage() {
           </div>
         </div>
 
+        {/* 事業者情報 */}
+        {organization && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">事業者情報</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">事業者名:</span>
+                <span className="font-medium">{organization.name}</span>
+              </div>
+              {organization.address && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">住所:</span>
+                  <span className="font-medium text-sm">{organization.address}</span>
+                </div>
+              )}
+              {organization.phone && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">電話番号:</span>
+                  <span className="font-medium">{organization.phone}</span>
+                </div>
+              )}
+              {organization.representative_name && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">代表者:</span>
+                  <span className="font-medium">{organization.representative_name}</span>
+                </div>
+              )}
+              {organization.license_number && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">許可番号:</span>
+                  <span className="font-medium">{organization.license_number}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 完了メッセージ */}
         {isCompleted && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -500,7 +640,7 @@ export default function DeliveryDetailPage() {
               <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span className="text-green-800 font-medium">配送が完了しました</span>
+              <span className="text-green-800 font-medium">送迎が完了しました</span>
             </div>
           </div>
         )}
