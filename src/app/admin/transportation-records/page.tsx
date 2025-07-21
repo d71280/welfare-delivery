@@ -371,7 +371,10 @@ export default function TransportationRecordsPage() {
                       <tr>
                         <th>利用者氏名・番号</th>
                         <th>乗車地点・降車地点</th>
-                        <th>お迎え時刻・到着時刻</th>
+                        <th>お迎え時刻</th>
+                        <th>到着時刻</th>
+                        <th>出発時刻</th>
+                        <th>降車時刻</th>
                         <th>健康状態・特記事項</th>
                         <th>車椅子使用</th>
                       </tr>
@@ -384,10 +387,10 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${detail.destinations?.name || '-'}</td>
-                          <td>
-                            お迎え: ${detail.pickup_time || '-'}<br>
-                            到着: ${detail.arrival_time || '-'}
-                          </td>
+                          <td>${detail.pickup_time || '-'}</td>
+                          <td><strong style="color: #2563eb;">${detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}</strong></td>
+                          <td><strong style="color: #16a34a;">${detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}</strong></td>
+                          <td>${detail.drop_off_time || '-'}</td>
                           <td>
                             ${detail.health_condition ? `体調: ${detail.health_condition}<br>` : ''}
                             ${detail.behavior_notes ? `行動: ${detail.behavior_notes}<br>` : ''}
@@ -1034,6 +1037,12 @@ export default function TransportationRecordsPage() {
                           <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             到着時刻
                           </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            出発時刻
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            降車時刻
+                          </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             体調・特記事項
                           </th>
@@ -1067,7 +1076,17 @@ export default function TransportationRecordsPage() {
                                 {detail.pickup_time || '-'}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {detail.arrival_time || '-'}
+                                <span className="text-blue-600 font-bold">
+                                  {detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                <span className="text-green-600 font-bold">
+                                  {detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                {detail.drop_off_time || '-'}
                               </td>
                               <td className="px-4 py-2 text-sm">
                                 <div className="space-y-1">
