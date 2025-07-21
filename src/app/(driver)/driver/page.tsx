@@ -55,6 +55,7 @@ export default function DriverPage() {
     }
 
     const parsedSession = JSON.parse(sessionData) as DriverSession
+    console.log('ドライバーセッション情報:', parsedSession)
     setSession(parsedSession)
     
     // 現在時刻を設定
@@ -95,38 +96,65 @@ export default function DriverPage() {
           `)
           .eq('transportation_record_id', record.id)
         
-        if (details && details.length > 0) {
-          // 各詳細記録を個別の配送アイテムとして追加
-          for (const detail of details) {
-            deliveryItems.push({ 
-              record, 
-              user: detail.users as User | null,
-              detail: detail
-            })
-          }
-        } else {
-          // 詳細記録がない場合（旧形式）はspecial_notesから取得
-          let user: User | null = null
-          
-          if (record.special_notes) {
-            const match = record.special_notes.match(/利用者ID: ([a-f0-9-]+)/)
-            if (match) {
-              const userId = match[1]
-              try {
-                const { data: userData } = await supabase
-                  .from('users')
-                  .select('*')
-                  .eq('id', userId)
-                  .single()
-                
-                user = userData
-              } catch (userErr) {
-                console.error('利用者取得エラー:', userErr)
-              }
+        // セッション情報から選択された利用者を取得
+        console.log('セッション内の選択された利用者:', session?.selectedUsers)
+        if (session?.selectedUsers && session.selectedUsers.length > 0) {
+          // 複数利用者送迎の場合、各利用者を個別のアイテムとして表示
+          for (const userId of session.selectedUsers) {
+            try {
+              const { data: userData } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single()
+              
+              // 対応する詳細記録を探す
+              const detail = details?.find(d => d.user_id === userId)
+              
+              deliveryItems.push({ 
+                record, 
+                user: userData,
+                detail: detail
+              })
+            } catch (userErr) {
+              console.error('利用者取得エラー:', userErr)
+              deliveryItems.push({ record, user: null })
             }
           }
-          
-          deliveryItems.push({ record, user })
+        } else {
+          // セッション情報がない場合は詳細記録から取得
+          if (details && details.length > 0) {
+            for (const detail of details) {
+              deliveryItems.push({ 
+                record, 
+                user: detail.users as User | null,
+                detail: detail
+              })
+            }
+          } else {
+            // special_notesから取得（後方互換性）
+            let user: User | null = null
+            
+            if (record.special_notes) {
+              const match = record.special_notes.match(/利用者ID: ([a-f0-9-]+)/)
+              if (match) {
+                const userId = match[1]
+                try {
+                  const { data: userData } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single()
+                  
+                  user = userData
+                } catch (userErr) {
+                  console.error('利用者取得エラー:', userErr)
+                }
+              }
+            }
+            
+            deliveryItems.push({ record, user })
+          }
         }
       }
 
