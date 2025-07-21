@@ -1035,7 +1035,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.boarding === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], boarding: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boarding: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1049,7 +1049,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.boarding === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], boarding: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boarding: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1061,7 +1061,7 @@ export default function DriverPage() {
                                   value={safetyData[delivery.record.id]?.boardingDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
-                                    [delivery.record.id]: { ...prev[delivery.record.id], boardingDetails: e.target.value }
+                                    [delivery.record.id]: { ...(prev[delivery.record.id] || {}), boardingDetails: e.target.value }
                                   }))}
                                   placeholder="問題の詳細を入力"
                                   className="mt-2 w-full px-2 py-1 border rounded text-sm"
@@ -1081,7 +1081,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.alighting === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], alighting: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alighting: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1095,7 +1095,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.alighting === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], alighting: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alighting: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1107,7 +1107,7 @@ export default function DriverPage() {
                                   value={safetyData[delivery.record.id]?.alightingDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
-                                    [delivery.record.id]: { ...prev[delivery.record.id], alightingDetails: e.target.value }
+                                    [delivery.record.id]: { ...(prev[delivery.record.id] || {}), alightingDetails: e.target.value }
                                   }))}
                                   placeholder="問題の詳細を入力"
                                   className="mt-2 w-full px-2 py-1 border rounded text-sm"
@@ -1130,7 +1130,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'no_problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], wheelchairSecurity: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairSecurity: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1144,7 +1144,7 @@ export default function DriverPage() {
                                     checked={safetyData[delivery.record.id]?.wheelchairSecurity === 'problem'}
                                     onChange={(e) => setSafetyData(prev => ({
                                       ...prev,
-                                      [delivery.record.id]: { ...prev[delivery.record.id], wheelchairSecurity: e.target.value as any }
+                                      [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairSecurity: e.target.value as any }
                                     }))}
                                     className="mr-2"
                                   />
@@ -1156,7 +1156,7 @@ export default function DriverPage() {
                                   value={safetyData[delivery.record.id]?.wheelchairDetails || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
-                                    [delivery.record.id]: { ...prev[delivery.record.id], wheelchairDetails: e.target.value }
+                                    [delivery.record.id]: { ...(prev[delivery.record.id] || {}), wheelchairDetails: e.target.value }
                                   }))}
                                   placeholder="固定に関する問題の詳細を入力"
                                   className="mt-2 w-full px-2 py-1 border rounded text-sm"
@@ -1174,7 +1174,7 @@ export default function DriverPage() {
                                 checked={safetyData[delivery.record.id]?.companionPresent || false}
                                 onChange={(e) => setSafetyData(prev => ({
                                   ...prev,
-                                  [delivery.record.id]: { ...prev[delivery.record.id], companionPresent: e.target.checked }
+                                  [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionPresent: e.target.checked }
                                 }))}
                                 className="mr-2"
                               />
@@ -1187,7 +1187,7 @@ export default function DriverPage() {
                                   value={safetyData[delivery.record.id]?.companionName || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
-                                    [delivery.record.id]: { ...prev[delivery.record.id], companionName: e.target.value }
+                                    [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionName: e.target.value }
                                   }))}
                                   placeholder="同乗者氏名"
                                   className="px-2 py-1 border rounded text-sm"
@@ -1197,7 +1197,7 @@ export default function DriverPage() {
                                   value={safetyData[delivery.record.id]?.companionRelationship || ''}
                                   onChange={(e) => setSafetyData(prev => ({
                                     ...prev,
-                                    [delivery.record.id]: { ...prev[delivery.record.id], companionRelationship: e.target.value }
+                                    [delivery.record.id]: { ...(prev[delivery.record.id] || {}), companionRelationship: e.target.value }
                                   }))}
                                   placeholder="続柄・関係（例: 母親）"
                                   className="px-2 py-1 border rounded text-sm"
