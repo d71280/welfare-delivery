@@ -9,8 +9,8 @@ interface DriverSession {
   vehicleId: string
   vehicleNo: string
   loginTime: string
-  selectedUser?: string
-  userName?: string
+  selectedUsers?: string[]
+  userNames?: string
 }
 
 export default function DriverPage() {
@@ -27,8 +27,9 @@ export default function DriverPage() {
     const parsedSession = JSON.parse(sessionData) as DriverSession
 
     // ログイン時に選択された利用者に基づいて配送画面にリダイレクト
-    if (parsedSession.selectedUser) {
-      router.push(`/driver/delivery/${parsedSession.selectedUser}`)
+    if (parsedSession.selectedUsers && parsedSession.selectedUsers.length > 0) {
+      // 複数利用者の場合は最初の利用者のページに遷移（後で改善可能）
+      router.push(`/driver/delivery/${parsedSession.selectedUsers[0]}`)
     } else {
       // 利用者が選択されていない場合はログイン画面に戻る
       router.push('/login')

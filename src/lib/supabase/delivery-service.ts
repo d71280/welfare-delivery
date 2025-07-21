@@ -21,13 +21,13 @@ export async function checkExistingDeliveryRecord(
       .eq('transportation_date', transportationDate)
       .eq('driver_id', driverId)
 
-    // user-based delivery の場合
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
     // route-based delivery の場合
-    else if (routeId) {
+    if (routeId) {
       query = query.eq('route_id', routeId)
+    }
+    // user-based delivery の場合は、special_notesで判定（簡易的な実装）
+    else if (userId) {
+      query = query.like('special_notes', `%利用者ID: ${userId}%`)
     }
 
     const { data, error } = await query.maybeSingle()
@@ -126,7 +126,6 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       transportation_date: formData.transportationDate,
       driver_id: formData.driverId,
       vehicle_id: formData.vehicleId,
-      user_id: formData.userId,
       route_id: formData.routeId,
       transportation_type: formData.transportationType || 'individual',
       start_odometer: currentOdometer, // 自動設定

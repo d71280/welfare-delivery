@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [showSelectionForm, setShowSelectionForm] = useState(false)
   const [startTime, setStartTime] = useState('')
   const [currentTime, setCurrentTime] = useState('')
-  const [selectedUser, setSelectedUser] = useState('')
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [duplicateRecord, setDuplicateRecord] = useState<{
     id: string;
@@ -185,12 +185,20 @@ export default function LoginPage() {
   }
 
   const handleUserSelect = (userId: string) => {
-    setSelectedUser(userId)
+    setSelectedUsers(prev => {
+      if (prev.includes(userId)) {
+        // 既に選択されている場合は削除
+        return prev.filter(id => id !== userId)
+      } else {
+        // 新しく選択
+        return [...prev, userId]
+      }
+    })
   }
 
   // 配送開始処理
   const handleStartDeliveryWithRecord = async () => {
-    if (!selectedDriver || !selectedVehicle || !selectedUser) {
+    if (!selectedDriver || !selectedVehicle || selectedUsers.length === 0) {
       setError('ドライバー、車両、利用者を選択してください')
       return
     }
@@ -202,58 +210,54 @@ export default function LoginPage() {
       console.log('配送開始処理開始')
       console.log('選択されたドライバー:', selectedDriver)
       console.log('選択された車両:', selectedVehicle)
-      console.log('選択された利用者:', selectedUser)
+      console.log('選択された利用者:', selectedUsers)
       console.log('開始走行距離:', startOdometer)
 
-      // 配送記録を作成（開始走行距離は自動設定）
-      const deliveryData = {
-        driverId: selectedDriver,
-        vehicleId: selectedVehicle,
-        userId: selectedUser,
-        transportationDate: new Date().toISOString().split('T')[0],
-        transportationType: 'individual' as const,
-        gasCardUsed: false
+      // 複数利用者に対して個別の配送記録を作成
+      const deliveryResults = []
+      
+      for (const userId of selectedUsers) {
+        const deliveryData = {
+          driverId: selectedDriver,
+          vehicleId: selectedVehicle,
+          routeId: null, // 個別配送のためrouteIdはnull
+          transportationDate: new Date().toISOString().split('T')[0],
+          transportationType: 'individual' as const,
+          passengerCount: 1,
+          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の1名)`,
+          gasCardUsed: false
+        }
+
+        console.log('配送データ:', deliveryData)
+        const result = await createDeliveryRecord(deliveryData)
+        deliveryResults.push(result)
       }
 
-      console.log('配送データ:', deliveryData)
-
-      const result = await createDeliveryRecord(deliveryData)
-      
-      console.log('配送記録作成結果:', result)
-      
-      if (result.error) {
-        console.error('配送記録作成エラー:', result.error)
-        
-        // 重複エラーの場合は特別な処理
-        const errorObj = result.error as { 
-          code?: string; 
-          existingRecord?: {
-            id: string;
-            delivery_date: string;
-            status: string;
-            start_odometer?: number;
-          }
-        }
-        if (errorObj?.code === 'DUPLICATE_DELIVERY') {
-          setDuplicateRecord(errorObj?.existingRecord || null)
-          setShowDuplicateDialog(true)
-          setIsLoading(false)
-          return
-        }
-        
-        throw new Error(`配送記録の作成に失敗しました: ${JSON.stringify(result.error)}`)
+      // すべての配送記録作成が成功したかチェック
+      const hasError = deliveryResults.some(result => result.error)
+      if (hasError) {
+        const errors = deliveryResults.filter(result => result.error).map(result => result.error)
+        console.error('配送記録作成エラー:', errors)
+        throw new Error(`配送記録の作成に失敗しました: ${JSON.stringify(errors)}`)
       }
 
-      // セッション情報を保存（配送記録IDも含める）
+      const firstResult = deliveryResults[0]
+      
+      console.log('配送記録作成結果:', firstResult)
+
+      // セッション情報を保存（複数利用者の情報を含める）
       const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
+      const selectedUserNames = selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
+      const deliveryRecordIds = deliveryResults.map(result => result.data?.id).filter(Boolean)
+      
       const sessionData = {
         driverId: selectedDriver,
         driverName: drivers.find(d => d.id === selectedDriver)?.name || '',
         vehicleId: selectedVehicle,
         vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no || '',
-        selectedUser,
-        userName: users.find(u => u.id === selectedUser)?.name || '',
-        deliveryRecordId: result.data?.id,
+        selectedUsers,
+        userNames: selectedUserNames,
+        deliveryRecordIds,
         startOdometer,
         loginTime: new Date().toISOString(),
         startTime: startTime || currentTime,
@@ -328,8 +332,8 @@ export default function LoginPage() {
         vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no,
         loginTime: new Date().toISOString(),
         startTime: startTime,
-        selectedUser: selectedUser,
-        userName: users.find(u => u.id === selectedUser)?.name
+        selectedUsers: selectedUsers,
+        userNames: selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
       }
       
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
@@ -350,7 +354,7 @@ export default function LoginPage() {
     setSelectedVehicle('')
     setError('')
     setStartTime('')
-    setSelectedUser('')
+    setSelectedUsers([])
   }
 
   return (
@@ -503,6 +507,11 @@ export default function LoginPage() {
             <div className="welfare-card">
               <label className="block text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 👤 送迎対象の利用者様 <span className="text-red-500 text-xl">*</span>
+                {selectedUsers.length > 0 && (
+                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">
+                    {selectedUsers.length}名選択中
+                  </span>
+                )}
               </label>
               <div className="grid gap-4">
                 {users.map((user) => (
@@ -511,7 +520,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => handleUserSelect(user.id)}
                     className={`p-4 border-2 rounded-xl text-left transition-all ${
-                      selectedUser === user.id
+                      selectedUsers.includes(user.id)
                         ? 'border-blue-500 bg-blue-50 text-blue-900'
                         : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
                     }`}
@@ -539,7 +548,7 @@ export default function LoginPage() {
                           <p className="text-sm text-orange-600 mt-1">📝 {user.special_notes}</p>
                         )}
                       </div>
-                      {selectedUser === user.id && (
+                      {selectedUsers.includes(user.id) && (
                         <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
                           ✓
                         </div>
@@ -548,7 +557,7 @@ export default function LoginPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-gray-600 text-sm mt-4">⚠️ 利用者様の体調と安全を最優先にお送りください</p>
+              <p className="text-gray-600 text-sm mt-4">⚠️ 複数の利用者様を選択できます。体調と安全を最優先にお送りください</p>
             </div>
 
             {/* 時間入力セクション */}
@@ -613,7 +622,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleStartDeliveryWithRecord}
-                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || !selectedUser}
+                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || selectedUsers.length === 0}
                 className="welfare-button welfare-button-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
