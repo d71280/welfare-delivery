@@ -9,7 +9,8 @@ interface DriverSession {
   vehicleId: string
   vehicleNo: string
   loginTime: string
-  selectedRoute?: string
+  selectedUser?: string
+  userName?: string
 }
 
 export default function DriverPage() {
@@ -25,11 +26,11 @@ export default function DriverPage() {
 
     const parsedSession = JSON.parse(sessionData) as DriverSession
 
-    // ログイン時に選択されたルートに直接リダイレクト
-    if (parsedSession.selectedRoute) {
-      router.push(`/driver/route-details/${parsedSession.selectedRoute}`)
+    // ログイン時に選択された利用者に基づいて配送画面にリダイレクト
+    if (parsedSession.selectedUser) {
+      router.push(`/driver/delivery/${parsedSession.selectedUser}`)
     } else {
-      // ルートが選択されていない場合はログイン画面に戻る
+      // 利用者が選択されていない場合はログイン画面に戻る
       router.push('/login')
     }
   }, [router])
@@ -39,7 +40,7 @@ export default function DriverPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">配送ルートに移動中...</p>
+        <p className="text-gray-600">配送画面に移動中...</p>
       </div>
     </div>
   )

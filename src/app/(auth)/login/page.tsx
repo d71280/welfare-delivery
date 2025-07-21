@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { getVehicleCurrentOdometer, createDeliveryRecord, deleteDeliveryRecord } from '@/lib/supabase/delivery-service'
-import { Driver, Vehicle, Route, Destination } from '@/types'
+import { Driver, Vehicle, User } from '@/types'
 
 export default function LoginPage() {
   const [drivers, setDrivers] = useState<Driver[]>([])
@@ -18,9 +18,8 @@ export default function LoginPage() {
   const [showSelectionForm, setShowSelectionForm] = useState(false)
   const [startTime, setStartTime] = useState('')
   const [currentTime, setCurrentTime] = useState('')
-  const [selectedRoute, setSelectedRoute] = useState('')
-  const [routes, setRoutes] = useState<Route[]>([])
-  const [, setDestinations] = useState<Destination[]>([])
+  const [selectedUser, setSelectedUser] = useState('')
+  const [users, setUsers] = useState<User[]>([])
   const [duplicateRecord, setDuplicateRecord] = useState<{
     id: string;
     delivery_date: string;
@@ -36,62 +35,15 @@ export default function LoginPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [driversRes, vehiclesRes] = await Promise.all([
+        const [driversRes, vehiclesRes, usersRes] = await Promise.all([
           supabase.from('drivers').select('*').eq('is_active', true),
-          supabase.from('vehicles').select('*').eq('is_active', true)
+          supabase.from('vehicles').select('*').eq('is_active', true),
+          supabase.from('users').select('*').eq('is_active', true)
         ])
         
         if (driversRes.data) setDrivers(driversRes.data)
         if (vehiclesRes.data) setVehicles(vehiclesRes.data)
-        
-        // ルートデータも取得
-        const routesRes = await supabase.from('routes').select('*').eq('is_active', true)
-        if (routesRes.data) {
-          setRoutes(routesRes.data)
-        } else {
-          // デモルートデータ
-          setRoutes([
-            { 
-              id: 'demo-route-1', 
-              route_name: '渋谷エリア配送', 
-              route_code: 'SHIBUYA',
-              start_location: '配送センター',
-              end_location: '配送センター',
-              estimated_time: '8時間', 
-              distance: '50km',
-              display_order: 1,
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            { 
-              id: 'demo-route-2', 
-              route_name: '新宿エリア配送', 
-              route_code: 'SHINJUKU',
-              start_location: '配送センター',
-              end_location: '配送センター',
-              estimated_time: '6時間', 
-              distance: '35km',
-              display_order: 2,
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            { 
-              id: 'demo-route-3', 
-              route_name: '池袋エリア配送', 
-              route_code: 'IKEBUKURO',
-              start_location: '配送センター',
-              end_location: '配送センター',
-              estimated_time: '7時間', 
-              distance: '45km',
-              display_order: 3,
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ])
-        }
+        if (usersRes.data) setUsers(usersRes.data)
       } catch (err) {
         console.error('データ取得エラー:', err)
         // エラー時はダミーデータを設定
@@ -144,8 +96,50 @@ export default function LoginPage() {
             updated_at: '' 
           }
         ])
-        
-        // デモルートデータ（上記の完全版を使用）
+        setUsers([
+          { 
+            id: '1', 
+            user_no: 'U001', 
+            name: '山田花子', 
+            phone: '03-1234-5678',
+            address: '東京都新宿区西新宿1-1-1',
+            emergency_contact: '山田太郎', 
+            emergency_phone: '090-1234-5678',
+            wheelchair_user: false,
+            special_notes: '血圧の薬を服用中',
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          },
+          { 
+            id: '2', 
+            user_no: 'U002', 
+            name: '佐藤次郎', 
+            phone: '03-2345-6789',
+            address: '東京都渋谷区渋谷2-2-2',
+            emergency_contact: '佐藤三郎', 
+            emergency_phone: '090-2345-6789',
+            wheelchair_user: true,
+            special_notes: '車椅子利用、アレルギー：卵',
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          },
+          { 
+            id: '3', 
+            user_no: 'U003', 
+            name: '田中一郎', 
+            phone: '03-3456-7890',
+            address: '東京都港区六本木3-3-3',
+            emergency_contact: '田中二郎', 
+            emergency_phone: '090-3456-7890',
+            wheelchair_user: false,
+            special_notes: '膝が悪く、歩行に時間がかかる',
+            is_active: true, 
+            created_at: '', 
+            updated_at: '' 
+          }
+        ])
       }
     }
     fetchData()
@@ -190,114 +184,14 @@ export default function LoginPage() {
     }
   }
 
-  const handleRouteSelect = (routeId: string) => {
-    setSelectedRoute(routeId)
-    if (routeId) {
-      // 実際の配送先データ（画像から読み取り）
-      /*
-      const demoDestinations = [
-        { 
-          id: '1', 
-          order: 1, 
-          name: 'Mano Café', 
-          address: '〒150-0001 東京都渋谷区神宮前1-2-3', 
-          estimatedTime: '09:30',
-          notes: 'カフェ・朝の営業時間・搬入口指定'
-        },
-        { 
-          id: '2', 
-          order: 2, 
-          name: 'ABC フランチャイズ', 
-          address: '〒150-0002 東京都渋谷区渋谷2-4-5', 
-          estimatedTime: '10:15',
-          notes: '冷凍食品・要冷蔵管理'
-        },
-        { 
-          id: '3', 
-          order: 3, 
-          name: 'ファミリーマート', 
-          address: '〒150-0003 東京都渋谷区道玄坂1-6-7', 
-          estimatedTime: '11:00',
-          notes: 'コンビニ・定期配送・バックヤード搬入'
-        },
-        { 
-          id: '4', 
-          order: 4, 
-          name: 'JKL医院', 
-          address: '〒150-0004 東京都渋谷区宇田川町3-8-9', 
-          estimatedTime: '11:45',
-          notes: '医療用品・院長直接受取・要サイン'
-        },
-        { 
-          id: '5', 
-          order: 5, 
-          name: 'MNO食品株式会社', 
-          address: '〒150-0005 東京都渋谷区桜丘町2-11-12', 
-          estimatedTime: '12:30',
-          notes: '食品卸・冷蔵品・大口配送'
-        },
-        { 
-          id: '6', 
-          order: 6, 
-          name: 'PQR個人宅（田中様）', 
-          address: '〒150-0006 東京都渋谷区恵比寿1-14-15 マンション201', 
-          estimatedTime: '13:15',
-          notes: '個人宅・不在時宅配ボックス可'
-        },
-        { 
-          id: '7', 
-          order: 7, 
-          name: 'STU オフィス', 
-          address: '〒150-0007 東京都渋谷区神南2-16-17 STUビル5F', 
-          estimatedTime: '14:00',
-          notes: 'オフィス・受付対応・平日のみ'
-        },
-        { 
-          id: '8', 
-          order: 8, 
-          name: 'VWX薬局', 
-          address: '〒150-0008 東京都渋谷区宮益坂3-18-19', 
-          estimatedTime: '14:45',
-          notes: '薬局・医薬品・薬剤師確認必要'
-        },
-        { 
-          id: '9', 
-          order: 9, 
-          name: 'YZ商店', 
-          address: '〒150-0009 東京都渋谷区神宮前4-20-21', 
-          estimatedTime: '15:30',
-          notes: '雑貨店・店長不在時は店員対応可'
-        },
-        { 
-          id: '10', 
-          order: 10, 
-          name: 'アパートメント（鈴木様）', 
-          address: '〒150-0010 東京都渋谷区恵比寿西2-22-23 アパート103', 
-          estimatedTime: '16:15',
-          notes: '個人宅・インターホン確認・手渡し希望'
-        }
-      ]
-      */
-      setDestinations([
-        { 
-          id: '1', 
-          route_id: routeId,
-          name: 'ABC商店', 
-          address: '〒150-0001 東京都渋谷区神宮前1-1-1', 
-          destination_type: 'facility' as const,
-          display_order: 1,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-    }
+  const handleUserSelect = (userId: string) => {
+    setSelectedUser(userId)
   }
 
   // 配送開始処理
   const handleStartDeliveryWithRecord = async () => {
-    if (!selectedDriver || !selectedVehicle || !selectedRoute) {
-      setError('ドライバー、車両、ルートを選択してください')
+    if (!selectedDriver || !selectedVehicle || !selectedUser) {
+      setError('ドライバー、車両、利用者を選択してください')
       return
     }
 
@@ -308,16 +202,16 @@ export default function LoginPage() {
       console.log('配送開始処理開始')
       console.log('選択されたドライバー:', selectedDriver)
       console.log('選択された車両:', selectedVehicle)
-      console.log('選択されたルート:', selectedRoute)
+      console.log('選択された利用者:', selectedUser)
       console.log('開始走行距離:', startOdometer)
 
       // 配送記録を作成（開始走行距離は自動設定）
       const deliveryData = {
         driverId: selectedDriver,
         vehicleId: selectedVehicle,
-        routeId: selectedRoute,
+        userId: selectedUser,
         transportationDate: new Date().toISOString().split('T')[0],
-        transportationType: 'regular' as const,
+        transportationType: 'individual' as const,
         gasCardUsed: false
       }
 
@@ -357,8 +251,8 @@ export default function LoginPage() {
         driverName: drivers.find(d => d.id === selectedDriver)?.name || '',
         vehicleId: selectedVehicle,
         vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no || '',
-        selectedRoute,
-        routeName: routes.find(r => r.id === selectedRoute)?.route_name || '',
+        selectedUser,
+        userName: users.find(u => u.id === selectedUser)?.name || '',
         deliveryRecordId: result.data?.id,
         startOdometer,
         loginTime: new Date().toISOString(),
@@ -434,8 +328,8 @@ export default function LoginPage() {
         vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no,
         loginTime: new Date().toISOString(),
         startTime: startTime,
-        selectedRoute: selectedRoute,
-        routeName: routes.find(r => r.id === selectedRoute)?.route_name
+        selectedUser: selectedUser,
+        userName: users.find(u => u.id === selectedUser)?.name
       }
       
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
@@ -456,8 +350,7 @@ export default function LoginPage() {
     setSelectedVehicle('')
     setError('')
     setStartTime('')
-    setSelectedRoute('')
-    setDestinations([])
+    setSelectedUser('')
   }
 
   return (
@@ -606,25 +499,56 @@ export default function LoginPage() {
             </div>
 
 
-            {/* ルート選択 */}
+            {/* 利用者選択 */}
             <div className="welfare-card">
-              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                🗺️ 送迎ルート <span className="text-red-500 text-xl">*</span>
+              <label className="block text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                👤 送迎対象の利用者様 <span className="text-red-500 text-xl">*</span>
               </label>
-              <select
-                value={selectedRoute}
-                onChange={(e) => handleRouteSelect(e.target.value)}
-                className="welfare-select"
-                required
-              >
-                <option value="">送迎ルートを選択してください</option>
-                {routes.map((route) => (
-                  <option key={route.id} value={route.id}>
-                    🗺️ {route.route_name} ({route.estimated_time} / {route.distance})
-                  </option>
+              <div className="grid gap-4">
+                {users.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => handleUserSelect(user.id)}
+                    className={`p-4 border-2 rounded-xl text-left transition-all ${
+                      selectedUser === user.id
+                        ? 'border-blue-500 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        user.wheelchair_user ? 'bg-purple-100' : 'bg-blue-100'
+                      }`}>
+                        <span className="text-2xl">{user.wheelchair_user ? '♿' : '👤'}</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-lg">{user.name}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                            {user.user_no}
+                          </span>
+                          {user.wheelchair_user && (
+                            <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                              車椅子利用
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">📍 {user.address}</p>
+                        {user.special_notes && (
+                          <p className="text-sm text-orange-600 mt-1">📝 {user.special_notes}</p>
+                        )}
+                      </div>
+                      {selectedUser === user.id && (
+                        <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 ))}
-              </select>
-              <p className="text-gray-600 text-sm mt-2">⚠️ 安全運転でご利用者様をお送りください</p>
+              </div>
+              <p className="text-gray-600 text-sm mt-4">⚠️ 利用者様の体調と安全を最優先にお送りください</p>
             </div>
 
             {/* 時間入力セクション */}
@@ -689,7 +613,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleStartDeliveryWithRecord}
-                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || !selectedRoute}
+                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || !selectedUser}
                 className="welfare-button welfare-button-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

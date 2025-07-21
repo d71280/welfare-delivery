@@ -9,18 +9,28 @@ const supabase = createClient()
 export async function checkExistingDeliveryRecord(
   transportationDate: string,
   driverId: string,
-  routeId: string
+  userId?: string,
+  routeId?: string
 ) {
   try {
-    console.log('既存配送記録チェック開始:', { transportationDate, driverId, routeId })
+    console.log('既存配送記録チェック開始:', { transportationDate, driverId, userId, routeId })
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('transportation_records')
       .select('*')
       .eq('transportation_date', transportationDate)
       .eq('driver_id', driverId)
-      .eq('route_id', routeId)
-      .maybeSingle() // single()ではなくmaybeSingle()を使用
+
+    // user-based delivery の場合
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    // route-based delivery の場合
+    else if (routeId) {
+      query = query.eq('route_id', routeId)
+    }
+
+    const { data, error } = await query.maybeSingle()
 
     if (error) {
       console.error('既存配送記録チェックエラー:', error)
@@ -92,6 +102,7 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     const existingCheck = await checkExistingDeliveryRecord(
       formData.transportationDate,
       formData.driverId,
+      formData.userId,
       formData.routeId
     )
     
@@ -115,11 +126,12 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       transportation_date: formData.transportationDate,
       driver_id: formData.driverId,
       vehicle_id: formData.vehicleId,
+      user_id: formData.userId,
       route_id: formData.routeId,
-      transportation_type: formData.transportationType || 'regular',
+      transportation_type: formData.transportationType || 'individual',
       start_odometer: currentOdometer, // 自動設定
       end_odometer: formData.endOdometer,
-      passenger_count: formData.passengerCount || 0,
+      passenger_count: formData.passengerCount || 1,
       weather_condition: formData.weatherCondition,
       special_notes: formData.specialNotes,
       status: 'pending'

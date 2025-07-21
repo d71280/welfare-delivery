@@ -57,9 +57,10 @@ export interface DriverLoginForm {
 export interface TransportationRecordForm {
   driverId: string
   vehicleId: string
-  routeId: string
+  routeId?: string
+  userId?: string
   transportationDate: string
-  transportationType: 'regular' | 'medical' | 'emergency' | 'outing'
+  transportationType: 'regular' | 'medical' | 'emergency' | 'outing' | 'individual'
   startOdometer?: number
   endOdometer?: number
   passengerCount?: number
@@ -82,7 +83,7 @@ export interface TransportationDetailForm {
 
 // Status types
 export type TransportationStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
-export type TransportationType = 'regular' | 'medical' | 'emergency' | 'outing'
+export type TransportationType = 'regular' | 'medical' | 'emergency' | 'outing' | 'individual'
 export type DestinationType = 'home' | 'facility' | 'medical' | 'other'
 
 // UI types
@@ -138,6 +139,7 @@ export const TRANSPORTATION_TYPES = {
   medical: '医療送迎',
   emergency: '緊急送迎',
   outing: '外出支援',
+  individual: '個別送迎',
 } as const
 
 export const DESTINATION_TYPES = {
