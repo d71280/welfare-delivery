@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, UserInsert, UserUpdate } from '@/types'
+import { User, UserInsert, UserUpdate, UserAddress, UserAddressInsert, UserWithAddresses } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserWithAddresses[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editingUser, setEditingUser] = useState<UserWithAddresses | null>(null)
   const [formData, setFormData] = useState<Partial<UserInsert>>({
     user_no: '',
     name: '',
@@ -22,6 +22,16 @@ export default function UsersPage() {
     management_code_id: '',
     is_active: true
   })
+  const [addresses, setAddresses] = useState<(UserAddress | UserAddressInsert)[]>([
+    {
+      address_type: 'home',
+      address_name: '自宅',
+      address: '',
+      is_primary: true,
+      is_active: true,
+      display_order: 0
+    } as UserAddressInsert
+  ])
 
   const [availableManagementCodes, setAvailableManagementCodes] = useState<{id: string, code: string, name: string}[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -94,8 +104,8 @@ export default function UsersPage() {
       
       const managementCodeIds = managementCodes.map(code => code.id)
       
-      // 管理コードでフィルタリングして利用者を取得
-      const { data, error } = await supabase
+      // 管理コードでフィルタリングして利用者を取得（住所情報も含む）
+      const { data: usersData, error } = await supabase
         .from('users')
         .select('*')
         .in('management_code_id', managementCodeIds)
@@ -106,7 +116,24 @@ export default function UsersPage() {
         return
       }
 
-      setUsers(data || [])
+      // 各利用者の住所情報を取得
+      const usersWithAddresses: UserWithAddresses[] = []
+      
+      for (const user of usersData || []) {
+        const { data: addressesData } = await supabase
+          .from('user_addresses')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('display_order')
+        
+        usersWithAddresses.push({
+          ...user,
+          addresses: addressesData || []
+        })
+      }
+      
+      setUsers(usersWithAddresses)
     } catch (error) {
       console.error('利用者取得エラー:', error)
     } finally {
@@ -141,7 +168,10 @@ export default function UsersPage() {
     }
     
     try {
+      let userId: string
+      
       if (editingUser) {
+        // 利用者情報を更新
         const { error } = await supabase
           .from('users')
           .update({
@@ -155,20 +185,57 @@ export default function UsersPage() {
           alert('利用者の更新に失敗しました: ' + (error.message || String(error)))
           return
         }
-        alert('利用者情報を更新しました')
+        
+        userId = editingUser.id
+        
+        // 既存の住所を削除（後で再作成）
+        await supabase
+          .from('user_addresses')
+          .delete()
+          .eq('user_id', userId)
+        
       } else {
-        const { error } = await supabase
+        // 新規利用者を作成
+        const { data, error } = await supabase
           .from('users')
           .insert([formData as UserInsert])
+          .select()
+          .single()
         
         if (error) {
           console.error('利用者の登録に失敗しました:', error)
           alert('利用者の登録に失敗しました: ' + (error.message || String(error)))
           return
         }
-        alert('新しい利用者を登録しました')
+        
+        userId = data.id
+      }
+      
+      // 住所データを保存
+      if (addresses.length > 0) {
+        const addressesToInsert = addresses.map((addr, index) => ({
+          user_id: userId,
+          address_type: addr.address_type,
+          address_name: addr.address_name,
+          address: addr.address,
+          is_primary: addr.is_primary,
+          is_active: addr.is_active ?? true,
+          display_order: index,
+          notes: addr.notes || null
+        }))
+        
+        const { error: addressError } = await supabase
+          .from('user_addresses')
+          .insert(addressesToInsert)
+        
+        if (addressError) {
+          console.error('住所の保存に失敗しました:', addressError)
+          alert('住所の保存に失敗しました: ' + (addressError.message || String(addressError)))
+          return
+        }
       }
 
+      alert(editingUser ? '利用者情報を更新しました' : '新しい利用者を登録しました')
       await fetchUsers()
       resetForm()
     } catch (error) {
@@ -177,7 +244,7 @@ export default function UsersPage() {
     }
   }
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: UserWithAddresses) => {
     setEditingUser(user)
     setFormData({
       user_no: user.user_no,
@@ -191,6 +258,24 @@ export default function UsersPage() {
       management_code_id: user.management_code_id || '',
       is_active: user.is_active
     })
+    
+    // 住所データを設定
+    if (user.addresses && user.addresses.length > 0) {
+      setAddresses(user.addresses)
+    } else {
+      // 既存の住所データから初期住所を作成
+      setAddresses([
+        {
+          address_type: 'home',
+          address_name: '自宅',
+          address: user.address || '',
+          is_primary: true,
+          is_active: true,
+          display_order: 0
+        } as UserAddressInsert
+      ])
+    }
+    
     setIsFormOpen(true)
   }
 
@@ -216,6 +301,62 @@ export default function UsersPage() {
     }
   }
 
+  const addAddress = () => {
+    const newAddress: UserAddressInsert = {
+      user_id: editingUser?.id || '',
+      address_type: 'other',
+      address_name: '',
+      address: '',
+      is_primary: addresses.length === 0,
+      is_active: true,
+      display_order: addresses.length
+    }
+    setAddresses([...addresses, newAddress])
+  }
+
+  const removeAddress = (index: number) => {
+    if (addresses.length <= 1) {
+      alert('最低1つの住所が必要です')
+      return
+    }
+    
+    const newAddresses = addresses.filter((_, i) => i !== index)
+    // 主要住所が削除された場合、最初の住所を主要に設定
+    if (addresses[index].is_primary && newAddresses.length > 0) {
+      newAddresses[0].is_primary = true
+    }
+    setAddresses(newAddresses)
+  }
+
+  const updateAddress = (index: number, field: keyof UserAddress, value: any) => {
+    const newAddresses = [...addresses]
+    newAddresses[index] = {
+      ...newAddresses[index],
+      [field]: value
+    }
+    
+    // 主要住所を設定した場合、他の住所の主要フラグを外す
+    if (field === 'is_primary' && value === true) {
+      newAddresses.forEach((addr, i) => {
+        if (i !== index) {
+          addr.is_primary = false
+        }
+      })
+    }
+    
+    setAddresses(newAddresses)
+  }
+
+  const getAddressTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      home: '自宅',
+      school: '学校',
+      work: '職場',
+      other: 'その他'
+    }
+    return types[type] || type
+  }
+
   const resetForm = () => {
     setFormData({
       user_no: '',
@@ -229,6 +370,16 @@ export default function UsersPage() {
       management_code_id: '',
       is_active: true
     })
+    setAddresses([
+      {
+        address_type: 'home',
+        address_name: '自宅',
+        address: '',
+        is_primary: true,
+        is_active: true,
+        display_order: 0
+      } as UserAddressInsert
+    ])
     setEditingUser(null)
     setIsFormOpen(false)
     setErrors({})
@@ -322,16 +473,6 @@ export default function UsersPage() {
                   />
                 </div>
                 <div className="welfare-filter-item">
-                  <label>🏠 ご住所</label>
-                  <input
-                    type="text"
-                    value={formData.address || ''}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="welfare-input"
-                    placeholder="例: 東京都○○区△△町1-2-3"
-                  />
-                </div>
-                <div className="welfare-filter-item">
                   <label>👨‍👩‍👧‍👦 緊急連絡先（お名前）</label>
                   <input
                     type="text"
@@ -389,7 +530,126 @@ export default function UsersPage() {
                     placeholder="アレルギー、服薬状況、介助の注意点、送迎時の配慮事項など"
                   />
                 </div>
+              </div>
 
+              {/* 複数住所管理セクション */}
+              <div className="welfare-section mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    🏠 住所管理
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addAddress}
+                    className="welfare-button welfare-button-secondary text-sm"
+                  >
+                    ➕ 住所を追加
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {addresses.map((address, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              種別 <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={address.address_type}
+                              onChange={(e) => updateAddress(index, 'address_type', e.target.value)}
+                              className="welfare-select"
+                              required
+                            >
+                              <option value="home">自宅</option>
+                              <option value="school">学校</option>
+                              <option value="work">職場</option>
+                              <option value="other">その他</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              名称 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={address.address_name}
+                              onChange={(e) => updateAddress(index, 'address_name', e.target.value)}
+                              className="welfare-input"
+                              placeholder="例: 自宅、○○学校"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              住所 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={address.address}
+                              onChange={(e) => updateAddress(index, 'address', e.target.value)}
+                              className="welfare-input"
+                              placeholder="例: 東京都○○区△△町1-2-3"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              備考
+                            </label>
+                            <input
+                              type="text"
+                              value={address.notes || ''}
+                              onChange={(e) => updateAddress(index, 'notes', e.target.value)}
+                              className="welfare-input"
+                              placeholder="送迎時の注意事項など"
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2 flex items-center space-x-4">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={address.is_primary}
+                                onChange={(e) => updateAddress(index, 'is_primary', e.target.checked)}
+                                className="mr-2"
+                              />
+                              <span className="text-sm font-medium">主要住所</span>
+                            </label>
+                            
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={address.is_active ?? true}
+                                onChange={(e) => updateAddress(index, 'is_active', e.target.checked)}
+                                className="mr-2"
+                              />
+                              <span className="text-sm font-medium">有効</span>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {addresses.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeAddress(index)}
+                            className="ml-4 text-red-600 hover:text-red-700"
+                            title="削除"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="welfare-filter-grid mt-6">
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
@@ -465,11 +725,22 @@ export default function UsersPage() {
                             <span className="font-medium">電話:</span> {user.phone}
                           </p>
                         )}
-                        {user.address && (
-                          <p className="flex items-center gap-2">
-                            <span className="text-green-600">🏠</span>
-                            <span className="font-medium">住所:</span> {user.address}
-                          </p>
+                        {user.addresses && user.addresses.length > 0 && (
+                          <div>
+                            <p className="flex items-start gap-2">
+                              <span className="text-green-600">🏠</span>
+                              <span className="font-medium">住所:</span>
+                            </p>
+                            <ul className="ml-7 space-y-1">
+                              {user.addresses.map((addr, idx) => (
+                                <li key={idx} className="text-sm">
+                                  <span className="font-medium">{addr.address_name}</span>
+                                  {addr.is_primary && <span className="text-blue-600 text-xs ml-1">(主要)</span>}
+                                  : {addr.address}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
                       </div>
                       <div className="space-y-2">

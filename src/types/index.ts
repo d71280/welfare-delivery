@@ -47,6 +47,47 @@ export interface TransportationDetailWithDestination extends TransportationDetai
   user?: any
 }
 
+// User Address types
+export interface UserAddress {
+  id: string
+  user_id: string
+  address_type: 'home' | 'school' | 'work' | 'other'
+  address_name: string
+  address: string
+  is_primary: boolean
+  is_active: boolean
+  display_order: number
+  notes?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UserAddressInsert {
+  user_id: string
+  address_type: 'home' | 'school' | 'work' | 'other'
+  address_name: string
+  address: string
+  is_primary?: boolean
+  is_active?: boolean
+  display_order?: number
+  notes?: string | null
+}
+
+export interface UserAddressUpdate {
+  address_type?: 'home' | 'school' | 'work' | 'other'
+  address_name?: string
+  address?: string
+  is_primary?: boolean
+  is_active?: boolean
+  display_order?: number
+  notes?: string | null
+}
+
+// Extended User type with addresses
+export interface UserWithAddresses extends User {
+  addresses?: UserAddress[]
+}
+
 // Form types
 export interface DriverLoginForm {
   driverId: string
