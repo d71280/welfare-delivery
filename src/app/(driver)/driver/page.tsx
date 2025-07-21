@@ -86,6 +86,10 @@ export default function DriverPage() {
       // 各送迎記録に対応する利用者詳細情報を取得
       const deliveryItems: DeliveryItem[] = []
       
+      // セッション情報を再取得
+      const sessionData = localStorage.getItem('driverSession')
+      const currentSession = sessionData ? JSON.parse(sessionData) as DriverSession : null
+      
       for (const record of records || []) {
         // transportation_detailsから利用者情報を取得
         const { data: details } = await supabase
@@ -97,10 +101,10 @@ export default function DriverPage() {
           .eq('transportation_record_id', record.id)
         
         // セッション情報から選択された利用者を取得
-        console.log('セッション内の選択された利用者:', session?.selectedUsers)
-        if (session?.selectedUsers && session.selectedUsers.length > 0) {
+        console.log('セッション内の選択された利用者:', currentSession?.selectedUsers)
+        if (currentSession?.selectedUsers && currentSession.selectedUsers.length > 0) {
           // 複数利用者送迎の場合、各利用者を個別のアイテムとして表示
-          for (const userId of session.selectedUsers) {
+          for (const userId of currentSession.selectedUsers) {
             try {
               const { data: userData } = await supabase
                 .from('users')
