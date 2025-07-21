@@ -115,7 +115,12 @@ export default function DestinationsManagementPage() {
           })
           .eq('id', editingDestination.id)
 
-        if (error) throw error
+        if (error) {
+          console.error('配送先の更新に失敗しました:', error)
+          alert('配送先の更新に失敗しました: ' + (error.message || String(error)))
+          return
+        }
+        alert('配送先を更新しました')
       } else {
         const { error } = await supabase
           .from('destinations')
@@ -127,14 +132,19 @@ export default function DestinationsManagementPage() {
             is_active: formData.is_active
           })
 
-        if (error) throw error
+        if (error) {
+          console.error('配送先の登録に失敗しました:', error)
+          alert('配送先の登録に失敗しました: ' + (error.message || String(error)))
+          return
+        }
+        alert('新しい配送先を登録しました')
       }
 
       fetchDestinations()
       resetForm()
     } catch (err) {
       console.error('保存エラー:', err)
-      alert('保存に失敗しました')
+      alert('保存に失敗しました: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
@@ -160,7 +170,12 @@ export default function DestinationsManagementPage() {
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('配送先の削除に失敗しました:', error)
+        alert('配送先の削除に失敗しました: ' + (error.message || String(error)))
+        return
+      }
+      alert('配送先を削除しました')
       fetchDestinations()
     } catch (err) {
       console.error('削除エラー:', err)

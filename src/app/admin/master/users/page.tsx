@@ -53,19 +53,30 @@ export default function UsersPage() {
           .update(formData as UserUpdate)
           .eq('id', editingUser.id)
         
-        if (error) throw error
+        if (error) {
+          console.error('利用者の更新に失敗しました:', error)
+          alert('利用者の更新に失敗しました: ' + (error.message || String(error)))
+          return
+        }
+        alert('利用者情報を更新しました')
       } else {
         const { error } = await supabase
           .from('users')
           .insert([formData as UserInsert])
         
-        if (error) throw error
+        if (error) {
+          console.error('利用者の登録に失敗しました:', error)
+          alert('利用者の登録に失敗しました: ' + (error.message || String(error)))
+          return
+        }
+        alert('新しい利用者を登録しました')
       }
 
       await fetchUsers()
       resetForm()
     } catch (error) {
       console.error('利用者の保存に失敗しました:', error)
+      alert('利用者の保存に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
     }
   }
 
@@ -94,10 +105,16 @@ export default function UsersPage() {
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('利用者の削除に失敗しました:', error)
+        alert('利用者の削除に失敗しました: ' + (error.message || String(error)))
+        return
+      }
+      alert('利用者を削除しました')
       await fetchUsers()
     } catch (error) {
       console.error('利用者の削除に失敗しました:', error)
+      alert('利用者の削除に失敗しました')
     }
   }
 

@@ -263,7 +263,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => router.push('/vehicles')}
+            onClick={() => router.push('/admin/master/vehicles')}
             className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
           >
             <h3 className="text-lg font-medium text-gray-900 mb-2">車両管理</h3>
@@ -278,13 +278,28 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600">配送ルートと配送先の管理</p>
           </button>
 
-
           <button
-            onClick={() => router.push('/admin/delivery-records')}
+            onClick={() => router.push('/admin/master/users')}
             className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
           >
-            <h3 className="text-lg font-medium text-gray-900 mb-2">配送記録</h3>
-            <p className="text-gray-600">配送記録の一覧と詳細確認</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">利用者管理</h3>
+            <p className="text-gray-600">ご利用者様の情報管理</p>
+          </button>
+
+          <button
+            onClick={() => router.push('/admin/transportation-records')}
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
+          >
+            <h3 className="text-lg font-medium text-gray-900 mb-2">送迎記録</h3>
+            <p className="text-gray-600">送迎記録の一覧と詳細確認</p>
+          </button>
+
+          <button
+            onClick={() => router.push('/admin/reports')}
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
+          >
+            <h3 className="text-lg font-medium text-gray-900 mb-2">レポート</h3>
+            <p className="text-gray-600">月次レポートと統計情報</p>
           </button>
         </div>
 

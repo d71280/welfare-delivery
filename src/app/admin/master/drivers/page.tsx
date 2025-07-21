@@ -95,8 +95,10 @@ export default function DriversManagementPage() {
 
         if (error) {
           console.error('更新エラー:', error)
+          alert('更新に失敗しました: ' + (error.message || String(error)))
           return
         }
+        alert('ドライバー情報を更新しました')
       } else {
         // 新規作成
         const { error } = await supabase
@@ -110,8 +112,10 @@ export default function DriversManagementPage() {
 
         if (error) {
           console.error('作成エラー:', error)
+          alert('登録に失敗しました: ' + (error.message || String(error)))
           return
         }
+        alert('新しいドライバーを登録しました')
       }
 
       // フォームリセット
@@ -126,6 +130,7 @@ export default function DriversManagementPage() {
       fetchDrivers()
     } catch (error) {
       console.error('保存エラー:', error)
+      alert('保存に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
     }
   }
 
@@ -153,12 +158,15 @@ export default function DriversManagementPage() {
 
       if (error) {
         console.error('削除エラー:', error)
+        alert('削除に失敗しました: ' + (error.message || String(error)))
         return
       }
+      alert('ドライバーを削除しました')
 
       fetchDrivers()
     } catch (error) {
       console.error('削除エラー:', error)
+      alert('削除に失敗しました')
     }
   }
 
