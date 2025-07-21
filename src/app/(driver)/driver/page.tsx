@@ -14,6 +14,7 @@ interface DriverSession {
   selectedUsers?: string[]
   userNames?: string
   selectedAddresses?: {[userId: string]: string}
+  deliveryRecordIds?: string[]
 }
 
 interface DeliveryItem {
