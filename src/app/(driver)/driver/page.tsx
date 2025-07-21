@@ -149,6 +149,7 @@ export default function DriverPage() {
                 }
               }
               
+              console.log('作成したdeliveryItem:', { recordId: record.id, userId, userData: userData?.name, detail: detail?.id })
               deliveryItems.push({ 
                 record, 
                 user: userData,
@@ -224,7 +225,7 @@ export default function DriverPage() {
     try {
       // 複数利用者送迎の場合は個別の詳細記録に時間を記録
       if (userId) {
-        console.log('個別利用者の到着時間を記録:', { recordId, userId, time: currentTimeStr })
+        console.log('個別利用者の到着時間を記録:', { recordId, userId, time: currentTimeStr, timestamp: new Date().toISOString() })
         
         // まず、該当するtransportation_detailsレコードが存在するかチェック
         const { data: existingDetail } = await supabase
@@ -717,8 +718,8 @@ export default function DriverPage() {
                     <div>
                       <span className="text-sm font-medium text-gray-700 block mb-2">到着時刻:</span>
                       {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
-                      {delivery.detail ? (
-                        delivery.detail.arrival_time ? (
+                      {(delivery.detail || (session?.selectedUsers && session.selectedUsers.length > 0)) ? (
+                        delivery.detail?.arrival_time ? (
                           <div className="flex items-center space-x-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival !== undefined ? (
                               <>
@@ -772,7 +773,10 @@ export default function DriverPage() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => handleArrivalTime(delivery.record.id, delivery.user?.id)}
+                            onClick={() => {
+                              console.log('到着記録ボタンクリック:', { recordId: delivery.record.id, userId: delivery.user?.id, userName: delivery.user?.name })
+                              handleArrivalTime(delivery.record.id, delivery.user?.id)
+                            }}
                             className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
                           >
                             到着記録
@@ -846,8 +850,8 @@ export default function DriverPage() {
                     <div>
                       <span className="text-sm font-medium text-gray-700 block mb-2">出発時刻:</span>
                       {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
-                      {delivery.detail ? (
-                        delivery.detail.departure_time ? (
+                      {(delivery.detail || (session?.selectedUsers && session.selectedUsers.length > 0)) ? (
+                        delivery.detail?.departure_time ? (
                           <div className="flex items-center space-x-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure !== undefined ? (
                               <>
