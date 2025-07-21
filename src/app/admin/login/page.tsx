@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('')
@@ -10,39 +11,39 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('')
   
   const router = useRouter()
-
-  // 管理者認証情報（本番環境では環境変数やデータベースに保存）
-  const ADMIN_CREDENTIALS = {
-    username: 'admin',
-    password: 'admin123'
-  }
+  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
-    console.log('ログイン処理開始:', { username, password })
-
     try {
-      // 管理者認証
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        console.log('認証成功！ダッシュボードに移動します')
-        // セッション情報をローカルストレージに保存
-        const adminSession = {
-          role: 'admin',
-          username,
-          loginTime: new Date().toISOString()
-        }
-        
-        localStorage.setItem('adminSession', JSON.stringify(adminSession))
-        
-        // 管理者ダッシュボードにリダイレクト
-        router.push('/admin/dashboard')
-      } else {
-        console.log('認証失敗:', { username, password, expected: ADMIN_CREDENTIALS })
+      // データベースで管理者認証
+      const { data: admin, error: adminError } = await supabase
+        .from('admins')
+        .select('id, username, password, organization_id')
+        .eq('username', username)
+        .eq('password', password)
+        .single()
+
+      if (adminError || !admin) {
         throw new Error('ユーザー名またはパスワードが正しくありません')
       }
+
+      // セッション情報をローカルストレージに保存
+      const adminSession = {
+        adminId: admin.id,
+        role: 'admin',
+        username: admin.username,
+        organizationId: admin.organization_id,
+        loginTime: new Date().toISOString()
+      }
+      
+      localStorage.setItem('adminSession', JSON.stringify(adminSession))
+      
+      // 管理者ダッシュボードにリダイレクト
+      router.push('/admin/dashboard')
       
     } catch (err) {
       console.error('ログインエラー:', err)
@@ -112,9 +113,9 @@ export default function AdminLoginPage() {
 
         {/* 管理者認証情報の表示（開発用） */}
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-800 text-sm font-medium mb-2">開発用認証情報:</p>
-          <p className="text-blue-700 text-sm">ユーザー名: admin</p>
-          <p className="text-blue-700 text-sm">パスワード: admin123</p>
+          <p className="text-blue-800 text-sm font-medium mb-2">ログイン方法:</p>
+          <p className="text-blue-700 text-sm">新規登録で作成したアカウントでログインしてください</p>
+          <p className="text-blue-700 text-sm">または、新規事業者登録から始めてください</p>
         </div>
 
         {/* 新規登録リンク */}

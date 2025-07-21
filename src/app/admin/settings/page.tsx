@@ -83,7 +83,8 @@ export default function SettingsPage() {
 
     } catch (err) {
       console.error('データ取得エラー:', err)
-      setError('データの取得に失敗しました')
+      const errorMessage = err instanceof Error ? err.message : 'データの取得に失敗しました'
+      setError(`データの取得に失敗しました: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
