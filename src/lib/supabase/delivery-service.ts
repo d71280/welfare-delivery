@@ -153,8 +153,28 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     // 往復送迎の場合、選択された利用者の詳細記録を作成
     if (formData.selectedUsers && formData.selectedUsers.length > 0) {
       console.log('利用者詳細記録を作成中:', formData.selectedUsers)
+      console.log('選択された住所:', formData.selectedAddresses)
       
       for (const userId of formData.selectedUsers) {
+        // 選択された住所情報を取得
+        let pickupAddress = null
+        if (formData.selectedAddresses && formData.selectedAddresses[userId]) {
+          const addressId = formData.selectedAddresses[userId]
+          try {
+            const { data: addressData } = await supabase
+              .from('user_addresses')
+              .select('address_name, address')
+              .eq('id', addressId)
+              .single()
+            
+            if (addressData) {
+              pickupAddress = `${addressData.address_name}: ${addressData.address}`
+            }
+          } catch (addressError) {
+            console.error('住所情報取得エラー:', addressError)
+          }
+        }
+        
         const detailData = {
           transportation_record_id: data.id,
           user_id: userId,
@@ -162,11 +182,14 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
           arrival_time: null,
           departure_time: null,
           drop_off_time: null,
+          pickup_address: pickupAddress,
           health_condition: null,
           behavior_notes: null,
           assistance_required: null,
           remarks: null
         }
+        
+        console.log('利用者詳細データ:', detailData)
         
         const { error: detailError } = await supabase
           .from('transportation_details')

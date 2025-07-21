@@ -261,7 +261,8 @@ export default function LoginPage() {
         passengerCount: selectedUsers.length,
         specialNotes: `往復送迎 - 利用者${selectedUsers.length}名`,
         managementCodeId: currentManagementCodeId,
-        selectedUsers: selectedUsers // 利用者リストを渡す
+        selectedUsers: selectedUsers, // 利用者リストを渡す
+        selectedAddresses: selectedAddresses // 選択された住所情報を追加
       }
 
       console.log('送迎データ:', deliveryData)
