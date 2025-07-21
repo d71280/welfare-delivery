@@ -152,7 +152,12 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     return { data, error: null }
   } catch (error) {
     console.error('送迎記録の作成に失敗:', error)
-    return { data: null, error }
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+        ? error 
+        : JSON.stringify(error, null, 2)
+    return { data: null, error: errorMessage }
   }
 }
 
