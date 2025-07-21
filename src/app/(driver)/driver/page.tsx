@@ -96,6 +96,16 @@ export default function DriverPage() {
         deliveryItems.push({ record, user })
       }
 
+      // 選択順序で並び替え（special_notesの番号を使用）
+      deliveryItems.sort((a, b) => {
+        const getOrderNumber = (notes: string | null) => {
+          if (!notes) return 999
+          const match = notes.match(/(\d+)番目/)
+          return match ? parseInt(match[1]) : 999
+        }
+        return getOrderNumber(a.record.special_notes) - getOrderNumber(b.record.special_notes)
+      })
+
       setDeliveries(deliveryItems)
       
       // 全ての配送が完了しているかチェック

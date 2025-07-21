@@ -216,14 +216,15 @@ export default function LoginPage() {
       // 複数利用者に対して個別の配送記録を作成
       const deliveryResults = []
       
-      for (const userId of selectedUsers) {
+      for (let i = 0; i < selectedUsers.length; i++) {
+        const userId = selectedUsers[i]
         const deliveryData = {
           driverId: selectedDriver,
           vehicleId: selectedVehicle,
           transportationDate: new Date().toISOString().split('T')[0],
           transportationType: 'individual' as const,
           passengerCount: 1,
-          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の1名)`
+          specialNotes: `利用者ID: ${userId} - 複数利用者配送 (${selectedUsers.length}名中の${i + 1}番目)`
         }
 
         console.log('配送データ:', deliveryData)
