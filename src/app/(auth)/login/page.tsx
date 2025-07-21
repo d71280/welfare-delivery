@@ -533,7 +533,7 @@ export default function LoginPage() {
                 </p>
               </div>
             ) : (
-
+              <>
             {/* ドライバー選択 */}
             <div className="welfare-card">
               <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -723,6 +723,7 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+              </>
             )}
             
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mt-6">
