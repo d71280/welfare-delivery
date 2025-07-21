@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TransportationRecord, Driver, Vehicle } from '@/types'
+import { consolidateDuplicateRecords } from '@/lib/database/migrations'
 
 interface TransportationRecordWithDetails extends TransportationRecord {
   drivers?: { name: string }
@@ -61,6 +62,7 @@ export default function TransportationRecordsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedGroup, setSelectedGroup] = useState<GroupedTransportationRecord | null>(null)
   const [showDetails, setShowDetails] = useState(false)
+  const [isConsolidating, setIsConsolidating] = useState(false)
   const [filterDriver, setFilterDriver] = useState<string>('all')
   const [filterVehicle, setFilterVehicle] = useState<string>('all')
   const [filterType, setFilterType] = useState<string>('all')
@@ -565,6 +567,28 @@ export default function TransportationRecordsPage() {
     setShowDetails(true)
   }
 
+  const handleConsolidateRecords = async () => {
+    if (!confirm('重複した送迎記録を統合しますか？\n同じ日付・ドライバー・車両の記録が1件に統合されます。')) {
+      return
+    }
+
+    setIsConsolidating(true)
+    try {
+      const result = await consolidateDuplicateRecords()
+      if (result.success) {
+        alert(`${result.message}`)
+        await fetchRecords() // 記録を再読み込み
+      } else {
+        alert('統合処理中にエラーが発生しました: ' + (result.error?.message || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error consolidating records:', error)
+      alert('統合処理中にエラーが発生しました')
+    } finally {
+      setIsConsolidating(false)
+    }
+  }
+
   const handleEditSafety = (record: TransportationRecordWithDetails) => {
     setEditingSafety((record as any).id)
     setSafetyFormData({
@@ -692,6 +716,13 @@ export default function TransportationRecordsPage() {
                 className="welfare-button welfare-button-primary disabled:opacity-50"
               >
                 📄 PDF出力 ({selectedRecords.length})
+              </button>
+              <button
+                onClick={handleConsolidateRecords}
+                disabled={isConsolidating}
+                className="welfare-button welfare-button-warning disabled:opacity-50"
+              >
+                {isConsolidating ? '統合中...' : '🔄 重複記録統合'}
               </button>
             </div>
           </div>
