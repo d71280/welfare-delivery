@@ -102,6 +102,8 @@ export default function DriverPage() {
         
         // セッション情報から選択された利用者を取得
         console.log('セッション内の選択された利用者:', currentSession?.selectedUsers)
+        console.log('取得した詳細記録:', details)
+        
         if (currentSession?.selectedUsers && currentSession.selectedUsers.length > 0) {
           // 複数利用者送迎の場合、各利用者を個別のアイテムとして表示
           for (const userId of currentSession.selectedUsers) {
@@ -113,7 +115,39 @@ export default function DriverPage() {
                 .single()
               
               // 対応する詳細記録を探す
-              const detail = details?.find(d => d.user_id === userId)
+              let detail = details?.find(d => d.user_id === userId)
+              
+              // 詳細記録が存在しない場合は作成
+              if (!detail) {
+                console.log('詳細記録が見つからないため作成:', { recordId: record.id, userId })
+                
+                const detailData = {
+                  transportation_record_id: record.id,
+                  user_id: userId,
+                  destination_id: null,
+                  pickup_time: null,
+                  arrival_time: null,
+                  departure_time: null,
+                  drop_off_time: null,
+                  health_condition: null,
+                  behavior_notes: null,
+                  assistance_required: null,
+                  remarks: null
+                }
+                
+                const { data: newDetail, error: createError } = await supabase
+                  .from('transportation_details')
+                  .insert([detailData])
+                  .select()
+                  .single()
+                
+                if (createError) {
+                  console.error('詳細記録作成エラー:', createError)
+                } else {
+                  detail = newDetail
+                  console.log('詳細記録作成成功:', detail)
+                }
+              }
               
               deliveryItems.push({ 
                 record, 
@@ -190,6 +224,22 @@ export default function DriverPage() {
     try {
       // 複数利用者送迎の場合は個別の詳細記録に時間を記録
       if (userId) {
+        console.log('個別利用者の到着時間を記録:', { recordId, userId, time: currentTimeStr })
+        
+        // まず、該当するtransportation_detailsレコードが存在するかチェック
+        const { data: existingDetail } = await supabase
+          .from('transportation_details')
+          .select('id')
+          .eq('transportation_record_id', recordId)
+          .eq('user_id', userId)
+          .single()
+        
+        if (!existingDetail) {
+          console.error('対応する詳細記録が見つかりません:', { recordId, userId })
+          alert('対応する詳細記録が見つかりません')
+          return
+        }
+        
         const { error: detailError } = await supabase
           .from('transportation_details')
           .update({
@@ -199,9 +249,14 @@ export default function DriverPage() {
           .eq('transportation_record_id', recordId)
           .eq('user_id', userId)
 
-        if (detailError) throw detailError
+        if (detailError) {
+          console.error('詳細記録更新エラー:', detailError)
+          throw detailError
+        }
 
-        // 状態を更新
+        console.log('個別利用者の到着時間記録成功:', { recordId, userId, time: currentTimeStr + ':00' })
+
+        // 状態を更新（該当する利用者のみ）
         setDeliveries(prev => 
           prev.map(item => 
             item.record.id === recordId && item.user?.id === userId
@@ -217,6 +272,8 @@ export default function DriverPage() {
         )
       } else {
         // 従来の方法（単一利用者の場合）
+        console.log('単一利用者の到着時間を記録:', { recordId, time: currentTimeStr })
+        
         const { data, error } = await supabase
           .from('transportation_records')
           .update({
@@ -242,7 +299,7 @@ export default function DriverPage() {
       
     } catch (err) {
       console.error('到着時刻記録エラー:', err)
-      alert('到着時刻の記録に失敗しました')
+      alert('到着時刻の記録に失敗しました: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
@@ -252,6 +309,22 @@ export default function DriverPage() {
     try {
       // 複数利用者送迎の場合は個別の詳細記録に時間を記録
       if (userId) {
+        console.log('個別利用者の出発時間を記録:', { recordId, userId, time: currentTimeStr })
+        
+        // まず、該当するtransportation_detailsレコードが存在するかチェック
+        const { data: existingDetail } = await supabase
+          .from('transportation_details')
+          .select('id')
+          .eq('transportation_record_id', recordId)
+          .eq('user_id', userId)
+          .single()
+        
+        if (!existingDetail) {
+          console.error('対応する詳細記録が見つかりません:', { recordId, userId })
+          alert('対応する詳細記録が見つかりません')
+          return
+        }
+        
         const { error: detailError } = await supabase
           .from('transportation_details')
           .update({
@@ -261,9 +334,14 @@ export default function DriverPage() {
           .eq('transportation_record_id', recordId)
           .eq('user_id', userId)
 
-        if (detailError) throw detailError
+        if (detailError) {
+          console.error('詳細記録更新エラー:', detailError)
+          throw detailError
+        }
 
-        // 状態を更新
+        console.log('個別利用者の出発時間記録成功:', { recordId, userId, time: currentTimeStr + ':00' })
+
+        // 状態を更新（該当する利用者のみ）
         setDeliveries(prev => 
           prev.map(item => 
             item.record.id === recordId && item.user?.id === userId
@@ -279,6 +357,8 @@ export default function DriverPage() {
         )
       } else {
         // 従来の方法（単一利用者の場合）
+        console.log('単一利用者の出発時間を記録:', { recordId, time: currentTimeStr })
+        
         const { data, error } = await supabase
           .from('transportation_records')
           .update({
@@ -319,7 +399,7 @@ export default function DriverPage() {
       
     } catch (err) {
       console.error('出発時刻記録エラー:', err)
-      alert('出発時刻の記録に失敗しました')
+      alert('出発時刻の記録に失敗しました: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
