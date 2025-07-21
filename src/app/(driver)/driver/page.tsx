@@ -506,6 +506,21 @@ export default function DriverPage() {
           }
         }))
       }
+
+      // 全完了チェック（時刻更新後）
+      setTimeout(() => {
+        setDeliveries(currentDeliveries => {
+          const completed = currentDeliveries.every(item => {
+            // 複数利用者の場合は、すべての利用者の出発時間が記録されているかチェック
+            if (item.detail) {
+              return item.detail.departure_time !== null && item.detail.departure_time !== undefined
+            }
+            return item.record.status === 'completed'
+          })
+          setAllCompleted(completed)
+          return currentDeliveries
+        })
+      }, 100)
       
     } catch (err) {
       console.error('時刻更新エラー:', err)
@@ -1098,7 +1113,13 @@ export default function DriverPage() {
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {allCompleted ? '本日の送迎を終了する' : `送迎完了待ち (${deliveries.filter(d => d.record.status === 'completed').length}/${deliveries.length})`}
+                {allCompleted ? '本日の送迎を終了する' : `送迎完了待ち (${deliveries.filter(d => {
+                  // 複数利用者の場合は、出発時間が記録されているかチェック
+                  if (d.detail) {
+                    return d.detail.departure_time !== null && d.detail.departure_time !== undefined
+                  }
+                  return d.record.status === 'completed'
+                }).length}/${deliveries.length})`}
               </button>
               {!allCompleted && (
                 <p className="text-sm text-gray-600 text-center mt-2">
