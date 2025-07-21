@@ -233,7 +233,7 @@ export default function LoginPage() {
         driverId: selectedDriver,
         vehicleId: selectedVehicle,
         transportationDate: new Date().toISOString().split('T')[0],
-        transportationType: 'round_trip' as const,
+        transportationType: 'regular' as const, // 暫定: データベース制約更新まで
         passengerCount: selectedUsers.length,
         specialNotes: `往復送迎 - 利用者${selectedUsers.length}名`,
         managementCodeId: currentManagementCodeId,
@@ -247,7 +247,7 @@ export default function LoginPage() {
         console.error('送迎記録作成エラー:', result.error)
         const errorMessage = typeof result.error === 'string' 
           ? result.error 
-          : result.error.message || JSON.stringify(result.error, null, 2)
+          : result.error?.message || (result.error?.code ? `データベースエラー (${result.error.code}): ${result.error.message}` : JSON.stringify(result.error, null, 2))
         throw new Error(`送迎記録の作成に失敗しました: ${errorMessage}`)
       }
 
