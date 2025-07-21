@@ -104,22 +104,27 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
     console.log('配送記録作成開始:', formData)
     
-    // 既存の配送記録をチェック
-    const existingCheck = await checkExistingDeliveryRecord(
-      formData.transportationDate,
-      formData.driverId,
-      formData.userId,
-      formData.routeId
-    )
-    
-    if (existingCheck.exists) {
-      console.log('既存の配送記録が見つかりました:', existingCheck.record)
-      return { 
-        data: null, 
-        error: { 
-          message: '同じ日付・ドライバー・ルートの配送記録が既に存在します',
-          code: 'DUPLICATE_DELIVERY',
-          existingRecord: existingCheck.record
+    // 個別配送の場合は重複チェックをスキップ
+    if (formData.transportationType === 'individual') {
+      console.log('個別配送のため重複チェックをスキップします')
+    } else {
+      // 既存の配送記録をチェック
+      const existingCheck = await checkExistingDeliveryRecord(
+        formData.transportationDate,
+        formData.driverId,
+        formData.userId,
+        formData.routeId
+      )
+      
+      if (existingCheck.exists) {
+        console.log('既存の配送記録が見つかりました:', existingCheck.record)
+        return { 
+          data: null, 
+          error: { 
+            message: '同じ日付・ドライバー・ルートの配送記録が既に存在します',
+            code: 'DUPLICATE_DELIVERY',
+            existingRecord: existingCheck.record
+          }
         }
       }
     }
