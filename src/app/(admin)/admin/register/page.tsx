@@ -87,7 +87,7 @@ export default function AdminRegisterPage() {
       if (orgError) throw orgError
 
       // 2. 管理者を作成
-      const { data: admin, error: adminError } = await supabase
+      const { error: adminError } = await supabase
         .from('admins')
         .insert({
           username: formData.adminUsername,
