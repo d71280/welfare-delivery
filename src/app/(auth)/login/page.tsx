@@ -48,9 +48,9 @@ export default function LoginPage() {
         console.error('データ取得エラー:', err)
         // エラー時はダミーデータを設定
         setDrivers([
-          { id: '1', name: '田中太郎', employee_no: 'D001', email: '', pin_code: '1234', is_active: true, created_at: '', updated_at: '' },
-          { id: '2', name: '佐藤花子', employee_no: 'D002', email: '', pin_code: '5678', is_active: true, created_at: '', updated_at: '' },
-          { id: '3', name: '山田次郎', employee_no: 'D003', email: '', pin_code: '9012', is_active: true, created_at: '', updated_at: '' }
+          { id: '1', name: '田中太郎', employee_no: 'D001', email: '', pin_code: '1234', driver_license_number: null, is_active: true, created_at: '', updated_at: '' },
+          { id: '2', name: '佐藤花子', employee_no: 'D002', email: '', pin_code: '5678', driver_license_number: null, is_active: true, created_at: '', updated_at: '' },
+          { id: '3', name: '山田次郎', employee_no: 'D003', email: '', pin_code: '9012', driver_license_number: null, is_active: true, created_at: '', updated_at: '' }
         ])
         setVehicles([
           { 

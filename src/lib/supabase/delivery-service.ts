@@ -122,11 +122,10 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
     const currentOdometer = await getVehicleCurrentOdometer(formData.vehicleId)
     console.log('取得した現在走行距離:', currentOdometer)
     
-    const deliveryData = {
+    const deliveryData: any = {
       transportation_date: formData.transportationDate,
       driver_id: formData.driverId,
       vehicle_id: formData.vehicleId,
-      route_id: formData.routeId,
       transportation_type: formData.transportationType || 'individual',
       start_odometer: currentOdometer, // 自動設定
       end_odometer: formData.endOdometer,
@@ -134,6 +133,11 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       weather_condition: formData.weatherCondition,
       special_notes: formData.specialNotes,
       status: 'pending'
+    }
+
+    // route_idは個別配送では省略
+    if (formData.routeId) {
+      deliveryData.route_id = formData.routeId
     }
 
     console.log('挿入する配送データ:', deliveryData)

@@ -66,6 +66,22 @@ export interface TransportationRecordForm {
   passengerCount?: number
   weatherCondition?: string
   specialNotes?: string
+  
+  // 基本的な記録事項
+  departureTime?: string  // 出発時刻
+  arrivalTime?: string    // 到着時刻
+  transportationDistance?: number  // 送迎距離(km)
+  transportationDuration?: number  // 所要時間(分)
+  pickupAddress?: string   // 乗車地点住所
+  dropoffAddress?: string  // 降車地点住所
+  
+  // 安全管理に関する記録
+  safetyCheckBoarding?: string      // 乗車時安全確認状況
+  safetyCheckAlighting?: string     // 降車時安全確認状況
+  wheelchairSecurityStatus?: string // 車椅子固定状況
+  companionPresent?: boolean        // 同乗者の有無
+  companionName?: string           // 同乗者氏名
+  companionRelationship?: string   // 同乗者続柄
 }
 
 export interface TransportationDetailForm {
@@ -79,6 +95,11 @@ export interface TransportationDetailForm {
   behaviorNotes?: string
   assistanceRequired?: string
   remarks?: string
+  
+  // 安全管理項目
+  individualSafetyNotes?: string  // 個別の安全に関する特記事項
+  mobilityAidUsed?: string        // 使用した福祉用具
+  mobilityAidSecurity?: string    // 福祉用具の固定状況
 }
 
 // Status types

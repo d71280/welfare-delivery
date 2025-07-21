@@ -20,9 +20,6 @@ export default function AdminPage() {
           <a href="/admin/master/vehicles" className="block text-green-600 hover:underline">
             車両管理
           </a>
-          <a href="/admin/master/routes" className="block text-green-600 hover:underline">
-            ルート管理
-          </a>
           <a href="/admin/transportation-records" className="block text-purple-600 hover:underline">
             送迎記録
           </a>
