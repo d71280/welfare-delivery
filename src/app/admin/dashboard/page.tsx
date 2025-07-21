@@ -126,13 +126,6 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600">送迎記録の一覧と詳細確認</p>
           </button>
 
-          <button
-            onClick={() => router.push('/admin/reports')}
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left"
-          >
-            <h3 className="text-lg font-medium text-gray-900 mb-2">レポート</h3>
-            <p className="text-gray-600">月次レポートと統計情報</p>
-          </button>
         </div>
 
         {/* 利用者選択配送システム */}
