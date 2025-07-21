@@ -69,6 +69,7 @@ export default function TransportationRecordsPage() {
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedRecords, setSelectedRecords] = useState<string[]>([])
+  const [selectedRecord, setSelectedRecord] = useState<TransportationRecordWithDetails | null>(null)
   const [selectAll, setSelectAll] = useState(false)
   const [editingSafety, setEditingSafety] = useState<string | null>(null)
   const [safetyFormData, setSafetyFormData] = useState({
@@ -560,7 +561,7 @@ export default function TransportationRecordsPage() {
   }
 
   const handleViewDetails = (record: TransportationRecordWithDetails) => {
-    setSelectedRecords([record.id])
+    setSelectedRecord(record)
     setShowDetails(true)
   }
 
