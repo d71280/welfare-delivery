@@ -152,12 +152,6 @@ export default function DriverPage() {
   }
 
   const handleDepartureTime = async (recordId: string) => {
-    const endOdometer = endOdometers[recordId]
-    if (!endOdometer) {
-      alert('終了時走行距離を入力してください')
-      return
-    }
-
     const currentTimeStr = new Date().toTimeString().substring(0, 5)
     
     try {
@@ -165,7 +159,6 @@ export default function DriverPage() {
         .from('transportation_records')
         .update({
           departure_time: currentTimeStr + ':00',
-          end_odometer: endOdometer,
           status: 'completed',
           updated_at: new Date().toISOString()
         })
@@ -179,21 +172,10 @@ export default function DriverPage() {
       setDeliveries(prev => 
         prev.map(item => 
           item.record.id === recordId 
-            ? { ...item, record: { ...item.record, departure_time: currentTimeStr + ':00', end_odometer: endOdometer, status: 'completed' }}
+            ? { ...item, record: { ...item.record, departure_time: currentTimeStr + ':00', status: 'completed' }}
             : item
         )
       )
-      
-      // 車両の走行距離を更新
-      if (session) {
-        await supabase
-          .from('vehicles')
-          .update({
-            current_odometer: endOdometer,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.vehicleId)
-      }
       
       // 全完了チェック
       const updatedDeliveries = deliveries.map(item => 
@@ -260,9 +242,31 @@ export default function DriverPage() {
       return
     }
 
-    if (confirm('本日の配送をすべて終了しますか？')) {
-      alert('お疲れさまでした！配送が完了しました。')
-      // 必要に応じて追加の処理（ログアウトなど）
+    const finalOdometer = endOdometers['final']
+    if (!finalOdometer) {
+      alert('終了時走行距離を入力してください')
+      return
+    }
+
+    try {
+      // 車両の走行距離を更新
+      if (session) {
+        await supabase
+          .from('vehicles')
+          .update({
+            current_odometer: finalOdometer,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.vehicleId)
+      }
+
+      if (confirm('本日の配送をすべて終了しますか？')) {
+        alert('お疲れさまでした！配送が完了しました。')
+        // 必要に応じて追加の処理（ログアウトなど）
+      }
+    } catch (err) {
+      console.error('車両走行距離更新エラー:', err)
+      alert('車両走行距離の更新に失敗しました')
     }
   }
 
@@ -496,24 +500,12 @@ export default function DriverPage() {
                           )}
                         </div>
                       ) : delivery.record.arrival_time ? (
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="number"
-                            value={endOdometers[delivery.record.id] || ''}
-                            onChange={(e) => setEndOdometers(prev => ({
-                              ...prev,
-                              [delivery.record.id]: parseInt(e.target.value) || 0
-                            }))}
-                            placeholder="終了時走行距離"
-                            className="px-2 py-1 border rounded text-sm w-32"
-                          />
-                          <button
-                            onClick={() => handleDepartureTime(delivery.record.id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
-                          >
-                            出発記録
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleDepartureTime(delivery.record.id)}
+                          className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                        >
+                          出発記録
+                        </button>
                       ) : (
                         <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
                       )}
@@ -540,25 +532,34 @@ export default function DriverPage() {
                     </div>
                   )}
 
-                  <div className="mt-4 text-right">
-                    <button
-                      onClick={() => router.push(`/driver/delivery/${delivery.record.id}`)}
-                      className="text-blue-600 text-sm font-medium hover:underline"
-                    >
-                      詳細を見る →
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>
 
             {/* 配送終了ボタン */}
             <div className="mt-8 bg-white rounded-lg shadow p-6">
+              {allCompleted && (
+                <div className="mb-6">
+                  <label className="block text-lg font-medium text-gray-700 mb-3">
+                    終了時走行距離 (km)
+                  </label>
+                  <input
+                    type="number"
+                    value={endOdometers['final'] || ''}
+                    onChange={(e) => setEndOdometers(prev => ({
+                      ...prev,
+                      final: parseInt(e.target.value) || 0
+                    }))}
+                    placeholder="終了時走行距離を入力"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
               <button
                 onClick={handleCompleteAllDeliveries}
-                disabled={!allCompleted}
+                disabled={!allCompleted || (allCompleted && !endOdometers['final'])}
                 className={`w-full py-4 rounded-lg font-medium text-lg transition-colors ${
-                  allCompleted
+                  allCompleted && endOdometers['final']
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
@@ -568,6 +569,11 @@ export default function DriverPage() {
               {!allCompleted && (
                 <p className="text-sm text-gray-600 text-center mt-2">
                   すべての利用者の配送を完了してから終了してください
+                </p>
+              )}
+              {allCompleted && !endOdometers['final'] && (
+                <p className="text-sm text-gray-600 text-center mt-2">
+                  終了時走行距離を入力してください
                 </p>
               )}
             </div>

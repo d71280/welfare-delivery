@@ -548,8 +548,8 @@ export default function LoginPage() {
                         )}
                       </div>
                       {selectedUsers.includes(user.id) && (
-                        <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                          ✓
+                        <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                          {selectedUsers.indexOf(user.id) + 1}
                         </div>
                       )}
                     </div>
