@@ -170,6 +170,7 @@ export default function TransportationRecordsPage() {
               user_no,
               wheelchair_user
             )
+          )
         `)
         .order('created_at', { ascending: false })
 
