@@ -21,6 +21,20 @@ export default function DriverHistoryPage() {
     setIsLoading(true)
     try {
       // 管理コードで送迎記録を検索
+      // まず管理コードからIDを取得
+      const { data: codeData, error: codeError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('code', managementCode)
+        .single()
+
+      if (codeError || !codeData) {
+        console.error('管理コード検索エラー:', codeError)
+        alert('指定された管理コードが見つかりません')
+        setIsLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('transportation_records')
         .select(`
@@ -28,7 +42,7 @@ export default function DriverHistoryPage() {
           drivers(name),
           vehicles(vehicle_no, vehicle_name)
         `)
-        .eq('management_code_id', managementCode)
+        .eq('management_code_id', codeData.id)
         .order('transportation_date', { ascending: false })
 
       if (error) {
