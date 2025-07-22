@@ -28,6 +28,9 @@ interface TransportationRecordWithDetails extends TransportationRecord {
     behavior_notes: string | null
     assistance_required: string | null
     remarks: string | null
+    pickup_address_id?: string | null
+    dropoff_address_id?: string | null
+    pickup_address?: string | null
     destinations?: {
       id: string
       name: string
@@ -40,6 +43,16 @@ interface TransportationRecordWithDetails extends TransportationRecord {
       name: string
       user_no: string
       wheelchair_user: boolean
+    }
+    pickup_addresses?: {
+      id: string
+      address_name: string
+      address: string
+    }
+    dropoff_addresses?: {
+      id: string
+      address_name: string
+      address: string
     }
   }>
 }
@@ -143,6 +156,7 @@ export default function TransportationRecordsPage() {
             remarks,
             pickup_address_id,
             dropoff_address_id,
+            pickup_address,
             destinations(
               id,
               name,
@@ -392,17 +406,23 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${
+                            // お迎え住所が設定されている場合
                             detail.pickup_addresses?.address_name && detail.pickup_addresses?.address
-                              ? `${detail.pickup_addresses.address_name}: ${detail.pickup_addresses.address}`
+                              ? `[お迎え] ${detail.pickup_addresses.address_name}: ${detail.pickup_addresses.address}`
+                              // 降車住所が設定されている場合  
                               : detail.dropoff_addresses?.address_name && detail.dropoff_addresses?.address
-                              ? `${detail.dropoff_addresses.address_name}: ${detail.dropoff_addresses.address}`
+                              ? `[降車] ${detail.dropoff_addresses.address_name}: ${detail.dropoff_addresses.address}`
+                              // 古い形式のpickup_addressカラムがある場合（後方互換性）
+                              : (detail as any).pickup_address
+                              ? `[お迎え] ${(detail as any).pickup_address}`
+                              // destinationsテーブルの情報を使用
                               : detail.destinations?.address
-                              ? `${detail.destinations.name || ''}: ${detail.destinations.address}`
+                              ? `${detail.destinations.name}: ${detail.destinations.address}`
                               : detail.destinations?.name || '-'
                           }</td>
                           <td><strong style="color: #2563eb;">${detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}</strong></td>
                           <td><strong style="color: #16a34a;">${detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}</strong></td>
-                          <td>${detail.remarks || '-'}</td>
+                          <td>-</td>
                         </tr>
                       `).join('')}
                     </tbody>
