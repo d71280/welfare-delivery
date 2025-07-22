@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 
 export default function DriverHistoryPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [managementCode, setManagementCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [records, setRecords] = useState<any[]>([])
