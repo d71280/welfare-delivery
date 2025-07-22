@@ -385,7 +385,7 @@ export default function TransportationRecordsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      ${record.transportation_details.map(detail => `
+                      ${record.transportation_details.map((detail: any) => `
                         <tr>
                           <td>
                             ${detail.users?.name || '-'}<br>
