@@ -29,7 +29,7 @@ export default function DriverHistoryPage() {
           vehicles(vehicle_no, vehicle_name),
           transportation_details(
             *,
-            users(name, user_no)
+            users(*)
           )
         `)
         .eq('management_code_id', managementCode)

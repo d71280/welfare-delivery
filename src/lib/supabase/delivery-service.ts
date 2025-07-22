@@ -183,7 +183,8 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
           arrival_time: null,
           departure_time: null,
           drop_off_time: null,
-          pickup_address: pickupAddress,
+          pickup_address_id: formData.selectedAddresses && formData.selectedAddresses[userId] ? formData.selectedAddresses[userId] : null,
+          dropoff_address_id: null, // 必要に応じて設定
           health_condition: null,
           behavior_notes: null,
           assistance_required: null,

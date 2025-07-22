@@ -144,32 +144,9 @@ export default function TransportationRecordsPage() {
           drivers(name),
           vehicles(vehicle_no, vehicle_name),
           transportation_details(
-            id,
-            user_id,
-            pickup_time,
-            arrival_time,
-            departure_time,
-            drop_off_time,
-            health_condition,
-            behavior_notes,
-            assistance_required,
-            remarks,
-            pickup_address_id,
-            dropoff_address_id,
-            pickup_address,
-            destinations(
-              id,
-              name,
-              address,
-              destination_type,
-              display_order
-            ),
-            users(
-              id,
-              name,
-              user_no,
-              wheelchair_user
-            )
+            *,
+            destinations(*),
+            users(*)
           )
         `)
         .order('created_at', { ascending: false })
@@ -179,6 +156,7 @@ export default function TransportationRecordsPage() {
         return
       }
 
+      console.log('取得したデータ:', data)
       setRecords(data || [])
       
       // レコードをグループ化
