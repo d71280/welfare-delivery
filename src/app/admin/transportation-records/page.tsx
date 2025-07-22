@@ -169,8 +169,7 @@ export default function TransportationRecordsPage() {
               name,
               user_no,
               wheelchair_user
-            ),
-          )
+            )
         `)
         .order('created_at', { ascending: false })
 
