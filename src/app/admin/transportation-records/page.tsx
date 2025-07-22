@@ -355,28 +355,21 @@ export default function TransportationRecordsPage() {
                       <span class="info-label">乗車人数:</span>
                       ${(record as any).passenger_count || 0}人
                     </div>
-                    <div class="info-item">
-                      <span class="info-label">天候:</span>
-                      ${(record as any).weather_condition || '-'}
-                    </div>
                   </div>
                 </div>
               </div>
 
               ${record.transportation_details && record.transportation_details.length > 0 ? `
                 <div class="section">
-                  <div class="section-title">利用者詳細・安全管理に関する記録</div>
+                  <div class="section-title">送迎詳細</div>
                   <table class="details-table">
                     <thead>
                       <tr>
-                        <th>利用者氏名・番号</th>
-                        <th>乗車地点・降車地点</th>
-                        <th>お迎え時刻</th>
+                        <th>利用者</th>
+                        <th>送迎先</th>
                         <th>到着時刻</th>
                         <th>出発時刻</th>
-                        <th>降車時刻</th>
-                        <th>健康状態・特記事項</th>
-                        <th>車椅子使用</th>
+                        <th>備考・特記事項</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -387,17 +380,9 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${detail.destinations?.name || '-'}</td>
-                          <td>${detail.pickup_time || '-'}</td>
                           <td><strong style="color: #2563eb;">${detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}</strong></td>
                           <td><strong style="color: #16a34a;">${detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}</strong></td>
-                          <td>${detail.drop_off_time || '-'}</td>
-                          <td>
-                            ${detail.health_condition ? `体調: ${detail.health_condition}<br>` : ''}
-                            ${detail.behavior_notes ? `行動: ${detail.behavior_notes}<br>` : ''}
-                            ${detail.assistance_required ? `介助: ${detail.assistance_required}<br>` : ''}
-                            ${detail.remarks ? `備考: ${detail.remarks}` : ''}
-                          </td>
-                          <td>${detail.users?.wheelchair_user ? '使用' : '-'}</td>
+                          <td>${detail.remarks || '-'}</td>
                         </tr>
                       `).join('')}
                     </tbody>
@@ -405,69 +390,7 @@ export default function TransportationRecordsPage() {
                 </div>
               ` : ''}
 
-              <div class="section">
-                <div class="section-title">安全管理記録</div>
-                <div class="info-grid">
-                  <div>
-                    <div class="info-item">
-                      <span class="info-label">乗車時安全確認:</span>
-                      ${(record as any).safety_check_boarding === 'no_problem' ? '✅ 問題なし' : 
-                        (record as any).safety_check_boarding === 'problem' ? '⚠️ 問題あり' : '-'}
-                      ${(record as any).safety_check_boarding_details ? `<br><small>詳細: ${(record as any).safety_check_boarding_details}</small>` : ''}
-                    </div>
-                    <div class="info-item">
-                      <span class="info-label">降車時安全確認:</span>
-                      ${(record as any).safety_check_alighting === 'no_problem' ? '✅ 問題なし' : 
-                        (record as any).safety_check_alighting === 'problem' ? '⚠️ 問題あり' : '-'}
-                      ${(record as any).safety_check_alighting_details ? `<br><small>詳細: ${(record as any).safety_check_alighting_details}</small>` : ''}
-                    </div>
-                    <div class="info-item">
-                      <span class="info-label">車椅子固定状況:</span>
-                      ${(record as any).wheelchair_security_status === 'no_problem' ? '✅ 問題なし（適切に固定済み）' : 
-                        (record as any).wheelchair_security_status === 'problem' ? '⚠️ 問題あり（固定不良等）' : '-'}
-                      ${(record as any).wheelchair_security_details ? `<br><small>詳細: ${(record as any).wheelchair_security_details}</small>` : ''}
-                    </div>
-                  </div>
-                  <div>
-                    <div class="info-item">
-                      <span class="info-label">同乗者の有無:</span>
-                      ${(record as any).companion_present ? '👥 同乗者あり' : '👤 同乗者なし'}
-                    </div>
-                    ${(record as any).companion_present ? `
-                      <div class="info-item">
-                        <span class="info-label">同乗者氏名:</span>
-                        ${(record as any).companion_name || '-'}
-                      </div>
-                      <div class="info-item">
-                        <span class="info-label">続柄・関係:</span>
-                        ${(record as any).companion_relationship || '-'}
-                      </div>
-                    ` : ''}
-                  </div>
-                </div>
-              </div>
 
-              <div class="section">
-                <div class="section-title">事業所管理情報</div>
-                <div class="info-grid">
-                  <div>
-                    <div class="info-item">
-                      <span class="info-label">記録作成日:</span>
-                      ${new Date((record as any).created_at).toLocaleDateString('ja-JP')}
-                    </div>
-                    <div class="info-item">
-                      <span class="info-label">特記事項:</span>
-                      ${(record as any).special_notes || '-'}
-                    </div>
-                  </div>
-                  <div>
-                    <div class="info-item" style="border-top: 1px solid #ccc; padding-top: 20px; margin-top: 20px;">
-                      <span class="info-label">責任者確認印:</span>
-                      <div style="width: 100px; height: 30px; border: 1px solid #ccc; display: inline-block; margin-left: 10px;"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           `
         }).join('')}
@@ -486,9 +409,7 @@ export default function TransportationRecordsPage() {
       '乗車人数',
       '開始走行距離',
       '終了走行距離',
-      '走行距離',
-      '天候',
-      '特記事項'
+      '走行距離'
     ]
 
     const csvData = filteredRecords.map(record => {
@@ -497,16 +418,13 @@ export default function TransportationRecordsPage() {
         record.drivers?.name || '-',
         record.vehicles?.vehicle_no || '-',
         record.vehicles?.vehicle_name || '-',
-        '-',
         getTransportationTypeLabel((record as any).transportation_type),
         (record as any).passenger_count || '-',
         (record as any).start_odometer || '-',
         (record as any).end_odometer || '-',
         (record as any).start_odometer && (record as any).end_odometer 
           ? (record as any).end_odometer - (record as any).start_odometer 
-          : '-',
-        (record as any).weather_condition || '-',
-        (record as any).special_notes || '-'
+          : '-'
       ]
     })
 
@@ -943,10 +861,6 @@ export default function TransportationRecordsPage() {
                       <p className="text-sm text-gray-900">{(selectedRecord as any).passenger_count || 0}人</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">天候</label>
-                      <p className="text-sm text-gray-900">{(selectedRecord as any).weather_condition || '-'}</p>
-                    </div>
-                    <div>
                       <label className="block text-sm font-medium text-gray-700">走行距離</label>
                       <p className="text-sm text-gray-900">
                         {(selectedRecord as any).start_odometer && (selectedRecord as any).end_odometer
@@ -956,12 +870,6 @@ export default function TransportationRecordsPage() {
                       </p>
                     </div>
                   </div>
-                  {(selectedRecord as any).special_notes && (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700">特記事項</label>
-                      <p className="text-sm text-gray-900 bg-yellow-50 p-3 rounded">{(selectedRecord as any).special_notes}</p>
-                    </div>
-                  )}
                 </div>
 
                 {/* 送迎詳細 */}
@@ -974,23 +882,11 @@ export default function TransportationRecordsPage() {
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             利用者
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            送迎先
-                          </th>
-                          <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            お迎え時刻
-                          </th>
                           <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             到着時刻
                           </th>
                           <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             出発時刻
-                          </th>
-                          <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            降車時刻
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            体調・特記事項
                           </th>
                         </tr>
                       </thead>
@@ -1005,21 +901,11 @@ export default function TransportationRecordsPage() {
                                     <div className="font-medium text-gray-900">{detail.users.name}</div>
                                     <div className="text-xs text-gray-500">
                                       {detail.users.user_no}
-                                      {detail.users.wheelchair_user && ' (車椅子)'}
                                     </div>
                                   </div>
                                 ) : (
                                   <span className="text-gray-500">-</span>
                                 )}
-                              </td>
-                              <td className="px-4 py-2 text-sm">
-                                <div className="font-medium text-gray-900">{detail.destinations?.name || '-'}</div>
-                                <div className="text-xs text-gray-500">
-                                  {getDestinationTypeLabel(detail.destinations?.destination_type || '')}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {detail.pickup_time || '-'}
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
                                 <span className="text-blue-600 font-bold">
@@ -1030,25 +916,6 @@ export default function TransportationRecordsPage() {
                                 <span className="text-green-600 font-bold">
                                   {detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}
                                 </span>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {detail.drop_off_time || '-'}
-                              </td>
-                              <td className="px-4 py-2 text-sm">
-                                <div className="space-y-1">
-                                  {detail.health_condition && (
-                                    <div><span className="font-medium">体調:</span> {detail.health_condition}</div>
-                                  )}
-                                  {detail.behavior_notes && (
-                                    <div><span className="font-medium">行動:</span> {detail.behavior_notes}</div>
-                                  )}
-                                  {detail.assistance_required && (
-                                    <div><span className="font-medium">介助:</span> {detail.assistance_required}</div>
-                                  )}
-                                  {detail.remarks && (
-                                    <div><span className="font-medium">備考:</span> {detail.remarks}</div>
-                                  )}
-                                </div>
                               </td>
                             </tr>
                           ))
