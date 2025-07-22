@@ -406,10 +406,10 @@ export default function VehiclesManagementPage() {
                   <label>📊 現在走行距離 (km)</label>
                   <input
                     type="number"
-                    value={formData.current_odometer}
-                    onChange={(e) => setFormData({ ...formData, current_odometer: parseInt(e.target.value) || 0 })}
+                    value={formData.current_odometer || ''}
+                    onChange={(e) => setFormData({ ...formData, current_odometer: e.target.value ? parseInt(e.target.value) : 0 })}
                     className="welfare-input"
-                    placeholder="0"
+                    placeholder="現在の走行距離を入力"
                     min="0"
                   />
                 </div>
