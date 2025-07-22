@@ -170,16 +170,6 @@ export default function TransportationRecordsPage() {
               user_no,
               wheelchair_user
             ),
-            pickup_addresses:user_addresses!pickup_address_id(
-              id,
-              address_name,
-              address
-            ),
-            dropoff_addresses:user_addresses!dropoff_address_id(
-              id,
-              address_name,
-              address
-            )
           )
         `)
         .order('created_at', { ascending: false })
@@ -406,19 +396,10 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${
-                            // お迎え住所が設定されている場合
-                            detail.pickup_addresses?.address_name && detail.pickup_addresses?.address
-                              ? `[お迎え] ${detail.pickup_addresses.address_name}: ${detail.pickup_addresses.address}`
-                              // 降車住所が設定されている場合  
-                              : detail.dropoff_addresses?.address_name && detail.dropoff_addresses?.address
-                              ? `[降車] ${detail.dropoff_addresses.address_name}: ${detail.dropoff_addresses.address}`
-                              // 古い形式のpickup_addressカラムがある場合（後方互換性）
-                              : (detail as any).pickup_address
-                              ? `[お迎え] ${(detail as any).pickup_address}`
-                              // destinationsテーブルの情報を使用
-                              : detail.destinations?.address
-                              ? `${detail.destinations.name}: ${detail.destinations.address}`
-                              : detail.destinations?.name || '-'
+                            (detail as any).pickup_address || 
+                            detail.destinations?.address || 
+                            detail.destinations?.name || 
+                            '-'
                           }</td>
                           <td><strong style="color: #2563eb;">${detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}</strong></td>
                           <td><strong style="color: #16a34a;">${detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}</strong></td>
