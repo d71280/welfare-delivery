@@ -26,11 +26,7 @@ export default function DriverHistoryPage() {
         .select(`
           *,
           drivers(name),
-          vehicles(vehicle_no, vehicle_name),
-          transportation_details(
-            *,
-            users(*)
-          )
+          vehicles(vehicle_no, vehicle_name)
         `)
         .eq('management_code_id', managementCode)
         .order('transportation_date', { ascending: false })
@@ -137,7 +133,7 @@ export default function DriverHistoryPage() {
                     </div>
                   </div>
 
-                  {record.transportation_details && record.transportation_details.length > 0 && (
+                  {false && record.transportation_details && record.transportation_details.length > 0 && (
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">利用者詳細</h4>
                       <div className="bg-gray-50 rounded p-3">
