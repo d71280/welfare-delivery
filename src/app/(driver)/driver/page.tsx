@@ -1158,12 +1158,27 @@ export default function DriverPage() {
                 <label className="block text-lg font-medium text-gray-700 mb-3">
                   事業所帰着時刻
                 </label>
-                <input
-                  type="time"
-                  value={returnToOfficeTime || ''}
-                  onChange={(e) => setReturnToOfficeTime(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="relative">
+                  <input
+                    type="time"
+                    value={returnToOfficeTime || ''}
+                    onChange={(e) => setReturnToOfficeTime(e.target.value)}
+                    className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      const hours = now.getHours().toString().padStart(2, '0');
+                      const minutes = now.getMinutes().toString().padStart(2, '0');
+                      setReturnToOfficeTime(`${hours}:${minutes}`);
+                    }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                    title="現在時刻を入力"
+                  >
+                    🕐
+                  </button>
+                </div>
               </div>
               <button
                 onClick={handleCompleteAllDeliveries}

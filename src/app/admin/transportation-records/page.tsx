@@ -141,6 +141,8 @@ export default function TransportationRecordsPage() {
             behavior_notes,
             assistance_required,
             remarks,
+            pickup_address_id,
+            dropoff_address_id,
             destinations(
               id,
               name,
@@ -153,6 +155,16 @@ export default function TransportationRecordsPage() {
               name,
               user_no,
               wheelchair_user
+            ),
+            pickup_addresses:user_addresses!pickup_address_id(
+              id,
+              address_name,
+              address
+            ),
+            dropoff_addresses:user_addresses!dropoff_address_id(
+              id,
+              address_name,
+              address
             )
           )
         `)
@@ -379,7 +391,15 @@ export default function TransportationRecordsPage() {
                             ${detail.users?.name || '-'}<br>
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
-                          <td>${detail.destinations?.name || '-'}</td>
+                          <td>${
+                            detail.pickup_addresses?.address_name && detail.pickup_addresses?.address
+                              ? `${detail.pickup_addresses.address_name}: ${detail.pickup_addresses.address}`
+                              : detail.dropoff_addresses?.address_name && detail.dropoff_addresses?.address
+                              ? `${detail.dropoff_addresses.address_name}: ${detail.dropoff_addresses.address}`
+                              : detail.destinations?.address
+                              ? `${detail.destinations.name || ''}: ${detail.destinations.address}`
+                              : detail.destinations?.name || '-'
+                          }</td>
                           <td><strong style="color: #2563eb;">${detail.arrival_time ? detail.arrival_time.substring(0, 5) : '-'}</strong></td>
                           <td><strong style="color: #16a34a;">${detail.departure_time ? detail.departure_time.substring(0, 5) : '-'}</strong></td>
                           <td>${detail.remarks || '-'}</td>

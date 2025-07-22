@@ -53,7 +53,7 @@ function TransportationCompleteContent() {
   }
 
   const handleViewHistory = () => {
-    router.push('/admin/transportation-records')
+    router.push('/driver-history')
   }
 
   const handleBackToHome = () => {
