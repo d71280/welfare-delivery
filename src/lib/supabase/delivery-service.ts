@@ -188,7 +188,7 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
           health_condition: null,
           behavior_notes: null,
           assistance_required: null,
-          remarks: null
+          remarks: pickupAddress
         }
         
         console.log('利用者詳細データ:', detailData)

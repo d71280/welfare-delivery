@@ -374,6 +374,7 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${
+                            detail.remarks || 
                             (detail as any).pickup_address || 
                             detail.destinations?.address || 
                             detail.destinations?.name || 
