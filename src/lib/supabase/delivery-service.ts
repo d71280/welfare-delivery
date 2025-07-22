@@ -127,6 +127,7 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       weather_condition: formData.weatherCondition,
       special_notes: formData.specialNotes,
       management_code_id: formData.managementCodeId,
+      start_time: formData.startTime, // 送迎開始時刻
       status: 'pending'
     }
 

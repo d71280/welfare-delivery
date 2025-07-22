@@ -31,6 +31,7 @@ export default function DriverPage() {
   const [editingTimes, setEditingTimes] = useState<{[key: string]: {arrival?: string, departure?: string}}>({})
   const [endOdometers, setEndOdometers] = useState<{[key: string]: number}>({})
   const [allCompleted, setAllCompleted] = useState(false)
+  const [returnToOfficeTime, setReturnToOfficeTime] = useState<string>('')
   
   const [safetyData, setSafetyData] = useState<{[key: string]: {
     boarding: 'no_problem' | 'problem' | '',
@@ -679,13 +680,14 @@ export default function DriverPage() {
     }
 
     try {
-      // 送迎記録の終了時走行距離を更新
+      // 送迎記録の終了時走行距離と帰着時刻を更新
       const recordIds = deliveries.map(d => d.record.id)
       if (recordIds.length > 0) {
         await supabase
           .from('transportation_records')
           .update({
             end_odometer: finalOdometer,
+            end_time: returnToOfficeTime || null,
             status: 'completed',
             updated_at: new Date().toISOString()
           })
@@ -1149,6 +1151,17 @@ export default function DriverPage() {
                     final: parseInt(e.target.value) || 0
                   }))}
                   placeholder="終了時走行距離を入力"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-lg font-medium text-gray-700 mb-3">
+                  事業所帰着時刻
+                </label>
+                <input
+                  type="time"
+                  value={returnToOfficeTime || ''}
+                  onChange={(e) => setReturnToOfficeTime(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
