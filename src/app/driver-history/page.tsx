@@ -30,10 +30,9 @@ export default function DriverHistoryPage() {
           transportation_details(
             *,
             users(name, user_no)
-          ),
-          management_codes!inner(code, description)
+          )
         `)
-        .eq('management_codes.code', managementCode)
+        .eq('management_code_id', managementCode)
         .order('transportation_date', { ascending: false })
 
       if (error) {
