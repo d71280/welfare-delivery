@@ -754,38 +754,34 @@ export default function DriverPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-safe">
       {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="text-center flex-1">
-              <h1 className="text-lg font-medium text-gray-900">
+      <div className="bg-white shadow sticky top-0 z-10">
+        <div className="px-4 py-3 safe-area-inset-top">
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-lg font-semibold text-gray-900">
                 送迎管理
               </h1>
-              {session && (
-                <p className="text-sm text-gray-600">
-                  {session.driverName} / {session.vehicleNo}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                {currentTime}
-              </div>
               <button
                 onClick={handleLogout}
-                className="text-red-600 text-sm font-medium"
+                className="text-red-600 text-sm font-medium p-2 -m-2"
               >
                 ログアウト
               </button>
             </div>
+            {session && (
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>{session.driverName} / {session.vehicleNo}</span>
+                <span>{currentTime}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* メインコンテンツ */}
-      <div className="p-4 max-w-4xl mx-auto">
+      <div className="p-4 max-w-lg mx-auto">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2">今日の送迎一覧</h2>
           <p className="text-gray-600 text-sm">
@@ -799,7 +795,7 @@ export default function DriverPage() {
         </div>
 
         {deliveries.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
@@ -812,11 +808,11 @@ export default function DriverPage() {
               {deliveries.map((delivery) => (
                 <div
                   key={delivery.record.id}
-                  className="bg-white rounded-lg shadow p-6"
+                  className="bg-white rounded-lg shadow-sm p-4"
                 >
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
@@ -834,7 +830,7 @@ export default function DriverPage() {
                   </div>
 
                   {/* 到着・出発時刻 */}
-                  <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                       <span className="text-sm font-medium text-gray-700 block mb-2">到着時刻:</span>
                       {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
@@ -853,11 +849,11 @@ export default function DriverPage() {
                                       arrival: e.target.value
                                     }
                                   }))}
-                                  className="px-2 py-1 border rounded text-sm"
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival || '', delivery.user?.id)}
-                                  className="text-blue-600 text-sm"
+                                  className="text-blue-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   保存
                                 </button>
@@ -866,7 +862,7 @@ export default function DriverPage() {
                                     ...prev,
                                     [`${delivery.record.id}-${delivery.user?.id}`]: { ...prev[`${delivery.record.id}-${delivery.user?.id}`], arrival: undefined }
                                   }))}
-                                  className="text-gray-600 text-sm"
+                                  className="text-gray-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   キャンセル
                                 </button>
@@ -884,7 +880,7 @@ export default function DriverPage() {
                                       arrival: delivery.detail.arrival_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="text-gray-500 text-sm underline"
+                                  className="text-blue-600 text-sm font-medium underline px-1 -m-1"
                                 >
                                   修正
                                 </button>
@@ -897,7 +893,7 @@ export default function DriverPage() {
                               console.log('到着記録ボタンクリック:', { recordId: delivery.record.id, userId: delivery.user?.id, userName: delivery.user?.name })
                               handleArrivalTime(delivery.record.id, delivery.user?.id)
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                            className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors w-full"
                           >
                             到着記録
                           </button>
@@ -920,11 +916,11 @@ export default function DriverPage() {
                                       arrival: e.target.value
                                     }
                                   }))}
-                                  className="px-2 py-1 border rounded text-sm"
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[delivery.record.id]?.arrival || '')}
-                                  className="text-blue-600 text-sm"
+                                  className="text-blue-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   保存
                                 </button>
@@ -933,7 +929,7 @@ export default function DriverPage() {
                                     ...prev,
                                     [delivery.record.id]: { ...prev[delivery.record.id], arrival: undefined }
                                   }))}
-                                  className="text-gray-600 text-sm"
+                                  className="text-gray-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   キャンセル
                                 </button>
@@ -951,7 +947,7 @@ export default function DriverPage() {
                                       arrival: delivery.record.arrival_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="text-gray-500 text-sm underline"
+                                  className="text-blue-600 text-sm font-medium underline px-1 -m-1"
                                 >
                                   修正
                                 </button>
@@ -961,7 +957,7 @@ export default function DriverPage() {
                         ) : (
                           <button
                             onClick={() => handleArrivalTime(delivery.record.id)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                            className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors w-full"
                           >
                             到着記録
                           </button>
@@ -987,11 +983,11 @@ export default function DriverPage() {
                                       departure: e.target.value
                                     }
                                   }))}
-                                  className="px-2 py-1 border rounded text-sm"
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure || '', delivery.user?.id)}
-                                  className="text-blue-600 text-sm"
+                                  className="text-blue-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   保存
                                 </button>
@@ -1000,7 +996,7 @@ export default function DriverPage() {
                                     ...prev,
                                     [`${delivery.record.id}-${delivery.user?.id}`]: { ...prev[`${delivery.record.id}-${delivery.user?.id}`], departure: undefined }
                                   }))}
-                                  className="text-gray-600 text-sm"
+                                  className="text-gray-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   キャンセル
                                 </button>
@@ -1018,7 +1014,7 @@ export default function DriverPage() {
                                       departure: delivery.detail.departure_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="text-gray-500 text-sm underline"
+                                  className="text-blue-600 text-sm font-medium underline px-1 -m-1"
                                 >
                                   修正
                                 </button>
@@ -1029,7 +1025,7 @@ export default function DriverPage() {
                           delivery.user?.id ? (
                             <button
                               onClick={() => handleDepartureTime(delivery.record.id, delivery.user?.id)}
-                              className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                              className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:bg-green-800 transition-colors w-full"
                             >
                               出発記録
                             </button>
@@ -1055,11 +1051,11 @@ export default function DriverPage() {
                                       departure: e.target.value
                                     }
                                   }))}
-                                  className="px-2 py-1 border rounded text-sm"
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[delivery.record.id]?.departure || '')}
-                                  className="text-blue-600 text-sm"
+                                  className="text-blue-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   保存
                                 </button>
@@ -1068,7 +1064,7 @@ export default function DriverPage() {
                                     ...prev,
                                     [delivery.record.id]: { ...prev[delivery.record.id], departure: undefined }
                                   }))}
-                                  className="text-gray-600 text-sm"
+                                  className="text-gray-600 text-sm font-medium px-2 py-1 -m-1"
                                 >
                                   キャンセル
                                 </button>
@@ -1086,7 +1082,7 @@ export default function DriverPage() {
                                       departure: delivery.record.departure_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="text-gray-500 text-sm underline"
+                                  className="text-blue-600 text-sm font-medium underline px-1 -m-1"
                                 >
                                   修正
                                 </button>
@@ -1096,7 +1092,7 @@ export default function DriverPage() {
                         ) : delivery.record.arrival_time ? (
                           <button
                             onClick={() => handleDepartureTime(delivery.record.id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                            className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:bg-green-800 transition-colors w-full"
                           >
                             出発記録
                           </button>
@@ -1109,22 +1105,22 @@ export default function DriverPage() {
 
                   {/* 利用者情報 */}
                   {delivery.user && (
-                    <div className="border-t pt-4">
-                      <div className="grid grid-cols-1 gap-2">
+                    <div className="border-t pt-3">
+                      <div className="space-y-2">
                         <div>
-                          <span className="text-sm text-gray-600">住所:</span>
-                          <p className="text-sm">
+                          <span className="text-xs text-gray-500 block">住所:</span>
+                          <p className="text-sm text-gray-900 leading-tight">
                             {session?.selectedAddresses && delivery.user?.id && session.selectedAddresses[delivery.user.id] 
                               ? userAddressNames[session.selectedAddresses[delivery.user.id]] || '選択された住所'
                               : delivery.user?.address || '住所不明'}
                           </p>
                         </div>
                         {delivery.user.wheelchair_user && (
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="inline-flex items-center bg-orange-50 text-orange-700 text-xs font-medium px-2 py-1 rounded-full">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="text-sm text-orange-600 font-medium">車椅子利用</span>
+                            車椅子利用
                           </div>
                         )}
                       </div>
@@ -1138,32 +1134,34 @@ export default function DriverPage() {
             </div>
 
             {/* 送迎終了ボタン */}
-            <div className="mt-8 bg-white rounded-lg shadow p-6">
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-gray-700 mb-3">
+            <div className="mt-6 bg-white rounded-lg shadow-sm p-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   終了時走行距離 (km)
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={endOdometers['final'] || ''}
                   onChange={(e) => setEndOdometers(prev => ({
                     ...prev,
                     final: parseInt(e.target.value) || 0
                   }))}
                   placeholder="終了時走行距離を入力"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-gray-700 mb-3">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   事業所帰着時刻
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <input
                     type="time"
                     value={returnToOfficeTime || ''}
                     onChange={(e) => setReturnToOfficeTime(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <button
                     type="button"
@@ -1173,18 +1171,18 @@ export default function DriverPage() {
                       const minutes = now.getMinutes().toString().padStart(2, '0');
                       setReturnToOfficeTime(`${hours}:${minutes}`);
                     }}
-                    className="w-full px-4 py-2 bg-blue-100 text-blue-700 border border-blue-300 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                    className="w-full px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium hover:bg-blue-100 active:bg-blue-200 transition-colors"
                   >
-                    🕐 現在時刻
+                    現在時刻を入力
                   </button>
                 </div>
               </div>
               <button
                 onClick={handleCompleteAllDeliveries}
                 disabled={!allCompleted || !endOdometers['final']}
-                className={`w-full py-4 rounded-lg font-medium text-lg transition-colors ${
+                className={`w-full py-3 rounded-lg font-medium text-base transition-colors ${
                   allCompleted && endOdometers['final']
-                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    ? 'bg-green-600 text-white hover:bg-green-700 active:bg-green-800'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >

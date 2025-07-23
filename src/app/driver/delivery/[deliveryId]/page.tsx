@@ -306,26 +306,26 @@ export default function DeliveryDetailPage() {
   const isCompleted = deliveryRecord.status === 'completed'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-safe">
       {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="px-4 py-3">
+      <div className="bg-white shadow sticky top-0 z-10">
+        <div className="px-4 py-3 safe-area-inset-top">
           <div className="flex items-center justify-between">
             <button
               onClick={handleBack}
-              className="text-blue-600 text-sm font-medium"
+              className="text-blue-600 text-sm font-medium p-2 -m-2"
             >
               ← 戻る
             </button>
-            <div className="text-center">
-              <h1 className="text-lg font-medium text-gray-900">
+            <div className="text-center flex-1">
+              <h1 className="text-lg font-semibold text-gray-900">
                 送迎詳細
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600 mt-1">
                 {driver.name} / {vehicle.vehicle_no}
               </p>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 w-12 text-right">
               {currentTime}
             </div>
           </div>
@@ -333,11 +333,11 @@ export default function DeliveryDetailPage() {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="p-4 max-w-md mx-auto">
+      <div className="p-4 max-w-lg mx-auto">
         {/* 利用者情報カード */}
         {user && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">利用者情報</h2>
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">利用者情報</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">氏名:</span>
@@ -372,8 +372,8 @@ export default function DeliveryDetailPage() {
         )}
 
         {/* 送迎ステータス */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">送迎ステータス</h2>
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-3">送迎ステータス</h2>
           
           {/* 開始セクション */}
           <div className="border-b pb-4 mb-4">
@@ -401,7 +401,7 @@ export default function DeliveryDetailPage() {
                     type="number"
                     value={startOdometer || ''}
                     onChange={(e) => setStartOdometer(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="走行距離を入力"
                   />
                 </div>
@@ -413,7 +413,7 @@ export default function DeliveryDetailPage() {
                     type="text"
                     value={pickupAddress}
                     onChange={(e) => setPickupAddress(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="乗車地点の住所"
                   />
                 </div>
@@ -424,7 +424,7 @@ export default function DeliveryDetailPage() {
                   <textarea
                     value={safetyNotes}
                     onChange={(e) => setSafetyNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows={2}
                     placeholder="乗車時の安全確認状況"
                   />
@@ -436,7 +436,7 @@ export default function DeliveryDetailPage() {
                   <textarea
                     value={wheelchairFixing}
                     onChange={(e) => setWheelchairFixing(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows={2}
                     placeholder="車椅子や福祉用具の固定状況を記録"
                   />
@@ -448,7 +448,7 @@ export default function DeliveryDetailPage() {
                   <textarea
                     value={healthStatus}
                     onChange={(e) => setHealthStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows={2}
                     placeholder="健康状態や特記事項を記録"
                   />
@@ -461,13 +461,13 @@ export default function DeliveryDetailPage() {
                     type="text"
                     value={companions}
                     onChange={(e) => setCompanions(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="同乗者の氏名（いない場合は「なし」）"
                   />
                 </div>
                 <button
                   onClick={handleStartDelivery}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors"
                 >
                   送迎開始
                 </button>
@@ -502,7 +502,7 @@ export default function DeliveryDetailPage() {
                       type="number"
                       value={endOdometer || ''}
                       onChange={(e) => setEndOdometer(e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="走行距離を入力"
                     />
                   </div>
@@ -514,7 +514,7 @@ export default function DeliveryDetailPage() {
                       type="text"
                       value={dropoffAddress}
                       onChange={(e) => setDropoffAddress(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="降車地点の住所"
                     />
                   </div>
@@ -526,7 +526,7 @@ export default function DeliveryDetailPage() {
                       type="number"
                       value={transportDistance || ''}
                       onChange={(e) => setTransportDistance(e.target.value ? parseFloat(e.target.value) : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="送迎距離を入力"
                       step="0.1"
                     />
@@ -539,7 +539,7 @@ export default function DeliveryDetailPage() {
                       type="text"
                       value={duration}
                       onChange={(e) => setDuration(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="例：30分、1時間15分"
                     />
                   </div>
@@ -550,14 +550,14 @@ export default function DeliveryDetailPage() {
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                       rows={3}
                       placeholder="送迎に関するメモ"
                     />
                   </div>
                   <button
                     onClick={handleCompleteDelivery}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 active:bg-green-800 transition-colors"
                   >
                     送迎完了
                   </button>
@@ -568,8 +568,8 @@ export default function DeliveryDetailPage() {
         </div>
 
         {/* 走行距離情報 */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">走行距離</h2>
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-3">走行距離</h2>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">開始時:</span>
@@ -598,8 +598,8 @@ export default function DeliveryDetailPage() {
 
         {/* 事業者情報 */}
         {organization && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">事業者情報</h2>
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">事業者情報</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">事業者名:</span>
@@ -635,7 +635,7 @@ export default function DeliveryDetailPage() {
 
         {/* 完了メッセージ */}
         {isCompleted && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
             <div className="flex items-center">
               <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
