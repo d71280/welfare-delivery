@@ -724,18 +724,6 @@ export default function DriverPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">待機中</span>
-      case 'in_progress':
-        return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">送迎中</span>
-      case 'completed':
-        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">完了</span>
-      default:
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">{status}</span>
-    }
-  }
 
   const handleLogout = () => {
     localStorage.removeItem('driverSession')
@@ -782,9 +770,9 @@ export default function DriverPage() {
 
       {/* メインコンテンツ */}
       <div className="p-4 max-w-lg mx-auto">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">今日の送迎一覧</h2>
-          <p className="text-gray-600 text-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-1">今日の送迎一覧</h2>
+          <p className="text-gray-600 text-xs">
             {new Date().toLocaleDateString('ja-JP', { 
               year: 'numeric', 
               month: 'long', 
@@ -800,7 +788,7 @@ export default function DriverPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">送迎予定がありません</h3>
-            <p className="text-gray-600">本日の送迎はすべて完了しているか、まだ送迎が登録されていません。</p>
+            <p className="text-gray-600 text-sm">本日の送迎はすべて完了しているか、まだ送迎が登録されていません。</p>
           </div>
         ) : (
           <>
@@ -818,7 +806,7 @@ export default function DriverPage() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base font-semibold text-gray-900">
                           {delivery.user ? delivery.user.name : '利用者不明'}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -826,13 +814,13 @@ export default function DriverPage() {
                         </p>
                       </div>
                     </div>
-                    {getStatusBadge(delivery.record.status)}
+                    {null}
                   </div>
 
                   {/* 到着・出発時刻 */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <span className="text-sm font-medium text-gray-700 block mb-2">到着時刻:</span>
+                      <span className="text-xs font-medium text-gray-700 block mb-2">到着時刻:</span>
                       {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
                       {(delivery.detail || (session?.selectedUsers && session.selectedUsers.length > 0)) ? (
                         delivery.detail?.arrival_time ? (
@@ -869,7 +857,7 @@ export default function DriverPage() {
                               </>
                             ) : (
                               <>
-                                <span className="font-mono text-lg font-bold text-blue-600">
+                                <span className="font-mono text-base font-bold text-blue-600">
                                   {delivery.detail.arrival_time?.substring(0, 5)}
                                 </span>
                                 <button
@@ -898,7 +886,7 @@ export default function DriverPage() {
                             到着記録
                           </button>
                         ) : (
-                          <div className="text-red-500 text-sm">利用者IDエラー</div>
+                          <div className="text-red-500 text-xs">利用者IDエラー</div>
                         )
                       ) : (
                         /* 従来の単一利用者送迎の場合 */
@@ -936,7 +924,7 @@ export default function DriverPage() {
                               </>
                             ) : (
                               <>
-                                <span className="font-mono text-lg font-bold text-blue-600">
+                                <span className="font-mono text-base font-bold text-blue-600">
                                   {delivery.record.arrival_time?.substring(0, 5)}
                                 </span>
                                 <button
@@ -966,7 +954,7 @@ export default function DriverPage() {
                     </div>
 
                     <div>
-                      <span className="text-sm font-medium text-gray-700 block mb-2">出発時刻:</span>
+                      <span className="text-xs font-medium text-gray-700 block mb-2">出発時刻:</span>
                       {/* 複数利用者送迎の場合は詳細記録の時間を表示 */}
                       {(delivery.detail || (session?.selectedUsers && session.selectedUsers.length > 0)) ? (
                         delivery.detail?.departure_time ? (
@@ -1003,7 +991,7 @@ export default function DriverPage() {
                               </>
                             ) : (
                               <>
-                                <span className="font-mono text-lg font-bold text-green-600">
+                                <span className="font-mono text-base font-bold text-green-600">
                                   {delivery.detail.departure_time?.substring(0, 5)}
                                 </span>
                                 <button
@@ -1030,10 +1018,10 @@ export default function DriverPage() {
                               出発記録
                             </button>
                           ) : (
-                            <div className="text-red-500 text-sm">利用者IDエラー</div>
+                            <div className="text-red-500 text-xs">利用者IDエラー</div>
                           )
                         ) : (
-                          <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
+                          <span className="text-gray-500 text-xs">到着記録後に入力可能</span>
                         )
                       ) : (
                         /* 従来の単一利用者送迎の場合 */
@@ -1071,7 +1059,7 @@ export default function DriverPage() {
                               </>
                             ) : (
                               <>
-                                <span className="font-mono text-lg font-bold text-green-600">
+                                <span className="font-mono text-base font-bold text-green-600">
                                   {delivery.record.departure_time?.substring(0, 5)}
                                 </span>
                                 <button
@@ -1097,7 +1085,7 @@ export default function DriverPage() {
                             出発記録
                           </button>
                         ) : (
-                          <span className="text-gray-500 text-sm">到着記録後に入力可能</span>
+                          <span className="text-gray-500 text-xs">到着記録後に入力可能</span>
                         )
                       )}
                     </div>
@@ -1109,7 +1097,7 @@ export default function DriverPage() {
                       <div className="space-y-2">
                         <div>
                           <span className="text-xs text-gray-500 block">住所:</span>
-                          <p className="text-sm text-gray-900 leading-tight">
+                          <p className="text-xs text-gray-900 leading-tight break-all">
                             {session?.selectedAddresses && delivery.user?.id && session.selectedAddresses[delivery.user.id] 
                               ? userAddressNames[session.selectedAddresses[delivery.user.id]] || '選択された住所'
                               : delivery.user?.address || '住所不明'}
@@ -1187,25 +1175,19 @@ export default function DriverPage() {
                 }`}
               >
                 {allCompleted ? '本日の送迎を終了する' : `送迎完了待ち (${deliveries.filter(d => {
-                  // 複数利用者の場合は、到着・出発時間の両方が記録されているかチェック
                   if (d.detail) {
                     const hasArrival = d.detail.arrival_time && d.detail.arrival_time.trim() !== ''
                     const hasDeparture = d.detail.departure_time && d.detail.departure_time.trim() !== ''
-                    console.log(`完了カウント - ${d.user?.name}: 到着=${d.detail.arrival_time}, 出発=${d.detail.departure_time}, 完了=${hasArrival && hasDeparture}`)
                     return hasArrival && hasDeparture
                   }
-                  console.log(`完了カウント - レコードステータス: ${d.record.status}`)
                   return d.record.status === 'completed'
-                }).length}/${deliveries.length}) [allCompleted=${allCompleted}]`}
+                }).length}/${deliveries.length})`}
               </button>
-              {!allCompleted && (
-                <p className="text-sm text-gray-600 text-center mt-2">
-                  すべての利用者の送迎を完了してから終了してください
-                </p>
-              )}
-              {!endOdometers['final'] && (
-                <p className="text-sm text-gray-600 text-center mt-2">
-                  終了時走行距離を入力してください
+              {(!allCompleted || !endOdometers['final']) && (
+                <p className="text-xs text-gray-600 text-center mt-2 leading-tight">
+                  {!allCompleted && 'すべての利用者の送迎を完了してから終了してください'}
+                  {!allCompleted && !endOdometers['final'] && <br />}
+                  {!endOdometers['final'] && '終了時走行距離を入力してください'}
                 </p>
               )}
             </div>
