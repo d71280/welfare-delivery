@@ -136,6 +136,10 @@ export default function DriverPage() {
       // 各送迎記録に対応する利用者詳細情報を取得
       const deliveryItems: DeliveryItem[] = []
       
+      // セッション情報を取得
+      const sessionData = localStorage.getItem('driverSession')
+      const currentSession = sessionData ? JSON.parse(sessionData) as DriverSession : null
+      
       for (const record of records || []) {
         // transportation_detailsから利用者情報を取得
         const { data: details } = await supabase
