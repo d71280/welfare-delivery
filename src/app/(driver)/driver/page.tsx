@@ -34,19 +34,6 @@ export default function DriverPage() {
   const [endOdometers, setEndOdometers] = useState<{[key: string]: number}>({})
   const [allCompleted, setAllCompleted] = useState(false)
   const [returnToOfficeTime, setReturnToOfficeTime] = useState<string>('')
-  
-  const [safetyData, setSafetyData] = useState<{[key: string]: {
-    boarding: 'no_problem' | 'problem' | '',
-    boardingDetails: string,
-    alighting: 'no_problem' | 'problem' | '',
-    alightingDetails: string,
-    wheelchairSecurity: 'no_problem' | 'problem' | '',
-    wheelchairDetails: string,
-    companionPresent: boolean,
-    companionName: string,
-    companionRelationship: string
-  }}>({})
-  const [showSafetyForm, setShowSafetyForm] = useState<{[key: string]: boolean}>({})
   const [userAddressNames, setUserAddressNames] = useState<{[addressId: string]: string}>({})
 
   const router = useRouter()
@@ -564,108 +551,6 @@ export default function DriverPage() {
     }
   }
 
-  const handleSaveSafetyData = async (recordId: string) => {
-    const safety = safetyData[recordId]
-    console.log('安全管理データ保存開始:', { recordId, safety, safetyData })
-    
-    if (!safety) {
-      console.error('安全管理データが見つかりません:', recordId)
-      alert('安全管理データが見つかりません')
-      return
-    }
-
-    try {
-      const updateData = {
-        safety_check_boarding: safety.boarding || null,
-        safety_check_boarding_details: safety.boarding === 'problem' ? safety.boardingDetails : null,
-        safety_check_alighting: safety.alighting || null,
-        safety_check_alighting_details: safety.alighting === 'problem' ? safety.alightingDetails : null,
-        wheelchair_security_status: safety.wheelchairSecurity || null,
-        wheelchair_security_details: safety.wheelchairSecurity === 'problem' ? safety.wheelchairDetails : null,
-        companion_present: safety.companionPresent,
-        companion_name: safety.companionPresent ? safety.companionName : null,
-        companion_relationship: safety.companionPresent ? safety.companionRelationship : null,
-        updated_at: new Date().toISOString()
-      }
-
-      console.log('データベース更新データ:', updateData)
-
-      // transportation_recordsテーブルに直接安全管理データを保存
-      const { data, error } = await supabase
-        .from('transportation_records')
-        .update(updateData)
-        .eq('id', recordId)
-        .select()
-        
-      if (error) throw error
-
-      console.log('安全管理データ保存成功:', data)
-      alert('安全管理データが保存されました')
-
-      // フォームを閉じる
-      setShowSafetyForm(prev => ({ ...prev, [recordId]: false }))
-      
-      // 状態を更新
-      setDeliveries(prev => 
-        prev.map(item => 
-          item.record.id === recordId 
-            ? { ...item, record: { ...item.record, ...updateData }}
-            : item
-        )
-      )
-
-    } catch (err) {
-      console.error('安全管理データ保存エラー:', err)
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : typeof err === 'object' && err !== null
-          ? JSON.stringify(err, null, 2)
-          : String(err)
-      alert(`安全管理データの保存に失敗しました:\n${errorMessage}`)
-    }
-  }
-
-  const initializeSafetyData = (recordId: string) => {
-    if (!safetyData[recordId]) {
-      setSafetyData(prev => ({
-        ...prev,
-        [recordId]: {
-          boarding: '',
-          boardingDetails: '',
-          alighting: '',
-          alightingDetails: '',
-          wheelchairSecurity: '',
-          wheelchairDetails: '',
-          companionPresent: false,
-          companionName: '',
-          companionRelationship: ''
-        }
-      }))
-    }
-  }
-
-  const handleToggleSafetyForm = (recordId: string) => {
-    // 安全確認データを強制的に初期化
-    setSafetyData(prev => ({
-      ...prev,
-      [recordId]: prev[recordId] || {
-        boarding: '',
-        boardingDetails: '',
-        alighting: '',
-        alightingDetails: '',
-        wheelchairSecurity: '',
-        wheelchairDetails: '',
-        companionPresent: false,
-        companionName: '',
-        companionRelationship: ''
-      }
-    }))
-    
-    setShowSafetyForm(prev => ({
-      ...prev,
-      [recordId]: !prev[recordId]
-    }))
-  }
 
   const handleCompleteAllDeliveries = async () => {
     if (!allCompleted) {
@@ -980,127 +865,14 @@ export default function DriverPage() {
                       </p>
                     </div>
 
-                    {/* 安全確認フォーム */}
-                    {showSafetyForm[delivery.record.id] && (
-                      <div className="border-t border-gray-200 pt-4 mt-4">
-                        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                          <span className="text-blue-600">🛡️</span>
-                          安全確認
-                        </h4>
-                        
-                        {/* 安全確認項目をコンパクトに */}
-                        <div className="space-y-3 text-sm">
-                          <div>
-                            <label className="block font-medium text-gray-700 mb-1">乗車時の安全確認</label>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setSafetyData(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    boarding: 'no_problem'
-                                  }
-                                }))}
-                                className={`btn-modern text-xs px-3 py-1 ${
-                                  safetyData[delivery.record.id]?.boarding === 'no_problem' ? 'btn-success' : 'btn-outline'
-                                }`}
-                              >
-                                ✅ 問題なし
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSafetyData(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    boarding: 'problem'
-                                  }
-                                }))}
-                                className={`btn-modern text-xs px-3 py-1 ${
-                                  safetyData[delivery.record.id]?.boarding === 'problem' ? 'btn-warning' : 'btn-outline'
-                                }`}
-                              >
-                                ⚠️ 問題あり
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block font-medium text-gray-700 mb-1">降車時の安全確認</label>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setSafetyData(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    alighting: 'no_problem'
-                                  }
-                                }))}
-                                className={`btn-modern text-xs px-3 py-1 ${
-                                  safetyData[delivery.record.id]?.alighting === 'no_problem' ? 'btn-success' : 'btn-outline'
-                                }`}
-                              >
-                                ✅ 問題なし
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSafetyData(prev => ({
-                                  ...prev,
-                                  [delivery.record.id]: {
-                                    ...prev[delivery.record.id],
-                                    alighting: 'problem'
-                                  }
-                                }))}
-                                className={`btn-modern text-xs px-3 py-1 ${
-                                  safetyData[delivery.record.id]?.alighting === 'problem' ? 'btn-warning' : 'btn-outline'
-                                }`}
-                              >
-                                ⚠️ 問題あり
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 mt-4">
-                          <button
-                            onClick={() => handleSaveSafetyData(delivery.record.id)}
-                            className="btn-modern btn-primary flex-1 text-sm"
-                          >
-                            安全確認保存
-                          </button>
-                          <button
-                            onClick={() => setShowSafetyForm(prev => ({
-                              ...prev,
-                              [delivery.record.id]: false
-                            }))}
-                            className="btn-modern btn-outline text-sm px-4"
-                          >
-                            閉じる
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="modern-card-footer">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowSafetyForm(prev => ({
-                          ...prev,
-                          [delivery.record.id]: !prev[delivery.record.id]
-                        }))}
-                        className="btn-modern btn-outline flex-1 text-sm"
-                      >
-                        🛡️ 安全確認
-                      </button>
-                      {delivery.detail?.arrival_time && delivery.detail?.departure_time && (
-                        <div className="flex items-center text-green-600 text-sm font-medium">
-                          ✅ 完了
-                        </div>
-                      )}
-                    </div>
+                    {delivery.detail?.arrival_time && delivery.detail?.departure_time && (
+                      <div className="text-center text-green-600 text-sm font-medium">
+                        ✅ 完了
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1134,7 +906,7 @@ export default function DriverPage() {
                           final: parseInt(e.target.value) || 0
                         }))}
                         className="form-input text-center text-lg font-mono pr-12"
-                        placeholder="例: 12345"
+                        placeholder="12345"
                         min={session.startOdometer || 0}
                       />
                       <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">km</span>
