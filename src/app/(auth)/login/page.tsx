@@ -453,400 +453,330 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'}}>
-      {/* 福祉送迎アプリ用ヘッダー */}
-      <div className="bg-white shadow-lg border-b-4 border-blue-500">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl font-bold">🚐</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">福祉送迎システム</h1>
-                <p className="text-sm text-gray-600">安全・安心な送迎サービス</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* モバイルヘッダー */}
+      <div className="mobile-header">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-2xl">🚐</span>
             </div>
-            <Link 
-              href="/admin/login"
-              className="welfare-button welfare-button-outline text-sm"
-            >
-              📊 管理者ログイン
-            </Link>
+            <div>
+              <h1>福祉送迎システム</h1>
+              <div className="subtitle">安全・安心な送迎サービス</div>
+            </div>
           </div>
+          <Link 
+            href="/admin/login"
+            className="btn-modern btn-outline text-sm bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            📊 管理者
+          </Link>
         </div>
       </div>
       
-      <div className="flex items-center justify-center p-6 pt-12">
-        <div className="welfare-card w-full max-w-5xl fade-in">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-white text-3xl">🚐</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              福祉送迎ドライバー
-            </h1>
-            <p className="text-xl text-gray-600 mb-4">安全運転でご利用者様をお送りします</p>
-            {currentTime && (
-              <div className="inline-flex items-center gap-2 bg-blue-50 px-6 py-3 rounded-full">
-                <span className="text-blue-600">🕐</span>
-                <span className="text-2xl font-mono font-bold text-blue-600">
-                  {currentTime}
-                </span>
+      <div className="container-mobile py-8">
+        <div className="max-w-md mx-auto">
+          {/* メインカード */}
+          <div className="modern-card fade-in">
+            <div className="text-center p-6">
+              {/* アイコンとタイトル */}
+              <div className="user-avatar mx-auto mb-4" style={{width: '5rem', height: '5rem', fontSize: '2rem'}}>
+                🚐
               </div>
-            )}
-          </div>
-
-        {!showSelectionForm ? (
-          // 初期画面：送迎開始ボタンのみ表示
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="text-center p-6 bg-blue-50 rounded-xl">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white text-2xl">🏠</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">通所支援</h3>
-                <p className="text-sm text-gray-600">ご自宅と施設間の送迎</p>
-              </div>
-              <div className="text-center p-6 bg-green-50 rounded-xl">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white text-2xl">🏥</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">医療送迎</h3>
-                <p className="text-sm text-gray-600">病院・診療所への送迎</p>
-              </div>
-              <div className="text-center p-6 bg-orange-50 rounded-xl">
-                <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white text-2xl">🌟</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">外出支援</h3>
-                <p className="text-sm text-gray-600">お買い物・レクリエーション</p>
-              </div>
-            </div>
-            <div className="text-center">
-              <button
-                onClick={handleStartDelivery}
-                className="welfare-button welfare-button-primary text-2xl px-12 py-6 shadow-xl hover:shadow-2xl"
-              >
-                🚐 送迎を開始する
-              </button>
-              <p className="text-gray-500 mt-4 text-lg">安全第一でご利用者様をお送りします</p>
-            </div>
-          </div>
-        ) : (
-          // 選択フォーム：ドライバーと車両を選択
-          <form onSubmit={handleLogin} className="space-y-8">
-            <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                👨‍💼 送迎情報の設定
-              </h2>
-              <p className="text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
-            </div>
-
-            {/* 管理コード入力 */}
-            {!codeVerified ? (
-              <div className="welfare-card border-l-4 border-orange-500">
-                <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  🔑 管理コード
-                </label>
-                <div className="flex gap-4">
-                  <input
-                    type="text"
-                    value={managementCode}
-                    onChange={(e) => setManagementCode(e.target.value.toUpperCase())}
-                    className="flex-1 welfare-input text-center text-2xl font-mono tracking-widest"
-                    placeholder="6桁の管理コードを入力"
-                    maxLength={6}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={verifyManagementCode}
-                    disabled={managementCode.length !== 6}
-                    className="bg-orange-600 text-white px-6 py-2 rounded font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    確認
-                  </button>
-                </div>
-                <p className="text-orange-600 text-sm mt-2">
-                  ⚠️ 管理者から発行された6桁の管理コードを入力してください
-                </p>
-              </div>
-            ) : (
-              <>
-            {/* ドライバー選択 */}
-            <div className="welfare-card">
-              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                👨‍💼 担当ドライバー
-              </label>
-              <select
-                value={selectedDriver}
-                onChange={(e) => setSelectedDriver(e.target.value)}
-                className="welfare-select"
-                required
-              >
-                <option value="">ドライバーを選択してください</option>
-                {drivers.map((driver) => (
-                  <option key={driver.id} value={driver.id}>
-                    👨‍💼 {driver.name} ({driver.employee_no})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 車両選択 */}
-            <div className="welfare-card">
-              <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                🚐 送迎車両
-              </label>
-              <select
-                value={selectedVehicle}
-                onChange={(e) => handleVehicleSelect(e.target.value)}
-                className="welfare-select"
-                required
-              >
-                <option value="">送迎車両を選択してください</option>
-                {vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    🚐 {vehicle.vehicle_no} ({vehicle.vehicle_type})
-                  </option>
-                ))}
-              </select>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                福祉送迎ドライバー
+              </h1>
+              <p className="text-gray-600 mb-4">安全運転でご利用者様をお送りします</p>
               
-              {/* 開始走行距離表示 */}
-              {startOdometer !== null && (
-                <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-green-600 text-xl">📊</span>
-                    <span className="font-bold text-green-800">走行距離情報</span>
-                  </div>
-                  <p className="text-green-700 text-lg">
-                    開始走行距離: <span className="font-bold text-xl">{startOdometer.toLocaleString()} km</span>
-                  </p>
-                  <p className="text-green-600 text-sm mt-1">💡 車両から自動取得されました</p>
+              {/* 現在時刻 */}
+              {currentTime && (
+                <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full mb-6">
+                  <span className="text-blue-600">🕐</span>
+                  <span className="text-xl font-mono font-bold text-blue-600">
+                    {currentTime}
+                  </span>
                 </div>
               )}
             </div>
 
+            {!showSelectionForm ? (
+              /* 初期画面：送迎開始ボタン */
+              <div className="p-6 pt-0">
+                {/* サービス紹介 */}
+                <div className="grid-mobile gap-4 mb-8">
+                  <div className="text-center p-4 bg-blue-50 rounded-xl">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-white text-xl">🏠</span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm mb-1">通所支援</h3>
+                    <p className="text-xs text-gray-600">ご自宅と施設間の送迎</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-xl">
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-white text-xl">🏥</span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm mb-1">医療送迎</h3>
+                    <p className="text-xs text-gray-600">病院・診療所への送迎</p>
+                  </div>
+                </div>
+                
+                {/* メインボタン */}
+                <button
+                  onClick={handleStartDelivery}
+                  className="btn-modern btn-primary btn-xl w-full text-xl"
+                >
+                  🚐 送迎を開始する
+                </button>
+                <p className="text-gray-500 mt-4 text-center text-sm">安全第一でご利用者様をお送りします</p>
+              </div>
+            ) : (
+              /* 選択フォーム */
+              <form onSubmit={handleLogin} className="p-6 pt-0 space-y-6">
+                {/* 案内メッセージ */}
+                <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-blue-600">👨‍💼</span>
+                    <h2 className="font-bold text-gray-900">送迎情報の設定</h2>
+                  </div>
+                  <p className="text-sm text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
+                </div>
 
-            {/* 利用者選択 */}
-            <div className="welfare-card">
-              <label className="block text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                👤 送迎対象の利用者様 <span className="text-red-500 text-xl">*</span>
-                {selectedUsers.length > 0 && (
-                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">
-                    {selectedUsers.length}名選択中
-                  </span>
-                )}
-              </label>
-              <div className="grid gap-4">
-                {users.map((user) => (
-                  <div
-                    key={user.id}
-                    className={`p-4 border-2 rounded-xl transition-all ${
-                      selectedUsers.includes(user.id)
-                        ? 'border-blue-500 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleUserSelect(user.id)}
-                      className="w-full text-left"
-                    >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        user.wheelchair_user ? 'bg-purple-100' : 'bg-blue-100'
-                      }`}>
-                        <span className="text-2xl">{user.wheelchair_user ? '♿' : '👤'}</span>
+                {/* 管理コード入力 */}
+                {!codeVerified ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-orange-600 text-xl">🔑</span>
+                      <label className="font-bold text-gray-900">管理コード</label>
+                    </div>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={managementCode}
+                        onChange={(e) => setManagementCode(e.target.value.toUpperCase())}
+                        className="form-input text-center text-2xl font-mono tracking-widest"
+                        placeholder="6桁のコード"
+                        maxLength={6}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={verifyManagementCode}
+                        disabled={managementCode.length !== 6}
+                        className="btn-modern btn-warning w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        確認
+                      </button>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <p className="text-orange-700 text-sm">
+                        ⚠️ 管理者から発行された6桁の管理コードを入力してください
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* ドライバー選択 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-blue-600 text-xl">👨‍💼</span>
+                        <label className="font-bold text-gray-900">担当ドライバー</label>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg">{user.name}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm bg-gray-100 px-2 py-1 rounded">
-                            {user.user_no}
-                          </span>
-                          {user.wheelchair_user && (
-                            <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                              車椅子利用
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">📍 {user.address}</p>
-                        {user.special_notes && (
-                          <p className="text-sm text-orange-600 mt-1">📝 {user.special_notes}</p>
-                        )}
+                      <select
+                        value={selectedDriver}
+                        onChange={(e) => setSelectedDriver(e.target.value)}
+                        className="form-select"
+                        required
+                      >
+                        <option value="">ドライバーを選択してください</option>
+                        {drivers.map((driver) => (
+                          <option key={driver.id} value={driver.id}>
+                            👨‍💼 {driver.name} ({driver.employee_no})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 車両選択 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-green-600 text-xl">🚐</span>
+                        <label className="font-bold text-gray-900">送迎車両</label>
                       </div>
-                      {selectedUsers.includes(user.id) && (
-                        <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
-                          {selectedUsers.indexOf(user.id) + 1}
+                                             <select
+                         value={selectedVehicle}
+                         onChange={(e) => handleVehicleSelect(e.target.value)}
+                         className="form-select"
+                         required
+                       >
+                        <option value="">送迎車両を選択してください</option>
+                        {vehicles.map((vehicle) => (
+                          <option key={vehicle.id} value={vehicle.id}>
+                            🚐 {vehicle.vehicle_no} ({vehicle.vehicle_name})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 利用者選択 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-purple-600 text-xl">👥</span>
+                        <label className="font-bold text-gray-900">送迎対象の利用者様</label>
+                        <span className="text-red-500">*</span>
+                      </div>
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {users.map((user) => (
+                          <div
+                            key={user.id}
+                            className={`user-card ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
+                                                         onClick={() => handleUserSelect(user.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="user-avatar" style={{width: '2.5rem', height: '2.5rem', fontSize: '1rem', marginBottom: 0}}>
+                                {user.name.charAt(0)}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900">{user.name}</h3>
+                                <p className="text-sm text-gray-600">{user.user_no}</p>
+                                {user.wheelchair_user && (
+                                  <span className="status-badge status-info text-xs mt-1">♿ 車椅子</span>
+                                )}
+                              </div>
+                              <div className="text-xl">
+                                {selectedUsers.includes(user.id) ? '✅' : '⭕'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {selectedUsers.length === 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <p className="text-yellow-700 text-sm">
+                            ⚠️ 複数の利用者様を選択できます。体調と安全を最優先にお送りください
+                          </p>
                         </div>
                       )}
                     </div>
-                    </button>
-                    
-                    {/* 住所選択（選択された利用者のみ表示） */}
-                    {selectedUsers.includes(user.id) && userAddresses[user.id] && userAddresses[user.id].length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-blue-200">
-                        <label className="block text-sm font-medium text-blue-800 mb-2">
-                          📍 送迎住所を選択:
-                        </label>
-                        <select
-                          value={selectedAddresses[user.id] || ''}
-                          onChange={(e) => setSelectedAddresses(prev => ({
-                            ...prev,
-                            [user.id]: e.target.value
-                          }))}
-                          className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                    {/* 開始時刻 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-blue-600 text-xl">🕐</span>
+                        <label className="font-bold text-gray-900">開始時刻</label>
+                        <span className="text-red-500">*</span>
+                      </div>
+                      <div className="time-picker">
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setStartTime(new Date().toTimeString().slice(0, 5))}
+                          className="btn-modern btn-outline text-sm px-3 py-1"
                         >
-                          <option value="">住所を選択してください</option>
-                          {userAddresses[user.id].map((address) => (
-                            <option key={address.id} value={address.id}>
-                              {address.address_name}: {address.address}
-                              {address.is_primary && ' (メイン)'}
-                            </option>
-                          ))}
-                        </select>
+                          現在時刻
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 走行距離 */}
+                    {startOdometer !== null && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-green-600 text-xl">📏</span>
+                          <label className="font-bold text-gray-900">開始時走行距離</label>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg border">
+                          <p className="text-lg font-mono font-bold text-center">
+                            {startOdometer.toLocaleString()} km
+                          </p>
+                        </div>
                       </div>
                     )}
+
+                    {/* エラー表示 */}
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-red-700 text-sm">{error}</p>
+                      </div>
+                    )}
+
+                    {/* ボタン */}
+                    <div className="space-y-3">
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="btn-modern btn-primary btn-lg w-full disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="spinner"></div>
+                            設定中...
+                          </div>
+                        ) : (
+                          '🚐 送迎開始'
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="btn-modern btn-outline w-full"
+                      >
+                        ❌ キャンセル
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <p className="text-gray-600 text-sm mt-4">⚠️ 複数の利用者様を選択できます。体調と安全を最優先にお送りください</p>
-            </div>
-
-            {/* 時間入力セクション */}
-            <div className="welfare-card border-l-4 border-orange-500">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                🕐 送迎開始時間
-              </h3>
-              
-              {/* 開始時刻 */}
-              <div>
-                <label className="block text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  🕐 開始時刻 <span className="text-red-500 text-xl">*</span>
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-3">
-                    <input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="welfare-input text-2xl font-mono text-center"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const now = new Date()
-                      setStartTime(now.toTimeString().slice(0, 5))
-                    }}
-                    className="welfare-button welfare-button-outline"
-                  >
-                    🕐 現在時刻
-                  </button>
-                </div>
-                <p className="text-orange-600 text-sm mt-2 flex items-center gap-1">
-                  ⚠️ 予定時刻より早めの出発をお勧めします
-                </p>
-              </div>
-            </div>
-
-
-            {/* エラーメッセージ */}
-            {error && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-red-500 text-xl">⚠️</span>
-                  <span className="font-bold text-red-800">エラーが発生しました</span>
-                </div>
-                <p className="text-red-700 text-lg">{error}</p>
-              </div>
-            )}
-
-            {/* ボタン */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="welfare-button welfare-button-outline text-lg"
-              >
-                ❌ キャンセル
-              </button>
-              <button
-                type="button"
-                onClick={handleStartDeliveryWithRecord}
-                disabled={isLoading || !selectedDriver || !selectedVehicle || !startTime || selectedUsers.length === 0 || !codeVerified}
-                className="welfare-button welfare-button-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⏳</span>
-                    処理中...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    🚐 送迎開始
-                  </span>
                 )}
-              </button>
-            </div>
-              </>
+              </form>
             )}
-            
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-yellow-600 text-xl">🛡️</span>
-                <span className="font-bold text-yellow-800">安全運転のお願い</span>
-              </div>
-              <ul className="text-yellow-700 space-y-1 text-sm">
-                <li>• シートベルトの着用確認をお願いします</li>
-                <li>• ご利用者様の体調にご配慮ください</li>
-                <li>• 急発進・急ブレーキはお控えください</li>
-                <li>• 困ったときは本部にご連絡ください</li>
-              </ul>
-            </div>
-          </form>
-        )}
+          </div>
+        </div>
+      </div>
 
-      </div>
-      </div>
-      
       {/* 重複記録ダイアログ */}
       {showDuplicateDialog && duplicateRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">送迎記録が既に存在します</h3>
-            <div className="space-y-2 mb-6">
-              <p className="text-sm text-gray-600">
-                同じ日付・ドライバー・ルートの送迎記録が既に存在します。
-              </p>
-              <div className="bg-gray-50 p-3 rounded text-sm">
-                <p><strong>日付:</strong> {duplicateRecord.delivery_date}</p>
-                <p><strong>ステータス:</strong> {duplicateRecord.status}</p>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="modern-card max-w-sm w-full">
+            <div className="p-6">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-yellow-600 text-2xl">⚠️</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">既存の送迎記録</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {duplicateRecord.delivery_date}の記録が見つかりました
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">状態:</span> {duplicateRecord.status === 'in_progress' ? '進行中' : duplicateRecord.status === 'completed' ? '完了' : '待機中'}
+                </p>
                 {duplicateRecord.start_odometer && (
-                  <p><strong>開始走行距離:</strong> {duplicateRecord.start_odometer.toLocaleString()} km</p>
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">開始距離:</span> {duplicateRecord.start_odometer}km
+                  </p>
                 )}
               </div>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => {
-                  setShowDuplicateDialog(false)
-                  setDuplicateRecord(null)
-                }}
-                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleDeleteAndRecreate}
-                disabled={isLoading}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                {isLoading ? '処理中...' : '削除して新規作成'}
-              </button>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={handleDeleteAndRecreate}
+                  className="btn-modern btn-warning w-full"
+                >
+                  既存記録を削除して新規作成
+                </button>
+                <button
+                  onClick={() => setShowDuplicateDialog(false)}
+                  className="btn-modern btn-outline w-full"
+                >
+                  キャンセル
+                </button>
+              </div>
             </div>
           </div>
         </div>

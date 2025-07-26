@@ -435,77 +435,136 @@ export default function DriversManagementPage() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="welfare-table">
-                <thead>
-                  <tr>
-                    <th>名前</th>
-                    <th>社員番号</th>
-                    <th>運転免許証番号</th>
-                    <th>メールアドレス</th>
-                    <th>ステータス</th>
-                    <th>登録日</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {drivers.map((driver) => (
-                    <tr key={driver.id}>
-                      <td>
-                        <span className="welfare-badge bg-blue-100 text-blue-800">
-                          👤 {driver.name}
-                        </span>
-                      </td>
-                      <td className="font-medium">{driver.employee_no}</td>
-                      <td className="text-center">
-                        {driver.driver_license_number ? (
-                          <span className="welfare-badge bg-purple-100 text-purple-800">
-                            🪪 {driver.driver_license_number}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="text-center">
-                        {driver.email ? (
-                          <span className="welfare-badge bg-green-100 text-green-800">
-                            📧 {driver.email}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td>
-                        {driver.is_active ? (
-                          <span className="status-safe">アクティブ</span>
-                        ) : (
-                          <span className="status-danger">非アクティブ</span>
-                        )}
-                      </td>
-                      <td className="text-center">
-                        {new Date(driver.created_at).toLocaleDateString('ja-JP')}
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handleEdit(driver)}
-                            className="welfare-button welfare-button-outline text-sm px-3 py-1"
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(driver.id)}
-                            className="welfare-button welfare-button-danger text-sm px-3 py-1"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* デスクトップ表示: テーブル */}
+              <div className="overflow-x-auto">
+                <table className="welfare-table">
+                  <thead>
+                    <tr>
+                      <th>名前</th>
+                      <th>社員番号</th>
+                      <th>運転免許証番号</th>
+                      <th>メールアドレス</th>
+                      <th>ステータス</th>
+                      <th>登録日</th>
+                      <th>操作</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {drivers.map((driver) => (
+                      <tr key={driver.id}>
+                        <td>
+                          <span className="welfare-badge bg-blue-100 text-blue-800">
+                            👤 {driver.name}
+                          </span>
+                        </td>
+                        <td className="font-medium">{driver.employee_no}</td>
+                        <td className="text-center">
+                          {driver.driver_license_number ? (
+                            <span className="welfare-badge bg-purple-100 text-purple-800">
+                              🪪 {driver.driver_license_number}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          {driver.email ? (
+                            <span className="welfare-badge bg-green-100 text-green-800">
+                              📧 {driver.email}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td>
+                          {driver.is_active ? (
+                            <span className="status-safe">アクティブ</span>
+                          ) : (
+                            <span className="status-danger">非アクティブ</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          {new Date(driver.created_at).toLocaleDateString('ja-JP')}
+                        </td>
+                        <td>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleEdit(driver)}
+                              className="welfare-button welfare-button-outline text-sm px-3 py-1"
+                            >
+                              ✏️
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(driver.id)}
+                              className="welfare-button welfare-button-danger text-sm px-3 py-1"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* モバイル表示: カードレイアウト */}
+              <div className="mobile-card-list">
+                {drivers.map((driver) => (
+                  <div key={driver.id} className="mobile-item-card">
+                    <div className="mobile-item-header">
+                      <div className="mobile-item-avatar">
+                        {driver.name.charAt(0)}
+                      </div>
+                      <div className="mobile-item-info">
+                        <h3 className="mobile-item-name">{driver.name}</h3>
+                        <p className="mobile-item-subtitle">{driver.employee_no}</p>
+                      </div>
+                      <div className={driver.is_active ? "mobile-status-active" : "mobile-status-inactive"}>
+                        {driver.is_active ? "アクティブ" : "非アクティブ"}
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-item-body">
+                      {driver.driver_license_number && (
+                        <div className="mobile-item-row">
+                          <span className="mobile-item-label">🪪 免許証番号</span>
+                          <span className="mobile-item-value">{driver.driver_license_number}</span>
+                        </div>
+                      )}
+                      {driver.email && (
+                        <div className="mobile-item-row">
+                          <span className="mobile-item-label">📧 メール</span>
+                          <span className="mobile-item-value">{driver.email}</span>
+                        </div>
+                      )}
+                      <div className="mobile-item-row">
+                        <span className="mobile-item-label">📅 登録日</span>
+                        <span className="mobile-item-value">
+                          {new Date(driver.created_at).toLocaleDateString('ja-JP')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-item-actions">
+                      <button 
+                        onClick={() => handleEdit(driver)}
+                        className="mobile-item-btn mobile-item-btn-edit"
+                      >
+                        ✏️ 編集
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(driver.id)}
+                        className="mobile-item-btn mobile-item-btn-delete"
+                      >
+                        🗑️ 削除
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

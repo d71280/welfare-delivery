@@ -481,85 +481,156 @@ export default function VehiclesManagementPage() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="welfare-table">
-                <thead>
-                  <tr>
-                    <th>車両番号</th>
-                    <th>車両名</th>
-                    <th>タイプ</th>
-                    <th>定員</th>
-                    <th>燃料</th>
-                    <th>車椅子対応</th>
-                    <th>走行距離</th>
-                    <th>管理コード</th>
-                    <th>ステータス</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vehicles.map((vehicle) => (
-                    <tr key={vehicle.id}>
-                      <td>
-                        <span className="welfare-badge bg-blue-100 text-blue-800">
-                          {vehicle.vehicle_no}
-                        </span>
-                      </td>
-                      <td className="font-medium">{vehicle.vehicle_name}</td>
-                      <td>
-                        <span className="flex items-center gap-1">
-                          {getFuelTypeIcon(vehicle.fuel_type)}
-                          {vehicle.vehicle_type}
-                        </span>
-                      </td>
-                      <td className="text-center">{vehicle.capacity}名</td>
-                      <td>
-                        <span className="flex items-center gap-1">
-                          {getFuelTypeIcon(vehicle.fuel_type)}
-                          {vehicle.fuel_type}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        {vehicle.wheelchair_accessible ? (
-                          <span className="wheelchair-badge">♿ 対応</span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="text-center">
-                        {vehicle.current_odometer ? `${vehicle.current_odometer.toLocaleString()}km` : '-'}
-                      </td>
-                      <td className="text-center">
-                        {availableManagementCodes.find(code => code.id === vehicle.management_code_id)?.code || '-'}
-                      </td>
-                      <td>
-                        {vehicle.is_active ? (
-                          <span className="status-safe">使用可能</span>
-                        ) : (
-                          <span className="status-danger">使用停止</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handleEdit(vehicle)}
-                            className="welfare-button welfare-button-outline text-sm px-3 py-1"
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(vehicle.id)}
-                            className="welfare-button welfare-button-danger text-sm px-3 py-1"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* デスクトップ表示: テーブル */}
+              <div className="overflow-x-auto">
+                <table className="welfare-table">
+                  <thead>
+                    <tr>
+                      <th>車両番号</th>
+                      <th>車両名</th>
+                      <th>タイプ</th>
+                      <th>定員</th>
+                      <th>燃料</th>
+                      <th>車椅子対応</th>
+                      <th>走行距離</th>
+                      <th>管理コード</th>
+                      <th>ステータス</th>
+                      <th>操作</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {vehicles.map((vehicle) => (
+                      <tr key={vehicle.id}>
+                        <td>
+                          <span className="welfare-badge bg-blue-100 text-blue-800">
+                            {vehicle.vehicle_no}
+                          </span>
+                        </td>
+                        <td className="font-medium">{vehicle.vehicle_name}</td>
+                        <td>
+                          <span className="flex items-center gap-1">
+                            {getFuelTypeIcon(vehicle.fuel_type)}
+                            {vehicle.vehicle_type}
+                          </span>
+                        </td>
+                        <td className="text-center">{vehicle.capacity}名</td>
+                        <td>
+                          <span className="flex items-center gap-1">
+                            {getFuelTypeIcon(vehicle.fuel_type)}
+                            {vehicle.fuel_type}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          {vehicle.wheelchair_accessible ? (
+                            <span className="wheelchair-badge">♿ 対応</span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          {vehicle.current_odometer ? `${vehicle.current_odometer.toLocaleString()}km` : '-'}
+                        </td>
+                        <td className="text-center">
+                          {availableManagementCodes.find(code => code.id === vehicle.management_code_id)?.code || '-'}
+                        </td>
+                        <td>
+                          {vehicle.is_active ? (
+                            <span className="status-safe">使用可能</span>
+                          ) : (
+                            <span className="status-danger">使用停止</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleEdit(vehicle)}
+                              className="welfare-button welfare-button-outline text-sm px-3 py-1"
+                            >
+                              ✏️
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(vehicle.id)}
+                              className="welfare-button welfare-button-danger text-sm px-3 py-1"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* モバイル表示: カードレイアウト */}
+              <div className="mobile-card-list">
+                {vehicles.map((vehicle) => (
+                  <div key={vehicle.id} className="mobile-item-card">
+                    <div className="mobile-item-header">
+                      <div className="mobile-item-avatar">
+                        🚐
+                      </div>
+                      <div className="mobile-item-info">
+                        <h3 className="mobile-item-name">{vehicle.vehicle_no}</h3>
+                        <p className="mobile-item-subtitle">{vehicle.vehicle_name}</p>
+                      </div>
+                      <div className={vehicle.is_active ? "mobile-status-active" : "mobile-status-inactive"}>
+                        {vehicle.is_active ? "使用可能" : "使用停止"}
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-item-body">
+                      <div className="mobile-item-row">
+                        <span className="mobile-item-label">🚗 タイプ</span>
+                        <span className="mobile-item-value">{vehicle.vehicle_type}</span>
+                      </div>
+                      <div className="mobile-item-row">
+                        <span className="mobile-item-label">👥 定員</span>
+                        <span className="mobile-item-value">{vehicle.capacity}名</span>
+                      </div>
+                      <div className="mobile-item-row">
+                        <span className="mobile-item-label">⛽ 燃料</span>
+                        <span className="mobile-item-value">{vehicle.fuel_type}</span>
+                      </div>
+                      {vehicle.wheelchair_accessible && (
+                        <div className="mobile-item-row">
+                          <span className="mobile-item-label">♿ 車椅子</span>
+                          <span className="mobile-item-value">対応</span>
+                        </div>
+                      )}
+                      {vehicle.current_odometer && (
+                        <div className="mobile-item-row">
+                          <span className="mobile-item-label">📏 走行距離</span>
+                          <span className="mobile-item-value">{vehicle.current_odometer.toLocaleString()}km</span>
+                        </div>
+                      )}
+                      <div className="mobile-item-row">
+                        <span className="mobile-item-label">🔑 管理コード</span>
+                        <span className="mobile-item-value">
+                          {availableManagementCodes.find(code => code.id === vehicle.management_code_id)?.code || '-'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-item-actions">
+                      <button 
+                        onClick={() => handleEdit(vehicle)}
+                        className="mobile-item-btn mobile-item-btn-edit"
+                      >
+                        ✏️ 編集
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(vehicle.id)}
+                        className="mobile-item-btn mobile-item-btn-delete"
+                      >
+                        🗑️ 削除
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
