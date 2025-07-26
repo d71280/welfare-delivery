@@ -450,10 +450,71 @@ body {
    管理者画面モバイル最適化
    ===================================== */
 
-/* 統一ヘッダーのモバイル対応 */
+/* 統一ヘッダーのレスポンシブ対応 */
+.welfare-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.welfare-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.welfare-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.welfare-header-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.welfare-header-text h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.welfare-header-text p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 4px 0 0 0;
+}
+
+.welfare-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* モバイル対応（768px以下） */
 @media (max-width: 768px) {
   .welfare-header {
     background: white;
+    color: #1f2937;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-bottom: 4px solid var(--primary-blue);
     padding: 1rem;
@@ -516,7 +577,67 @@ body {
   }
 }
 
-/* コンテンツエリアのモバイル対応 */
+/* コンテンツエリアのレスポンシブ対応 */
+.welfare-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.welfare-section {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.welfare-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* テーブルのレスポンシブ対応 */
+.welfare-table-container {
+  overflow-x: auto;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.welfare-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.welfare-table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #374151;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.welfare-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.welfare-table tr:hover {
+  background: #f8fafc;
+}
+
+/* モバイル対応（768px以下） */
 @media (max-width: 768px) {
   .welfare-content {
     max-width: 100%;
@@ -541,6 +662,16 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+  
+  .welfare-table-container {
+    overflow: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .welfare-table {
+    display: none; /* デスクトップテーブルを非表示 */
   }
 }
 
@@ -754,7 +885,7 @@ body {
   }
 }
 
-/* デスクトップでは通常表示 */
+/* デスクトップ（769px以上）では通常表示 */
 @media (min-width: 769px) {
   .mobile-card-list {
     display: none;
@@ -764,53 +895,11 @@ body {
     display: table;
   }
   
-  .welfare-header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 24px;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 24px;
-  }
-  
-  .welfare-header-title {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  
-  .welfare-header-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--primary-blue);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-  
-  .welfare-header-text h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--foreground);
-    margin: 0;
-  }
-  
-  .welfare-header-text p {
-    font-size: 18px;
-    color: #6b7280;
-    margin: 4px 0 0 0;
-  }
-  
-  .welfare-nav-buttons {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+  /* フィルターを横並びに */
+  .welfare-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
   }
 }
 
@@ -1187,4 +1276,110 @@ body {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   min-height: 2.5rem;
+}
+
+/* =====================================
+   ドライバー画面レスポンシブ対応
+   ===================================== */
+
+/* デスクトップ（769px以上）向けドライバー画面 */
+@media (min-width: 769px) {
+  /* ドライバー画面をPC向けにも最適化 */
+  .driver-desktop-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .driver-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .driver-time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .driver-info-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  
+  /* PC向けボタンサイズ調整 */
+  .btn-modern {
+    min-height: 2.75rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn-lg {
+    min-height: 3.5rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  /* PC向けフォーム調整 */
+  .form-input,
+  .form-select {
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* モバイル（768px以下）向けドライバー画面 */
+@media (max-width: 768px) {
+  .driver-mobile-layout {
+    padding: 1rem;
+  }
+  
+  .driver-time-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .driver-info-section {
+    display: block;
+    space-y: 1rem;
+  }
+  
+  /* モバイル向けボタンサイズ */
+  .btn-modern {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    touch-action: manipulation;
+  }
+  
+  .btn-compact {
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  /* モバイル向けフォーム */
+  .form-input,
+  .form-select {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem; /* iOS拡大防止 */
+    touch-action: manipulation;
+  }
+  
+  /* 時間入力の特別対応 */
+  input[type="time"] {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+  
+  input[type="number"] {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
 }

@@ -774,8 +774,8 @@ export default function DriverPage() {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container-mobile py-4">
-        <div className="max-w-md mx-auto">
+      <div className="driver-mobile-layout driver-desktop-layout">
+        <div className="max-w-md mx-auto lg:max-w-4xl">
           {/* 今日の日付カード */}
           <div className="modern-card mb-4 fade-in">
             <div className="text-center p-4">
@@ -807,7 +807,7 @@ export default function DriverPage() {
             </div>
           ) : (
             /* 送迎リスト */
-            <div className="space-y-3">
+            <div className="space-y-3 lg:driver-card-grid">
               {deliveries.map((delivery, index) => (
                 <div
                   key={delivery.record.id}
@@ -840,7 +840,7 @@ export default function DriverPage() {
 
                   <div className="modern-card-body">
                     {/* 到着・出発時刻 */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="driver-time-grid mb-3">
                       <div>
                         <label className="text-xs font-medium text-gray-700 block mb-1">🚪 到着時刻</label>
                         {delivery.detail?.arrival_time ? (
