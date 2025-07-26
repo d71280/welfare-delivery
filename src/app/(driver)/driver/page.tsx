@@ -801,9 +801,24 @@ export default function DriverPage() {
                 <span className="text-gray-400 text-3xl">📋</span>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">送迎予定がありません</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-sm mb-4">
                 本日の送迎はすべて完了しているか、まだ送迎が登録されていません。
               </p>
+              
+              {/* デバッグ情報 */}
+              <div className="bg-gray-50 p-4 rounded-lg text-left text-xs">
+                <p className="font-bold mb-2">デバッグ情報:</p>
+                <p>セッション: {session ? 'あり' : 'なし'}</p>
+                {session && (
+                  <>
+                    <p>ドライバー: {session.driverName}</p>
+                    <p>車両: {session.vehicleNo}</p>
+                    <p>選択利用者数: {session.selectedUsers?.length || 0}</p>
+                    <p>送迎記録ID数: {session.deliveryRecordIds?.length || 0}</p>
+                    <p>送迎記録IDs: {JSON.stringify(session.deliveryRecordIds)}</p>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             /* 送迎リスト */
