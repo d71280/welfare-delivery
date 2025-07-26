@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { getVehicleCurrentOdometer, createDeliveryRecord, deleteDeliveryRecord } from '@/lib/supabase/delivery-service'
-import { Driver, Vehicle, User } from '@/types'
+import { Driver, Vehicle, User, UserAddress } from '@/types'
 
 export default function LoginPage() {
   const [drivers, setDrivers] = useState<Driver[]>([])
@@ -20,8 +20,8 @@ export default function LoginPage() {
   const [currentTime, setCurrentTime] = useState('')
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [users, setUsers] = useState<User[]>([])
-  const [userAddresses, setUserAddresses] = useState<{[userId: string]: any[]}>({})
-  const [selectedAddresses, setSelectedAddresses] = useState<{[userId: string]: string}>({})
+  const [userAddresses, setUserAddresses] = useState<{[userId: string]: UserAddress[]}>({})
+  const [selectedAddresses, setSelectedAddresses] = useState<{[userId: string]: number}>({})
   const [managementCode, setManagementCode] = useState('')
   const [codeVerified, setCodeVerified] = useState(false)
   const [currentManagementCodeId, setCurrentManagementCodeId] = useState<string | null>(null)
@@ -63,7 +63,7 @@ export default function LoginPage() {
           })
           
           const addressResults = await Promise.all(addressPromises)
-          const addressMap: {[userId: string]: any[]} = {}
+          const addressMap: {[userId: string]: UserAddress[]} = {}
           
           addressResults.forEach(({ userId, addresses }) => {
             addressMap[userId] = addresses
@@ -217,7 +217,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleUserSelect = (userId: string) => {
+  const handleUserSelect = async (userId: string) => {
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
         // 既に選択されている場合は削除
@@ -227,6 +227,35 @@ export default function LoginPage() {
         return [...prev, userId]
       }
     })
+
+    // 選択された利用者の住所を取得
+    if (!userAddresses[userId]) {
+      try {
+        const { data: addresses, error } = await supabase
+          .from('user_addresses')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .order('display_order')
+
+        if (error) throw error
+
+        setUserAddresses(prev => ({
+          ...prev,
+          [userId]: addresses || []
+        }))
+
+        // デフォルトで最初の住所を選択
+        if (addresses && addresses.length > 0) {
+          setSelectedAddresses(prev => ({
+            ...prev,
+            [userId]: 0
+          }))
+        }
+      } catch (error) {
+        console.error('住所取得エラー:', error)
+      }
+    }
   }
 
   // 送迎開始処理
@@ -262,7 +291,9 @@ export default function LoginPage() {
         specialNotes: `往復送迎 - 利用者${selectedUsers.length}名`,
         managementCodeId: currentManagementCodeId,
         selectedUsers: selectedUsers, // 利用者リストを渡す
-        selectedAddresses: selectedAddresses, // 選択された住所情報を追加
+        selectedAddresses: Object.fromEntries(
+          Object.entries(selectedAddresses).map(([userId, index]) => [userId, index.toString()])
+        ), // 選択された住所情報を文字列として変換
         startTime: startTime // 開始時刻を追加
       }
 
@@ -620,63 +651,101 @@ export default function LoginPage() {
 
                     {/* 利用者選択 */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-purple-600 text-xl">👥</span>
-                        <label className="font-bold text-gray-900">送迎対象の利用者様</label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-purple-600 text-lg">👥</span>
+                        <label className="font-semibold text-gray-900 text-sm">送迎対象の利用者様</label>
                         <span className="text-red-500">*</span>
                       </div>
-                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
                         {users.map((user) => (
                           <div
                             key={user.id}
-                            className={`user-card ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
-                                                         onClick={() => handleUserSelect(user.id)}
+                            className={`user-card-compact ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
+                            onClick={() => handleUserSelect(user.id)}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="user-avatar" style={{width: '2.5rem', height: '2.5rem', fontSize: '1rem', marginBottom: 0}}>
+                            <div className="flex items-center gap-2">
+                              <div className="user-avatar-small">
                                 {user.name.charAt(0)}
                               </div>
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                                <p className="text-sm text-gray-600">{user.user_no}</p>
-                                {user.wheelchair_user && (
-                                  <span className="status-badge status-info text-xs mt-1">♿ 車椅子</span>
-                                )}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-gray-900 text-sm truncate">{user.name}</h3>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-600">{user.user_no}</span>
+                                  {user.wheelchair_user && (
+                                    <span className="text-xs bg-purple-100 text-purple-700 px-1 rounded">♿</span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-xl">
-                                {selectedUsers.includes(user.id) ? '✅' : '⭕'}
+                              <div className="text-lg">
+                                {selectedUsers.includes(user.id) ? '✅' : '○'}
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                      {selectedUsers.length === 0 && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                          <p className="text-yellow-700 text-sm">
-                            ⚠️ 複数の利用者様を選択できます。体調と安全を最優先にお送りください
-                          </p>
-                        </div>
-                      )}
                     </div>
+
+                    {/* 住所選択 */}
+                    {selectedUsers.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-green-600 text-lg">🏠</span>
+                          <label className="font-semibold text-gray-900 text-sm">送迎先住所</label>
+                          <span className="text-red-500">*</span>
+                        </div>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {selectedUsers.map((userId) => {
+                            const user = users.find(u => u.id === userId)
+                            if (!user || !userAddresses[userId]) return null
+                            
+                            return (
+                              <div key={userId} className="bg-gray-50 p-2 rounded-lg">
+                                <p className="text-sm font-medium text-gray-800 mb-1">{user.name}</p>
+                                {userAddresses[userId].map((address, index) => (
+                                  <label key={index} className="flex items-center gap-2 text-sm">
+                                    <input
+                                      type="radio"
+                                      name={`address-${userId}`}
+                                      value={index}
+                                      checked={selectedAddresses[userId] === index}
+                                      onChange={() => setSelectedAddresses(prev => ({
+                                        ...prev,
+                                        [userId]: index
+                                      }))}
+                                      className="w-3 h-3"
+                                    />
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">
+                                      {address.address_name}
+                                    </span>
+                                    <span className="text-gray-600 text-xs truncate">{address.address}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {/* 開始時刻 */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-blue-600 text-xl">🕐</span>
-                        <label className="font-bold text-gray-900">開始時刻</label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-blue-600 text-lg">🕐</span>
+                        <label className="font-semibold text-gray-900 text-sm">開始時刻</label>
                         <span className="text-red-500">*</span>
                       </div>
-                      <div className="time-picker">
+                      <div className="flex gap-2">
                         <input
                           type="time"
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
+                          className="form-input flex-1 text-center"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setStartTime(new Date().toTimeString().slice(0, 5))}
-                          className="btn-modern btn-outline text-sm px-3 py-1"
+                          className="btn-modern btn-outline text-xs px-3 py-1 whitespace-nowrap"
                         >
                           現在時刻
                         </button>

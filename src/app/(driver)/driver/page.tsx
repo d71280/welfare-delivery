@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TransportationRecord, User } from '@/types'
+import Link from 'next/link'
 
 interface DriverSession {
   driverId: string
@@ -15,6 +16,7 @@ interface DriverSession {
   userNames?: string
   selectedAddresses?: {[userId: string]: string}
   deliveryRecordIds?: string[]
+  startOdometer?: number
 }
 
 interface DeliveryItem {
@@ -772,16 +774,16 @@ export default function DriverPage() {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container-mobile py-6">
+      <div className="container-mobile py-4">
         <div className="max-w-md mx-auto">
           {/* 今日の日付カード */}
-          <div className="modern-card mb-6 fade-in">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-white text-2xl">📅</span>
+          <div className="modern-card mb-4 fade-in">
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white text-lg">📅</span>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">今日の送迎一覧</h2>
-              <p className="text-gray-600 text-sm">
+              <h2 className="text-lg font-bold text-gray-900 mb-1">今日の送迎一覧</h2>
+              <p className="text-gray-600 text-xs">
                 {new Date().toLocaleDateString('ja-JP', { 
                   year: 'numeric', 
                   month: 'long', 
@@ -805,7 +807,7 @@ export default function DriverPage() {
             </div>
           ) : (
             /* 送迎リスト */
-            <div className="space-y-4">
+            <div className="space-y-3">
               {deliveries.map((delivery, index) => (
                 <div
                   key={delivery.record.id}
@@ -814,22 +816,22 @@ export default function DriverPage() {
                 >
                   <div className="modern-card-header">
                     <div className="flex items-center gap-3">
-                      <div className="user-avatar" style={{width: '3rem', height: '3rem', fontSize: '1.25rem', marginBottom: 0}}>
+                      <div className="user-avatar" style={{width: '2.5rem', height: '2.5rem', fontSize: '1rem', marginBottom: 0}}>
                         {delivery.user ? delivery.user.name.charAt(0) : '?'}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-gray-900">
+                        <h3 className="font-bold text-gray-900 text-sm">
                           {delivery.user ? delivery.user.name : '利用者不明'}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600">
                           {delivery.user ? delivery.user.user_no : ''}
                         </p>
                         {delivery.user?.wheelchair_user && (
-                          <span className="status-badge status-info text-xs mt-1">♿ 車椅子</span>
+                          <span className="status-badge status-info text-xs mt-1">♿</span>
                         )}
                       </div>
                       <div className="text-right">
-                        <span className="status-badge status-success">
+                        <span className="status-badge status-success text-xs">
                           #{index + 1}
                         </span>
                       </div>
@@ -838,9 +840,9 @@ export default function DriverPage() {
 
                   <div className="modern-card-body">
                     {/* 到着・出発時刻 */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-700 block mb-2">🚪 到着時刻</label>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">🚪 到着時刻</label>
                         {delivery.detail?.arrival_time ? (
                           <div className="flex items-center gap-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival !== undefined ? (
@@ -895,7 +897,7 @@ export default function DriverPage() {
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium text-gray-700 block mb-2">🚗 出発時刻</label>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">🚗 出発時刻</label>
                         {delivery.detail?.departure_time ? (
                           <div className="flex items-center gap-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure !== undefined ? (
@@ -952,12 +954,12 @@ export default function DriverPage() {
                     </div>
 
                     {/* 住所情報 */}
-                    <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                    <div className="bg-gray-50 p-2 rounded-lg mb-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-gray-600">📍</span>
-                        <span className="text-sm font-medium text-gray-700">送迎先</span>
+                        <span className="text-gray-600 text-xs">🏠</span>
+                        <span className="text-xs font-medium text-gray-700">送迎先住所</span>
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs text-gray-600 leading-relaxed">
                         {delivery.user && session?.selectedAddresses && session.selectedAddresses[delivery.user.id]
                           ? userAddressNames[session.selectedAddresses[delivery.user.id]] || '住所情報なし'
                           : delivery.user?.address || '住所情報なし'
@@ -1092,79 +1094,79 @@ export default function DriverPage() {
             </div>
           )}
 
-          {/* 送迎完了セクション */}
-          {deliveries.length > 0 && allCompleted && (
-            <div className="modern-card mt-6 slide-up">
-              <div className="modern-card-header">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-green-600 text-2xl">🎉</span>
+          {/* 全送迎完了カード */}
+          {allCompleted && session && (
+            <div className="modern-card mb-4 fade-in">
+              <div className="p-4">
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-white text-lg">✅</span>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">送迎完了お疲れさまでした！</h3>
-                  <p className="text-sm text-gray-600 mt-1">最終確認をして送迎を終了してください</p>
-                </div>
-              </div>
-
-              <div className="modern-card-body space-y-4">
-                {/* 終了時走行距離 */}
-                <div>
-                  <label className="block font-medium text-gray-700 mb-2">📏 終了時走行距離 (km)</label>
-                  <input
-                    type="number"
-                    value={endOdometers['final'] || ''}
-                    onChange={(e) => setEndOdometers(prev => ({
-                      ...prev,
-                      final: parseInt(e.target.value) || 0
-                    }))}
-                    className="form-input"
-                    placeholder="走行距離を入力"
-                  />
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">全送迎完了</h3>
+                  <p className="text-xs text-gray-600">お疲れ様でした！記録を完了してください</p>
                 </div>
 
-                {/* 事業所帰着時刻 */}
-                <div>
-                  <label className="block font-medium text-gray-700 mb-2">🏢 事業所帰着時刻</label>
-                  <div className="time-picker">
+                {/* 終了時走行距離入力 */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-700 block mb-1">📏 終了時走行距離</label>
                     <input
-                      type="time"
-                      value={returnToOfficeTime}
-                      onChange={(e) => setReturnToOfficeTime(e.target.value)}
+                      type="number"
+                      value={endOdometers['final'] || ''}
+                      onChange={(e) => setEndOdometers(prev => ({
+                        ...prev,
+                        final: parseInt(e.target.value) || 0
+                      }))}
+                      className="form-input text-center"
+                      placeholder="現在の走行距離"
+                      min={session.startOdometer || 0}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setReturnToOfficeTime(new Date().toTimeString().slice(0, 5))}
-                      className="btn-modern btn-outline text-sm px-3 py-1"
-                    >
-                      現在時刻
-                    </button>
                   </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-gray-700 block mb-1">🕐 終了時刻</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="time"
+                        value={returnToOfficeTime}
+                        onChange={(e) => setReturnToOfficeTime(e.target.value)}
+                        className="form-input flex-1 text-center"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setReturnToOfficeTime(new Date().toTimeString().slice(0, 5))}
+                        className="btn-modern btn-outline text-xs px-3 py-1 whitespace-nowrap"
+                      >
+                        現在時刻
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleCompleteAllDeliveries}
+                    disabled={!endOdometers['final'] || !returnToOfficeTime}
+                    className="btn-modern btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    🏁 すべての送迎を完了する
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="modern-card-footer">
-                <button
-                  onClick={handleCompleteAllDeliveries}
-                  disabled={!endOdometers['final'] || !returnToOfficeTime}
-                  className="btn-modern btn-success btn-lg w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  🏁 本日の送迎を終了する
-                </button>
-              </div>
+          {/* 新しい送迎を開始するボタン（送迎がない場合） */}
+          {deliveries.length === 0 && (
+            <div className="fixed bottom-6 right-6">
+              <Link
+                href="/login"
+                className="fab bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl"
+              >
+                <span className="text-xl">➕</span>
+              </Link>
             </div>
           )}
         </div>
       </div>
-
-      {/* フローティングアクションボタン - 新しい送迎 */}
-      {deliveries.length === 0 && (
-        <button
-          onClick={() => router.push('/login')}
-          className="fab"
-          title="新しい送迎を開始"
-        >
-          ➕
-        </button>
-      )}
     </div>
   )
 }
