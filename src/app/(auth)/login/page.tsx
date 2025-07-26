@@ -309,11 +309,18 @@ export default function LoginPage() {
       const firstResult = result
       
       console.log('送迎記録作成結果:', firstResult)
+      console.log('送迎記録作成結果の詳細:', {
+        data: result.data,
+        id: result.data?.id,
+        error: result.error
+      })
 
       // セッション情報を保存（複数利用者の情報を含める）
       const currentTime = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute: '2-digit' })
       const selectedUserNames = selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', ')
-      const deliveryRecordIds = deliveryResults.map(result => result.data?.id).filter(Boolean)
+      const deliveryRecordIds = result.data?.id ? [result.data.id] : []
+      
+      console.log('送迎記録IDリスト:', deliveryRecordIds)
       
       const sessionData = {
         driverId: selectedDriver,
@@ -334,6 +341,7 @@ export default function LoginPage() {
       console.log('セッションデータ:', sessionData)
       console.log('車両ID:', sessionData.vehicleId)
       console.log('車両番号:', sessionData.vehicleNo)
+      console.log('送迎記録IDs:', sessionData.deliveryRecordIds)
       console.log('=== ログイン時セッションデータ作成終了 ===')
       localStorage.setItem('driverSession', JSON.stringify(sessionData))
       
