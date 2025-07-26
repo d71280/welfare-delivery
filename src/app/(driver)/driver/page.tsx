@@ -154,6 +154,15 @@ export default function DriverPage() {
               // 対応する詳細記録を探す
               let detail = details?.find(d => d.user_id === userId)
               
+              // デバッグ: 詳細記録の内容を確認
+              if (detail) {
+                console.log('既存の詳細記録:', {
+                  userId: detail.user_id,
+                  arrival_time: detail.arrival_time,
+                  departure_time: detail.departure_time
+                })
+              }
+              
               // 詳細記録が存在しない場合は作成（destination_idをスキップ）
               if (!detail) {
                 console.log('詳細記録が見つからないため作成:', { recordId: record.id, userId })

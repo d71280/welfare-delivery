@@ -518,21 +518,21 @@ export default function LoginPage() {
         <div className="max-w-md mx-auto">
           {/* メインカード */}
           <div className="modern-card fade-in">
-            <div className="text-center p-6">
+            <div className="text-center p-4">
               {/* アイコンとタイトル */}
-              <div className="user-avatar mx-auto mb-4" style={{width: '5rem', height: '5rem', fontSize: '2rem'}}>
+              <div className="user-avatar mx-auto mb-3" style={{width: '3.5rem', height: '3.5rem', fontSize: '1.5rem'}}>
                 🚐
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">
                 福祉送迎ドライバー
               </h1>
-              <p className="text-gray-600 mb-4">安全運転でご利用者様をお送りします</p>
+              <p className="text-sm text-gray-600 mb-3">安全運転でご利用者様をお送りします</p>
               
               {/* 現在時刻 */}
               {currentTime && (
-                <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full mb-6">
-                  <span className="text-blue-600">🕐</span>
-                  <span className="text-xl font-mono font-bold text-blue-600">
+                <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full mb-3 text-sm">
+                  <span className="text-blue-600 text-sm">🕐</span>
+                  <span className="font-mono text-blue-600">
                     {currentTime}
                   </span>
                 </div>
@@ -565,22 +565,22 @@ export default function LoginPage() {
               </div>
             ) : (
               /* 選択フォーム */
-              <form onSubmit={handleLogin} className="p-6 pt-0 space-y-6">
+              <form onSubmit={handleLogin} className="p-4 pt-0 space-y-4">
                 {/* 案内メッセージ */}
-                <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-500">
+                  <div className="flex items-center gap-2 mb-1">
                     <span className="text-blue-600">👨‍💼</span>
-                    <h2 className="font-bold text-gray-900">送迎情報の設定</h2>
+                    <h2 className="font-bold text-gray-900 text-sm">送迎情報の設定</h2>
                   </div>
-                  <p className="text-sm text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
+                  <p className="text-xs text-gray-600">安全な送迎のため、必要な情報を入力してください</p>
                 </div>
 
                 {/* 管理コード入力 */}
                 {!codeVerified ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-orange-600 text-xl">🔑</span>
-                      <label className="font-bold text-gray-900">管理コード</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-orange-600 text-lg">🔑</span>
+                      <label className="font-bold text-gray-900 text-sm">管理コード</label>
                     </div>
                     <div className="space-y-3">
                       <input
@@ -601,8 +601,8 @@ export default function LoginPage() {
                         確認
                       </button>
                     </div>
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <p className="text-orange-700 text-sm">
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                      <p className="text-orange-700 text-xs">
                         ⚠️ 管理者から発行された6桁の管理コードを入力してください
                       </p>
                     </div>
