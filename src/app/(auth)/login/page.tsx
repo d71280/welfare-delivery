@@ -533,20 +533,14 @@ export default function LoginPage() {
 
             {!showSelectionForm ? (
               /* 初期画面：送迎開始ボタン */
-              <div className="p-6 pt-0">
+              <div className="p-4 pt-0">
                 {/* サービス紹介 */}
-                <div className="grid-mobile gap-4 mb-8">
-                  <div className="text-center p-4 bg-blue-50 rounded-xl">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-white text-xl">🏠</span>
-                    </div>
+                <div className="grid-mobile gap-3 mb-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-xl">
                     <h3 className="font-bold text-gray-900 text-sm mb-1">通所支援</h3>
                     <p className="text-xs text-gray-600">ご自宅と施設間の送迎</p>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-xl">
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-white text-xl">🏥</span>
-                    </div>
+                  <div className="text-center p-3 bg-green-50 rounded-xl">
                     <h3 className="font-bold text-gray-900 text-sm mb-1">医療送迎</h3>
                     <p className="text-xs text-gray-600">病院・診療所への送迎</p>
                   </div>
@@ -559,7 +553,7 @@ export default function LoginPage() {
                 >
                   🚐 送迎を開始する
                 </button>
-                <p className="text-gray-500 mt-4 text-center text-sm">安全第一でご利用者様をお送りします</p>
+                <p className="text-gray-500 mt-3 text-center text-xs">安全第一でご利用者様をお送りします</p>
               </div>
             ) : (
               /* 選択フォーム */
