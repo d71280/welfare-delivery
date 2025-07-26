@@ -840,11 +840,11 @@ export default function DriverPage() {
 
                   <div className="modern-card-body">
                     {/* 到着・出発時刻 */}
-                    <div className="driver-time-grid mb-3">
+                    <div className="space-y-3 mb-3">
                       <div>
                         <label className="text-xs font-medium text-gray-700 block mb-1">🚪 到着時刻</label>
                         {delivery.detail?.arrival_time ? (
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival !== undefined ? (
                               <div className="flex items-center gap-2 w-full">
                                 <input
@@ -857,11 +857,11 @@ export default function DriverPage() {
                                       arrival: e.target.value
                                     }
                                   }))}
-                                  className="form-input text-sm py-2"
+                                  className="form-input text-sm py-2 flex-1"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'arrival', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.arrival || '', delivery.user?.id)}
-                                  className="btn-modern btn-primary text-xs px-2 py-1"
+                                  className="btn-modern btn-primary text-xs px-3 py-2"
                                 >
                                   保存
                                 </button>
@@ -879,7 +879,7 @@ export default function DriverPage() {
                                       arrival: delivery.detail.arrival_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="btn-modern btn-outline text-xs px-2 py-1"
+                                  className="btn-modern btn-outline text-xs px-3 py-1"
                                 >
                                   修正
                                 </button>
@@ -889,7 +889,7 @@ export default function DriverPage() {
                         ) : (
                           <button
                             onClick={() => handleArrivalTime(delivery.record.id, delivery.user?.id)}
-                            className="btn-modern btn-primary w-full text-sm"
+                            className="btn-modern btn-primary w-full text-sm py-2"
                           >
                             🚪 到着記録
                           </button>
@@ -899,7 +899,7 @@ export default function DriverPage() {
                       <div>
                         <label className="text-xs font-medium text-gray-700 block mb-1">🚗 出発時刻</label>
                         {delivery.detail?.departure_time ? (
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-2">
                             {editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure !== undefined ? (
                               <div className="flex items-center gap-2 w-full">
                                 <input
@@ -912,11 +912,11 @@ export default function DriverPage() {
                                       departure: e.target.value
                                     }
                                   }))}
-                                  className="form-input text-sm py-2"
+                                  className="form-input text-sm py-2 flex-1"
                                 />
                                 <button
                                   onClick={() => handleTimeEdit(delivery.record.id, 'departure', editingTimes[`${delivery.record.id}-${delivery.user?.id}`]?.departure || '', delivery.user?.id)}
-                                  className="btn-modern btn-primary text-xs px-2 py-1"
+                                  className="btn-modern btn-primary text-xs px-3 py-2"
                                 >
                                   保存
                                 </button>
@@ -934,7 +934,7 @@ export default function DriverPage() {
                                       departure: delivery.detail.departure_time?.substring(0, 5) || ''
                                     }
                                   }))}
-                                  className="btn-modern btn-outline text-xs px-2 py-1"
+                                  className="btn-modern btn-outline text-xs px-3 py-1"
                                 >
                                   修正
                                 </button>
@@ -945,7 +945,7 @@ export default function DriverPage() {
                           <button
                             onClick={() => handleDepartureTime(delivery.record.id, delivery.user?.id)}
                             disabled={!delivery.detail?.arrival_time}
-                            className="btn-modern btn-success w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-modern btn-success w-full text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             🚗 出発記録
                           </button>
@@ -1096,31 +1096,39 @@ export default function DriverPage() {
 
           {/* 全送迎完了カード */}
           {allCompleted && session && (
-            <div className="modern-card mb-4 fade-in">
+            <div className="modern-card mb-4 fade-in bg-gradient-to-br from-green-50 to-green-100 border-green-200">
               <div className="p-4">
-                <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-lg">✅</span>
+                <div className="text-center mb-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-white">✅</span>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">全送迎完了</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-1">全送迎完了</h3>
                   <p className="text-xs text-gray-600">お疲れ様でした！記録を完了してください</p>
                 </div>
 
                 {/* 終了時走行距離入力 */}
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">📏 終了時走行距離</label>
-                    <input
-                      type="number"
-                      value={endOdometers['final'] || ''}
-                      onChange={(e) => setEndOdometers(prev => ({
-                        ...prev,
-                        final: parseInt(e.target.value) || 0
-                      }))}
-                      className="form-input text-center"
-                      placeholder="現在の走行距離"
-                      min={session.startOdometer || 0}
-                    />
+                    <label className="text-xs font-medium text-gray-700 block mb-1">📏 終了時走行距離（km）</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={endOdometers['final'] || ''}
+                        onChange={(e) => setEndOdometers(prev => ({
+                          ...prev,
+                          final: parseInt(e.target.value) || 0
+                        }))}
+                        className="form-input text-center text-lg font-mono pr-12"
+                        placeholder="例: 12345"
+                        min={session.startOdometer || 0}
+                      />
+                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">km</span>
+                    </div>
+                    {session.startOdometer && (
+                      <p className="text-xs text-gray-500 mt-1">開始時: {session.startOdometer} km</p>
+                    )}
                   </div>
 
                   <div>
@@ -1130,12 +1138,12 @@ export default function DriverPage() {
                         type="time"
                         value={returnToOfficeTime}
                         onChange={(e) => setReturnToOfficeTime(e.target.value)}
-                        className="form-input flex-1 text-center"
+                        className="form-input flex-1 text-center text-lg"
                       />
                       <button
                         type="button"
                         onClick={() => setReturnToOfficeTime(new Date().toTimeString().slice(0, 5))}
-                        className="btn-modern btn-outline text-xs px-3 py-1 whitespace-nowrap"
+                        className="btn-modern btn-outline text-xs px-3 py-2 whitespace-nowrap"
                       >
                         現在時刻
                       </button>
@@ -1145,7 +1153,7 @@ export default function DriverPage() {
                   <button
                     onClick={handleCompleteAllDeliveries}
                     disabled={!endOdometers['final'] || !returnToOfficeTime}
-                    className="btn-modern btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-modern btn-success w-full py-3 text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     🏁 すべての送迎を完了する
                   </button>

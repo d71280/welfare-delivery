@@ -95,14 +95,32 @@ body {
   border-bottom: 1px solid #f1f5f9;
 }
 
+@media (max-width: 640px) {
+  .modern-card-header {
+    padding: 1rem;
+  }
+}
+
 .modern-card-body {
   padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .modern-card-body {
+    padding: 1rem;
+  }
 }
 
 .modern-card-footer {
   padding: 1rem 1.5rem;
   background: #f8fafc;
   border-top: 1px solid #f1f5f9;
+}
+
+@media (max-width: 640px) {
+  .modern-card-footer {
+    padding: 0.75rem 1rem;
+  }
 }
 
 /* フローティングアクションボタン */
@@ -1335,13 +1353,13 @@ body {
 /* モバイル（768px以下）向けドライバー画面 */
 @media (max-width: 768px) {
   .driver-mobile-layout {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   
   .driver-time-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
   }
   
   .driver-info-section {
