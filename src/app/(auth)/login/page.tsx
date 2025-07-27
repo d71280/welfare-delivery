@@ -394,40 +394,9 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    try {
-      // 選択されたドライバーの情報を取得
-      const driver = drivers.find(d => d.id === selectedDriver)
-      if (!driver) {
-        throw new Error('ドライバーが選択されていません')
-      }
-
-
-      // セッション情報をローカルストレージに保存（簡易実装）
-      const sessionData = {
-        driverId: selectedDriver,
-        driverName: driver.name,
-        vehicleId: selectedVehicle,
-        vehicleNo: vehicles.find(v => v.id === selectedVehicle)?.vehicle_no,
-        loginTime: new Date().toISOString(),
-        startTime: startTime,
-        selectedUsers: selectedUsers,
-        userNames: selectedUsers.map(id => users.find(u => u.id === id)?.name || '').join(', '),
-        selectedAddresses
-      }
-      
-      localStorage.setItem('driverSession', JSON.stringify(sessionData))
-      
-      // ドライバー画面にリダイレクト
-      router.push('/driver')
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました')
-    } finally {
-      setIsLoading(false)
-    }
+    
+    // 新しい送迎記録を作成
+    await handleStartDeliveryWithRecord()
   }
 
   const verifyManagementCode = async () => {

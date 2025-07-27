@@ -957,17 +957,15 @@ export default function DriverPage() {
             </div>
           )}
 
-          {/* 新しい送迎を開始するボタン（送迎がない場合） */}
-          {deliveries.length === 0 && (
-            <div className="fixed bottom-6 right-6">
-              <Link
-                href="/login"
-                className="fab bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl"
-              >
-                <span className="text-xl">➕</span>
-              </Link>
-            </div>
-          )}
+          {/* 新しい送迎を開始するボタン */}
+          <div className="fixed bottom-6 right-6">
+            <Link
+              href="/login"
+              className="fab bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl"
+            >
+              <span className="text-xl">➕</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
