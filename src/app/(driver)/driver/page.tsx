@@ -266,7 +266,8 @@ export default function DriverPage() {
         return item.record.status === 'completed'
       })
       console.log('初期全完了判定:', completed, 'deliveryItems:', deliveryItems.length)
-      setAllCompleted(completed)
+      // 送迎記録がない場合はallCompletedをfalseにする
+      setAllCompleted(deliveryItems.length > 0 && completed)
     } catch (err) {
       console.error('送迎記録取得エラー:', err)
     } finally {
@@ -889,7 +890,7 @@ export default function DriverPage() {
           )}
 
           {/* 全送迎完了カード */}
-          {allCompleted && session && (
+          {allCompleted && session && deliveries.length > 0 && (
             <div className="modern-card mb-4 fade-in bg-gradient-to-br from-green-50 to-green-100 border-green-200">
               <div className="p-4">
                 <div className="text-center mb-3">
