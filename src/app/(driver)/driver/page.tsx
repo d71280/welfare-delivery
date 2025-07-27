@@ -132,13 +132,21 @@ export default function DriverPage() {
         management_code_id: managementCodeId
       })
       
+      // セッションから現在の送迎記録IDを取得
+      const deliveryRecordIds = driverSession.deliveryRecordIds || []
+      console.log('セッションの送迎記録IDs:', deliveryRecordIds)
+      
+      if (deliveryRecordIds.length === 0) {
+        console.log('セッションに送迎記録IDがありません')
+        setDeliveries([])
+        setIsLoading(false)
+        return
+      }
+      
       const { data: records, error } = await supabase
         .from('transportation_records')
         .select('*')
-        .eq('driver_id', driverId)
-        .eq('transportation_date', today)
-        .eq('management_code_id', managementCodeId)
-        .in('transportation_type', ['individual', 'regular', 'round_trip'])
+        .in('id', deliveryRecordIds)
         .order('created_at', { ascending: true })
 
       console.log('取得した送迎記録:', records)
