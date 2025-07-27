@@ -87,24 +87,43 @@ export default function DriverPage() {
 
   const fetchAddressNames = async (selectedAddresses: {[userId: string]: string}) => {
     try {
-      const addressIds = Object.values(selectedAddresses).filter(id => id && id !== '')
-      if (addressIds.length === 0) {
-        console.log('住所IDが空のためスキップ')
+      const userIds = Object.keys(selectedAddresses)
+      if (userIds.length === 0) {
+        console.log('選択されたユーザーがいないためスキップ')
         return
       }
 
-      const { data: addresses } = await supabase
-        .from('user_addresses')
-        .select('id, address_name, address')
-        .in('id', addressIds)
+      console.log('住所情報取得開始:', { selectedAddresses })
 
-      if (addresses) {
-        const addressNameMap: {[addressId: string]: string} = {}
-        addresses.forEach(addr => {
-          addressNameMap[addr.id] = `${addr.address_name}: ${addr.address}`
-        })
-        setUserAddressNames(addressNameMap)
+      const addressNameMap: {[userId: string]: string} = {}
+      
+      for (const userId of userIds) {
+        const addressIndex = selectedAddresses[userId]
+        if (!addressIndex || addressIndex === '') continue
+
+        // ユーザーの住所リストを取得
+        const { data: userAddresses } = await supabase
+          .from('user_addresses')
+          .select('id, address_name, address, display_order')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .order('display_order')
+
+        if (userAddresses && userAddresses.length > 0) {
+          const indexNum = parseInt(addressIndex)
+          const selectedAddress = userAddresses[indexNum]
+          
+          if (selectedAddress) {
+            addressNameMap[userId] = `${selectedAddress.address_name}: ${selectedAddress.address}`
+            console.log(`ユーザー${userId}の住所:`, addressNameMap[userId])
+          } else {
+            console.log(`ユーザー${userId}のindex ${indexNum}に該当する住所が見つかりません`)
+          }
+        }
       }
+
+      console.log('取得した住所マップ:', addressNameMap)
+      setUserAddressNames(addressNameMap)
     } catch (error) {
       console.error('住所名取得エラー:', error)
     }
@@ -995,7 +1014,7 @@ export default function DriverPage() {
                       </div>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         {delivery.user && session?.selectedAddresses && session.selectedAddresses[delivery.user.id]
-                          ? userAddressNames[session.selectedAddresses[delivery.user.id]] || '住所情報なし'
+                          ? userAddressNames[delivery.user.id] || '住所情報なし'
                           : delivery.user?.address || '住所情報なし'
                         }
                       </p>
