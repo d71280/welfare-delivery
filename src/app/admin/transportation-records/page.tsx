@@ -31,6 +31,16 @@ interface TransportationRecordWithDetails extends TransportationRecord {
     pickup_address_id?: string | null
     dropoff_address_id?: string | null
     pickup_address?: string | null
+    pickup_addresses?: {
+      id: string
+      address_name: string
+      address: string
+    } | null
+    dropoff_addresses?: {
+      id: string
+      address_name: string
+      address: string
+    } | null
     destinations?: {
       id: string
       name: string
@@ -43,16 +53,6 @@ interface TransportationRecordWithDetails extends TransportationRecord {
       name: string
       user_no: string
       wheelchair_user: boolean
-    }
-    pickup_addresses?: {
-      id: string
-      address_name: string
-      address: string
-    }
-    dropoff_addresses?: {
-      id: string
-      address_name: string
-      address: string
     }
   }>
 }
@@ -225,7 +225,9 @@ export default function TransportationRecordsPage() {
           transportation_details(
             *,
             destinations(*),
-            users(*)
+            users(*),
+            pickup_addresses:user_addresses!pickup_address_id(id, address_name, address),
+            dropoff_addresses:user_addresses!dropoff_address_id(id, address_name, address)
           )
         `)
         .in('management_code_id', managementCodeIds)
@@ -454,6 +456,10 @@ export default function TransportationRecordsPage() {
                             <small>${detail.users?.user_no || '-'}</small>
                           </td>
                           <td>${
+                            (detail as any).pickup_addresses?.address_name ? 
+                              `${(detail as any).pickup_addresses.address_name}: ${(detail as any).pickup_addresses.address}` :
+                            (detail as any).dropoff_addresses?.address_name ? 
+                              `${(detail as any).dropoff_addresses.address_name}: ${(detail as any).dropoff_addresses.address}` :
                             detail.remarks || 
                             (detail as any).pickup_address || 
                             detail.destinations?.address || 
@@ -962,6 +968,9 @@ export default function TransportationRecordsPage() {
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             利用者
                           </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            送迎先
+                          </th>
                           <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             到着時刻
                           </th>
@@ -986,6 +995,19 @@ export default function TransportationRecordsPage() {
                                 ) : (
                                   <span className="text-gray-500">-</span>
                                 )}
+                              </td>
+                              <td className="px-4 py-2 text-sm">
+                                <span className="text-gray-900">
+                                  {(detail as any).pickup_addresses?.address_name ? 
+                                    `${(detail as any).pickup_addresses.address_name}: ${(detail as any).pickup_addresses.address}` :
+                                   (detail as any).dropoff_addresses?.address_name ? 
+                                    `${(detail as any).dropoff_addresses.address_name}: ${(detail as any).dropoff_addresses.address}` :
+                                   detail.remarks || 
+                                   (detail as any).pickup_address || 
+                                   detail.destinations?.address || 
+                                   detail.destinations?.name || 
+                                   '-'}
+                                </span>
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-mono">
                                 <span className="text-blue-600 font-bold">
