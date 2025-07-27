@@ -92,6 +92,7 @@ export async function getVehicleCurrentOdometer(vehicleId: string): Promise<numb
 export async function createDeliveryRecord(formData: TransportationRecordForm) {
   try {
     console.log('送迎記録作成開始:', formData)
+    console.log('作成日時:', new Date().toISOString())
     
     // 重複チェックを無効化：同じ日付・ドライバーでも複数の送迎記録を作成可能にする
     // const existingCheck = await checkExistingDeliveryRecord(
