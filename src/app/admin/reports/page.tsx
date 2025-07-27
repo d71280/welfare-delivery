@@ -80,10 +80,31 @@ export default function ReportsPage() {
     try {
       setIsLoading(true)
       
+      // 管理者セッションから組織情報を取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) return
+      
+      const session = JSON.parse(sessionData)
+      
+      // 組織に紐づく管理コードを取得
+      const { data: codes } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', session.organizationId)
+        .eq('is_active', true)
+      
+      if (!codes || codes.length === 0) {
+        console.error('管理コードが見つかりません')
+        return
+      }
+      
+      const managementCodeIds = codes.map(code => code.id)
+      
       // 基本統計の取得
       const { data: allDeliveries } = await supabase
         .from('transportation_records')
         .select('*')
+        .in('management_code_id', managementCodeIds)
       
       const totalDeliveries = allDeliveries?.length || 0
       const completedDeliveries = allDeliveries?.filter(d => d.status === 'completed').length || 0
@@ -98,6 +119,7 @@ export default function ReportsPage() {
           status,
           drivers(name)
         `)
+        .in('management_code_id', managementCodeIds)
       
       const driverStats = processDriverStats((driverDeliveries || []) as unknown as TransportationRecord[])
 
@@ -109,6 +131,7 @@ export default function ReportsPage() {
           status,
           vehicles(vehicle_no)
         `)
+        .in('management_code_id', managementCodeIds)
       
       const vehicleStats = processVehicleStats((vehicleDeliveries || []) as unknown as TransportationRecord[])
 
@@ -120,6 +143,7 @@ export default function ReportsPage() {
           status,
           routes(route_name)
         `)
+        .in('management_code_id', managementCodeIds)
       
       const routeStats = processRouteStats((routeDeliveries || []) as unknown as TransportationRecord[])
 

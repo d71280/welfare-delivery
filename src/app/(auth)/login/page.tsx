@@ -334,7 +334,8 @@ export default function LoginPage() {
         startOdometer,
         loginTime: new Date().toISOString(),
         startTime: startTime || currentTime,
-        endTime: null
+        endTime: null,
+        managementCodeId: currentManagementCodeId
       }
 
       console.log('=== ログイン時セッションデータ作成 ===')

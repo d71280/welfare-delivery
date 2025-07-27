@@ -17,6 +17,7 @@ interface DriverSession {
   selectedAddresses?: {[userId: string]: string}
   deliveryRecordIds?: string[]
   startOdometer?: number
+  managementCodeId?: string
 }
 
 interface DeliveryItem {
@@ -110,11 +111,27 @@ export default function DriverPage() {
     try {
       const today = new Date().toISOString().split('T')[0]
       
+      // セッションから管理コードIDを取得
+      const sessionData = localStorage.getItem('driverSession')
+      if (!sessionData) {
+        console.error('ドライバーセッションが見つかりません')
+        return
+      }
+      
+      const driverSession = JSON.parse(sessionData) as DriverSession
+      const managementCodeId = driverSession.managementCodeId
+      
+      if (!managementCodeId) {
+        console.error('管理コードIDが設定されていません')
+        return
+      }
+      
       const { data: records, error } = await supabase
         .from('transportation_records')
         .select('*')
         .eq('driver_id', driverId)
         .eq('transportation_date', today)
+        .eq('management_code_id', managementCodeId)
         .in('transportation_type', ['individual', 'regular', 'round_trip'])
         .order('created_at', { ascending: true })
 
