@@ -158,19 +158,32 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
       console.log('選択された住所:', formData.selectedAddresses)
       
       for (const userId of formData.selectedUsers) {
-        // 選択された住所情報を取得
+        let pickupAddressId = null
         let pickupAddress = null
-        if (formData.selectedAddresses && formData.selectedAddresses[userId]) {
-          const addressId = formData.selectedAddresses[userId]
+        
+        if (formData.selectedAddresses && formData.selectedAddresses[userId] !== undefined) {
+          const addressIndex = formData.selectedAddresses[userId]
+          
           try {
-            const { data: addressData } = await supabase
+            // ユーザーの住所リストを取得してindexから実際のIDを取得
+            const { data: userAddresses } = await supabase
               .from('user_addresses')
-              .select('address_name, address')
-              .eq('id', addressId)
-              .single()
-            
-            if (addressData) {
-              pickupAddress = `${addressData.address_name}: ${addressData.address}`
+              .select('id, address_name, address, display_order')
+              .eq('user_id', userId)
+              .eq('is_active', true)
+              .order('display_order')
+
+            if (userAddresses && userAddresses.length > 0) {
+              const indexNum = typeof addressIndex === 'number' ? addressIndex : parseInt(String(addressIndex))
+              const selectedAddress = userAddresses[indexNum]
+              
+              if (selectedAddress) {
+                pickupAddressId = selectedAddress.id
+                pickupAddress = `${selectedAddress.address_name}: ${selectedAddress.address}`
+                console.log(`ユーザー${userId}の住所ID: ${pickupAddressId}, 住所: ${pickupAddress}`)
+              } else {
+                console.log(`ユーザー${userId}のindex ${indexNum}に該当する住所が見つかりません（住所数: ${userAddresses.length}）`)
+              }
             }
           } catch (addressError) {
             console.error('住所情報取得エラー:', addressError)
@@ -180,11 +193,12 @@ export async function createDeliveryRecord(formData: TransportationRecordForm) {
         const detailData = {
           transportation_record_id: data.id,
           user_id: userId,
+          destination_id: null, // 個別送迎では不要
           pickup_time: null,
           arrival_time: null,
           departure_time: null,
           drop_off_time: null,
-          pickup_address_id: formData.selectedAddresses && formData.selectedAddresses[userId] ? formData.selectedAddresses[userId] : null,
+          pickup_address_id: pickupAddressId,
           dropoff_address_id: null, // 必要に応じて設定
           health_condition: null,
           behavior_notes: null,

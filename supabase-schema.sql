@@ -113,8 +113,10 @@ CREATE TABLE IF NOT EXISTS transportation_records (
     transportation_date DATE NOT NULL,
     driver_id UUID NOT NULL REFERENCES drivers(id),
     vehicle_id UUID NOT NULL REFERENCES vehicles(id),
-    route_id UUID NOT NULL REFERENCES routes(id),
-    transportation_type TEXT DEFAULT 'regular' CHECK (transportation_type IN ('regular', 'medical', 'emergency', 'outing')),
+    route_id UUID REFERENCES routes(id), -- ルート送迎時のみ必須、個別送迎では不要
+    transportation_type TEXT DEFAULT 'regular' CHECK (transportation_type IN ('regular', 'medical', 'emergency', 'outing', 'individual')),
+    start_time TIME, -- 送迎開始時刻
+    end_time TIME, -- 送迎終了時刻
     start_odometer INTEGER,
     end_odometer INTEGER,
     passenger_count INTEGER DEFAULT 0, -- 乗車人数
@@ -123,10 +125,7 @@ CREATE TABLE IF NOT EXISTS transportation_records (
     management_code_id UUID REFERENCES management_codes(id),
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- 同じ日付・ドライバー・ルートの組み合わせは一意にする
-    UNIQUE(transportation_date, driver_id, route_id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 送迎詳細テーブル (Transportation Details)
@@ -134,7 +133,7 @@ CREATE TABLE IF NOT EXISTS transportation_details (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     transportation_record_id UUID NOT NULL REFERENCES transportation_records(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id), -- 利用者（複数利用者の場合は複数レコード）
-    destination_id UUID NOT NULL REFERENCES destinations(id),
+    destination_id UUID REFERENCES destinations(id), -- ルート送迎時のみ必須、個別送迎では不要
     pickup_time TIME, -- お迎え時刻
     arrival_time TIME, -- 到着時刻
     departure_time TIME, -- 出発時刻
@@ -143,6 +142,8 @@ CREATE TABLE IF NOT EXISTS transportation_details (
     behavior_notes TEXT, -- 行動記録
     assistance_required TEXT, -- 介助内容
     remarks TEXT, -- その他特記事項
+    pickup_address_id UUID REFERENCES user_addresses(id), -- 個別送迎時の送迎元住所
+    dropoff_address_id UUID REFERENCES user_addresses(id), -- 個別送迎時の送迎先住所
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
