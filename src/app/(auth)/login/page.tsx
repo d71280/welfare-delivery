@@ -651,108 +651,85 @@ export default function LoginPage() {
                       </select>
                     </div>
 
-                    {/* 利用者選択 */}
+                    {/* 利用者選択と住所選択 */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-purple-600 text-lg">👥</span>
                         <label className="font-semibold text-gray-900 text-sm">送迎対象の利用者様</label>
                         <span className="text-red-500">*</span>
                       </div>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
                         {users.map((user) => (
-                          <div
-                            key={user.id}
-                            className={`user-card-compact ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
-                            onClick={() => handleUserSelect(user.id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="user-avatar-small">
-                                {user.name.charAt(0)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-gray-900 text-sm truncate">{user.name}</h3>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-600">{user.user_no}</span>
-                                  {user.wheelchair_user && (
-                                    <span className="text-xs bg-purple-100 text-purple-700 px-1 rounded">♿</span>
-                                  )}
+                          <div key={user.id} className="border rounded-lg p-3">
+                            <div
+                              className={`user-card-compact ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
+                              onClick={() => handleUserSelect(user.id)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="user-avatar-small">
+                                  {user.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-medium text-gray-900 text-sm truncate">{user.name}</h3>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-600">{user.user_no}</span>
+                                    {user.wheelchair_user && (
+                                      <span className="text-xs bg-purple-100 text-purple-700 px-1 rounded">♿</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-lg">
+                                  {selectedUsers.includes(user.id) ? '✅' : '○'}
                                 </div>
                               </div>
-                              <div className="text-lg">
-                                {selectedUsers.includes(user.id) ? '✅' : '○'}
-                              </div>
                             </div>
+                            
+                            {/* 住所選択（利用者が選択されている場合のみ表示） */}
+                            {selectedUsers.includes(user.id) && userAddresses[user.id] && (
+                              <div className="mt-3 space-y-2">
+                                <div className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                                  <span>🏠</span>
+                                  <span>送迎先住所</span>
+                                </div>
+                                {userAddresses[user.id].map((address, index) => (
+                                  <label 
+                                    key={index} 
+                                    className={`block p-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                                      selectedAddresses[user.id] === index 
+                                        ? 'bg-blue-50 border-blue-500' 
+                                        : 'bg-white border-gray-200 hover:border-gray-300'
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-2">
+                                      <input
+                                        type="radio"
+                                        name={`address-${user.id}`}
+                                        value={index}
+                                        checked={selectedAddresses[user.id] === index}
+                                        onChange={() => setSelectedAddresses(prev => ({
+                                          ...prev,
+                                          [user.id]: index
+                                        }))}
+                                        className="w-3 h-3 mt-0.5 text-blue-600 cursor-pointer"
+                                      />
+                                      <div className="flex-1">
+                                        <div className="font-medium text-xs text-gray-900">
+                                          {address.address_name}
+                                        </div>
+                                        <div className="text-xs text-gray-600">
+                                          📍 {address.address}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* 住所選択 */}
-                    {selectedUsers.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-green-600 text-lg">🏠</span>
-                          <label className="font-semibold text-gray-900 text-sm">送迎先住所</label>
-                          <span className="text-red-500">*</span>
-                        </div>
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
-                          {selectedUsers.map((userId) => {
-                            const user = users.find(u => u.id === userId)
-                            if (!user || !userAddresses[userId]) return null
-                            
-                            return (
-                              <div key={userId} className="bg-gray-50 p-3 rounded-lg">
-                                <p className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
-                                  <span className="user-avatar" style={{width: '1.5rem', height: '1.5rem', fontSize: '0.75rem'}}>
-                                    {user.name.charAt(0)}
-                                  </span>
-                                  {user.name}
-                                </p>
-                                <div className="space-y-2">
-                                  {userAddresses[userId].map((address, index) => (
-                                    <label 
-                                      key={index} 
-                                      className={`block p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                        selectedAddresses[userId] === index 
-                                          ? 'bg-blue-50 border-blue-500' 
-                                          : 'bg-white border-gray-200 hover:border-gray-300'
-                                      }`}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <input
-                                          type="radio"
-                                          name={`address-${userId}`}
-                                          value={index}
-                                          checked={selectedAddresses[userId] === index}
-                                          onChange={() => setSelectedAddresses(prev => ({
-                                            ...prev,
-                                            [userId]: index
-                                          }))}
-                                          className="w-4 h-4 mt-1 text-blue-600 cursor-pointer"
-                                        />
-                                        <div className="flex-1">
-                                          <div className="font-medium text-sm text-gray-900 mb-1">
-                                            {address.address_name}
-                                          </div>
-                                          <div className="text-xs text-gray-600">
-                                            📍 {address.address}
-                                          </div>
-                                        </div>
-                                        {selectedAddresses[userId] === index && (
-                                          <div className="text-blue-600">
-                                            ✅
-                                          </div>
-                                        )}
-                                      </div>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
 
                     {/* 開始時刻 */}
                     <div>
