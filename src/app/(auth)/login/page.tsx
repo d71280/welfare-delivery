@@ -38,6 +38,9 @@ export default function LoginPage() {
 
   // ページ読み込み時にドライバーと車両データを取得
   useEffect(() => {
+    // 既存のセッションをクリア（新しいログインのため）
+    localStorage.removeItem('driverSession')
+    
     async function fetchData() {
       try {
         const [driversRes, vehiclesRes, usersRes] = await Promise.all([

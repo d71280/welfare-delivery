@@ -150,6 +150,7 @@ export default function DriverPage() {
         .from('transportation_records')
         .select('*')
         .in('id', deliveryRecordIds)
+        .eq('management_code_id', managementCodeId)
         .order('created_at', { ascending: true })
 
       console.log('取得した送迎記録:', records)
@@ -644,8 +645,12 @@ export default function DriverPage() {
       
       if (recordId) {
         console.log('送迎完了ページに遷移します。記録ID:', recordId)
-        // セッション情報はクリアせずに完了ページで表示用に保持
+        // 送迎完了ページに遷移
         router.push(`/transportation-complete?recordId=${recordId}`)
+        // 完了ページ遷移後にセッションをクリア
+        setTimeout(() => {
+          localStorage.removeItem('driverSession')
+        }, 1000)
       } else {
         console.log('記録IDが取得できないため、ログインページに戻ります')
         localStorage.removeItem('driverSession')
