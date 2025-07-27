@@ -695,33 +695,58 @@ export default function LoginPage() {
                           <label className="font-semibold text-gray-900 text-sm">送迎先住所</label>
                           <span className="text-red-500">*</span>
                         </div>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
                           {selectedUsers.map((userId) => {
                             const user = users.find(u => u.id === userId)
                             if (!user || !userAddresses[userId]) return null
                             
                             return (
-                              <div key={userId} className="bg-gray-50 p-2 rounded-lg">
-                                <p className="text-sm font-medium text-gray-800 mb-1">{user.name}</p>
-                                {userAddresses[userId].map((address, index) => (
-                                  <label key={index} className="flex items-center gap-2 text-sm">
-                                    <input
-                                      type="radio"
-                                      name={`address-${userId}`}
-                                      value={index}
-                                      checked={selectedAddresses[userId] === index}
-                                      onChange={() => setSelectedAddresses(prev => ({
-                                        ...prev,
-                                        [userId]: index
-                                      }))}
-                                      className="w-3 h-3"
-                                    />
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">
-                                      {address.address_name}
-                                    </span>
-                                    <span className="text-gray-600 text-xs truncate">{address.address}</span>
-                                  </label>
-                                ))}
+                              <div key={userId} className="bg-gray-50 p-3 rounded-lg">
+                                <p className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                                  <span className="user-avatar" style={{width: '1.5rem', height: '1.5rem', fontSize: '0.75rem'}}>
+                                    {user.name.charAt(0)}
+                                  </span>
+                                  {user.name}
+                                </p>
+                                <div className="space-y-2">
+                                  {userAddresses[userId].map((address, index) => (
+                                    <label 
+                                      key={index} 
+                                      className={`block p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                        selectedAddresses[userId] === index 
+                                          ? 'bg-blue-50 border-blue-500' 
+                                          : 'bg-white border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <input
+                                          type="radio"
+                                          name={`address-${userId}`}
+                                          value={index}
+                                          checked={selectedAddresses[userId] === index}
+                                          onChange={() => setSelectedAddresses(prev => ({
+                                            ...prev,
+                                            [userId]: index
+                                          }))}
+                                          className="w-4 h-4 mt-1 text-blue-600 cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                          <div className="font-medium text-sm text-gray-900 mb-1">
+                                            {address.address_name}
+                                          </div>
+                                          <div className="text-xs text-gray-600">
+                                            📍 {address.address}
+                                          </div>
+                                        </div>
+                                        {selectedAddresses[userId] === index && (
+                                          <div className="text-blue-600">
+                                            ✅
+                                          </div>
+                                        )}
+                                      </div>
+                                    </label>
+                                  ))}
+                                </div>
                               </div>
                             )
                           })}
