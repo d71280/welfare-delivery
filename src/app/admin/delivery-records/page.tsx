@@ -28,12 +28,17 @@ export default function DeliveryRecordsPage() {
       
       const session = JSON.parse(sessionData)
       
+      console.log('管理者セッション情報:', session)
+      console.log('組織ID:', session.organizationId)
+      
       // 組織に紐づく管理コードを取得
       const { data: codes, error } = await supabase
         .from('management_codes')
-        .select('id')
+        .select('id, code')
         .eq('organization_id', session.organizationId)
         .eq('is_active', true)
+      
+      console.log('取得した管理コード:', codes)
       
       if (error) {
         console.error('管理コード取得エラー:', error)
@@ -41,7 +46,11 @@ export default function DeliveryRecordsPage() {
       }
       
       if (codes && codes.length > 0) {
-        setManagementCodeIds(codes.map(code => code.id))
+        const codeIds = codes.map(code => code.id)
+        console.log('管理コードIDリスト:', codeIds)
+        setManagementCodeIds(codeIds)
+      } else {
+        console.warn('管理コードが見つかりません')
       }
     }
     
@@ -50,7 +59,10 @@ export default function DeliveryRecordsPage() {
 
   useEffect(() => {
     if (managementCodeIds.length > 0) {
+      console.log('送迎記録を取得します。管理コードIDs:', managementCodeIds)
       fetchRecords()
+    } else {
+      console.log('管理コードIDがまだ設定されていません')
     }
   }, [dateFilter, statusFilter, driverFilter, managementCodeIds])
 
@@ -80,6 +92,9 @@ export default function DeliveryRecordsPage() {
 
       const { data, error } = await query
 
+      console.log('送迎記録取得結果:', data)
+      console.log('取得エラー:', error)
+      
       if (error) throw error
       setRecords(data || [])
     } catch (error) {
