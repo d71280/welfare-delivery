@@ -187,6 +187,27 @@ export default function DriverPage() {
               // 対応する詳細記録を探す
               let detail = details?.find(d => d.user_id === userId)
               
+              // 詳細記録がない場合は作成
+              if (!detail) {
+                console.log('詳細記録が見つからないため作成します:', userId)
+                const { data: newDetail, error: createError } = await supabase
+                  .from('transportation_details')
+                  .insert({
+                    transportation_record_id: record.id,
+                    user_id: userId,
+                    pickup_address_id: currentSession.selectedAddresses?.[userId] || null
+                  })
+                  .select()
+                  .single()
+                  
+                if (!createError && newDetail) {
+                  detail = newDetail
+                  console.log('詳細記録を作成しました:', newDetail)
+                } else {
+                  console.error('詳細記録の作成に失敗:', createError)
+                }
+              }
+              
               // デバッグ: 詳細記録の内容を確認
               if (detail) {
                 console.log('既存の詳細記録:', {
