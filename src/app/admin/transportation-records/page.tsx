@@ -121,9 +121,50 @@ export default function TransportationRecordsPage() {
 
   const fetchFilterData = async () => {
     try {
+      // 管理者セッション情報を取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) {
+        return
+      }
+      
+      const adminSession = JSON.parse(sessionData)
+      const adminOrganizationId = adminSession.organizationId
+      
+      if (!adminOrganizationId) {
+        console.error('管理者の組織IDが見つかりません')
+        return
+      }
+      
+      // 管理者の組織に属する管理コードを取得
+      const { data: managementCodes, error: mcError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', adminOrganizationId)
+        .eq('is_active', true)
+      
+      if (mcError) {
+        console.error('管理コード取得エラー:', mcError)
+        return
+      }
+      
+      const managementCodeIds = managementCodes?.map(mc => mc.id) || []
+      
+      if (managementCodeIds.length === 0) {
+        return
+      }
+      
+      // 組織に属するドライバーと車両のみを取得
       const [driversRes, vehiclesRes] = await Promise.all([
-        supabase.from('drivers').select('*').eq('is_active', true),
-        supabase.from('vehicles').select('*').eq('is_active', true)
+        supabase
+          .from('drivers')
+          .select('*')
+          .in('management_code_id', managementCodeIds)
+          .eq('is_active', true),
+        supabase
+          .from('vehicles')
+          .select('*')
+          .in('management_code_id', managementCodeIds)
+          .eq('is_active', true)
       ])
 
       if (driversRes.data) setDrivers(driversRes.data)
@@ -137,6 +178,44 @@ export default function TransportationRecordsPage() {
     try {
       setIsLoading(true)
       
+      // 管理者セッション情報を取得
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) {
+        router.push('/admin/login')
+        return
+      }
+      
+      const adminSession = JSON.parse(sessionData)
+      const adminOrganizationId = adminSession.organizationId
+      
+      if (!adminOrganizationId) {
+        console.error('管理者の組織IDが見つかりません')
+        // setError('アクセス権限がありません') // This line was not in the original file, so it's removed.
+        return
+      }
+      
+      // 管理者の組織に属する管理コードを取得
+      const { data: managementCodes, error: mcError } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', adminOrganizationId)
+        .eq('is_active', true)
+      
+      if (mcError) {
+        console.error('管理コード取得エラー:', mcError)
+        return
+      }
+      
+      const managementCodeIds = managementCodes?.map(mc => mc.id) || []
+      
+      if (managementCodeIds.length === 0) {
+        console.log('該当する管理コードが見つかりません')
+        setRecords([])
+        setGroupedRecords([])
+        return
+      }
+      
+      // 組織に属する送迎記録のみを取得
       const { data, error } = await supabase
         .from('transportation_records')
         .select(`
@@ -149,6 +228,7 @@ export default function TransportationRecordsPage() {
             users(*)
           )
         `)
+        .in('management_code_id', managementCodeIds)
         .order('created_at', { ascending: false })
 
       if (error) {

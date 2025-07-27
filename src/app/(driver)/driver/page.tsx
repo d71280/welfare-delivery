@@ -146,12 +146,19 @@ export default function DriverPage() {
         return
       }
       
-      const { data: records, error } = await supabase
+      // 管理コードIDが一致するかを確認するためのクエリ
+      let query = supabase
         .from('transportation_records')
         .select('*')
         .in('id', deliveryRecordIds)
-        .eq('management_code_id', managementCodeId)
         .order('created_at', { ascending: true })
+      
+      // 管理コードIDがある場合のみフィルタリング
+      if (managementCodeId) {
+        query = query.eq('management_code_id', managementCodeId)
+      }
+      
+      const { data: records, error } = await query
 
       console.log('取得した送迎記録:', records)
       console.log('取得エラー:', error)
@@ -323,16 +330,54 @@ export default function DriverPage() {
         console.log('個別利用者の到着時間を記録:', { recordId, userId, time: currentTimeStr, timestamp: new Date().toISOString() })
         
         // まず、該当するtransportation_detailsレコードが存在するかチェック
-        const { data: existingDetail } = await supabase
+        const { data: existingDetail, error: detailFetchError } = await supabase
           .from('transportation_details')
           .select('id')
           .eq('transportation_record_id', recordId)
           .eq('user_id', userId)
           .single()
         
-        if (!existingDetail) {
-          console.error('対応する詳細記録が見つかりません:', { recordId, userId })
-          alert('対応する詳細記録が見つかりません')
+        if (!existingDetail || detailFetchError) {
+          console.error('対応する詳細記録が見つかりません:', { 
+            recordId, 
+            userId, 
+            error: detailFetchError,
+            message: '詳細記録の取得に失敗しました'
+          })
+          
+          // 詳細記録が存在しない場合は作成を試みる
+          console.log('詳細記録を新規作成します（到着時間記録時）')
+          const { data: newDetail, error: createError } = await supabase
+            .from('transportation_details')
+            .insert({
+              transportation_record_id: recordId,
+              user_id: userId,
+              arrival_time: currentTimeStr + ':00',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single()
+            
+          if (createError) {
+            console.error('詳細記録の作成に失敗:', createError)
+            alert('詳細記録の作成に失敗しました')
+            return
+          }
+          
+          console.log('詳細記録を作成しました:', newDetail)
+          
+          // 状態を更新
+          setDeliveries(prev => 
+            prev.map(item => 
+              item.record.id === recordId && item.user?.id === userId
+                ? { 
+                    ...item, 
+                    detail: newDetail
+                  }
+                : item
+            )
+          )
           return
         }
         
@@ -408,16 +453,54 @@ export default function DriverPage() {
         console.log('個別利用者の出発時間を記録:', { recordId, userId, time: currentTimeStr })
         
         // まず、該当するtransportation_detailsレコードが存在するかチェック
-        const { data: existingDetail } = await supabase
+        const { data: existingDetail, error: detailFetchError } = await supabase
           .from('transportation_details')
           .select('id')
           .eq('transportation_record_id', recordId)
           .eq('user_id', userId)
           .single()
         
-        if (!existingDetail) {
-          console.error('対応する詳細記録が見つかりません:', { recordId, userId })
-          alert('対応する詳細記録が見つかりません')
+        if (!existingDetail || detailFetchError) {
+          console.error('対応する詳細記録が見つかりません:', { 
+            recordId, 
+            userId, 
+            error: detailFetchError,
+            message: '詳細記録の取得に失敗しました'
+          })
+          
+          // 詳細記録が存在しない場合は作成を試みる
+          console.log('詳細記録を新規作成します（出発時間記録時）')
+          const { data: newDetail, error: createError } = await supabase
+            .from('transportation_details')
+            .insert({
+              transportation_record_id: recordId,
+              user_id: userId,
+              departure_time: currentTimeStr + ':00',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single()
+            
+          if (createError) {
+            console.error('詳細記録の作成に失敗:', createError)
+            alert('詳細記録の作成に失敗しました')
+            return
+          }
+          
+          console.log('詳細記録を作成しました:', newDetail)
+          
+          // 状態を更新
+          setDeliveries(prev => 
+            prev.map(item => 
+              item.record.id === recordId && item.user?.id === userId
+                ? { 
+                    ...item, 
+                    detail: newDetail
+                  }
+                : item
+            )
+          )
           return
         }
         

@@ -1,6 +1,44 @@
 -- 福祉送迎記録システム データベーススキーマ
 -- Welfare Transportation Record System Database Schema
 
+-- 組織テーブル (Organizations)
+CREATE TABLE IF NOT EXISTS organizations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT,
+    phone TEXT,
+    email TEXT,
+    representative_name TEXT,
+    license_number TEXT,
+    business_type TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 管理コードテーブル (Management Codes)
+CREATE TABLE IF NOT EXISTS management_codes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 管理者テーブル (Admins)
+CREATE TABLE IF NOT EXISTS admins (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    email TEXT,
+    name TEXT,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ドライバーテーブル (Drivers)
 CREATE TABLE IF NOT EXISTS drivers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -8,6 +46,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     employee_no TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE,
     pin_code TEXT,
+    management_code_id UUID REFERENCES management_codes(id),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -20,6 +59,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_name TEXT,
     capacity INTEGER DEFAULT 8, -- 乗車定員
     wheelchair_accessible BOOLEAN DEFAULT false, -- 車椅子対応
+    management_code_id UUID REFERENCES management_codes(id),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -30,6 +70,7 @@ CREATE TABLE IF NOT EXISTS routes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     route_name TEXT NOT NULL,
     route_code TEXT UNIQUE NOT NULL,
+    management_code_id UUID REFERENCES management_codes(id),
     display_order INTEGER NOT NULL DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -47,6 +88,7 @@ CREATE TABLE IF NOT EXISTS users (
     emergency_phone TEXT,
     wheelchair_user BOOLEAN DEFAULT false, -- 車椅子利用者
     special_notes TEXT, -- 特記事項
+    management_code_id UUID REFERENCES management_codes(id),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -78,6 +120,7 @@ CREATE TABLE IF NOT EXISTS transportation_records (
     passenger_count INTEGER DEFAULT 0, -- 乗車人数
     weather_condition TEXT, -- 天候
     special_notes TEXT, -- 特記事項
+    management_code_id UUID REFERENCES management_codes(id),
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -105,6 +148,16 @@ CREATE TABLE IF NOT EXISTS transportation_details (
 );
 
 -- インデックス作成
+CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);
+CREATE INDEX IF NOT EXISTS idx_management_codes_organization_id ON management_codes(organization_id);
+CREATE INDEX IF NOT EXISTS idx_management_codes_code ON management_codes(code);
+CREATE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
+CREATE INDEX IF NOT EXISTS idx_admins_organization_id ON admins(organization_id);
+CREATE INDEX IF NOT EXISTS idx_drivers_management_code_id ON drivers(management_code_id);
+CREATE INDEX IF NOT EXISTS idx_vehicles_management_code_id ON vehicles(management_code_id);
+CREATE INDEX IF NOT EXISTS idx_routes_management_code_id ON routes(management_code_id);
+CREATE INDEX IF NOT EXISTS idx_users_management_code_id ON users(management_code_id);
+CREATE INDEX IF NOT EXISTS idx_transportation_records_management_code_id ON transportation_records(management_code_id);
 CREATE INDEX IF NOT EXISTS idx_transportation_records_date ON transportation_records(transportation_date);
 CREATE INDEX IF NOT EXISTS idx_transportation_records_driver ON transportation_records(driver_id);
 CREATE INDEX IF NOT EXISTS idx_transportation_records_route ON transportation_records(route_id);
@@ -125,6 +178,9 @@ END;
 $$ language 'plpgsql';
 
 -- 各テーブルにupdated_at自動更新トリガーを設定
+CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_management_codes_updated_at BEFORE UPDATE ON management_codes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_admins_updated_at BEFORE UPDATE ON admins FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_drivers_updated_at BEFORE UPDATE ON drivers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_vehicles_updated_at BEFORE UPDATE ON vehicles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_routes_updated_at BEFORE UPDATE ON routes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -134,6 +190,9 @@ CREATE TRIGGER update_transportation_records_updated_at BEFORE UPDATE ON transpo
 CREATE TRIGGER update_transportation_details_updated_at BEFORE UPDATE ON transportation_details FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Row Level Security (RLS) の設定
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE management_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE routes ENABLE ROW LEVEL SECURITY;
@@ -142,7 +201,10 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transportation_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transportation_details ENABLE ROW LEVEL SECURITY;
 
--- RLSポリシー（認証済みユーザーのみアクセス可能）
+-- 組織単位のRLSポリシー（現在は基本認証のみ、将来的に組織制御追加予定）
+CREATE POLICY "Allow authenticated users" ON organizations FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users" ON management_codes FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users" ON admins FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated users" ON drivers FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated users" ON vehicles FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated users" ON routes FOR ALL USING (auth.role() = 'authenticated');
@@ -152,35 +214,106 @@ CREATE POLICY "Allow authenticated users" ON transportation_records FOR ALL USIN
 CREATE POLICY "Allow authenticated users" ON transportation_details FOR ALL USING (auth.role() = 'authenticated');
 
 -- サンプルデータの挿入
-INSERT INTO drivers (name, employee_no, email, pin_code) VALUES 
+
+-- サンプル組織
+INSERT INTO organizations (name, address, phone, email, representative_name, license_number, business_type) VALUES 
+    ('福祉法人さくら', '東京都世田谷区1-1-1', '03-1234-5678', 'info@sakura-welfare.org', '田中代表', 'LICENSE001', '障害者通所支援')
+ON CONFLICT DO NOTHING;
+
+-- サンプル管理コード
+INSERT INTO management_codes (organization_id, code, name) 
+SELECT 
+    o.id,
+    '123456',
+    'さくら通所支援センター'
+FROM organizations o 
+WHERE o.name = '福祉法人さくら'
+ON CONFLICT (code) DO NOTHING;
+
+-- サンプル管理者
+INSERT INTO admins (username, password, email, name, organization_id)
+SELECT 
+    'admin',
+    'password123',
+    'admin@sakura-welfare.org',
+    '管理者太郎',
+    o.id
+FROM organizations o 
+WHERE o.name = '福祉法人さくら'
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO drivers (name, employee_no, email, pin_code, management_code_id) 
+SELECT 
+    d.name,
+    d.employee_no,
+    d.email,
+    d.pin_code,
+    mc.id
+FROM (VALUES 
     ('田中太郎', 'D001', 'tanaka@example.com', '1234'),
     ('佐藤花子', 'D002', 'sato@example.com', '5678'),
     ('鈴木一郎', 'D003', 'suzuki@example.com', '9999')
+) AS d(name, employee_no, email, pin_code)
+CROSS JOIN management_codes mc
+WHERE mc.code = '123456'
 ON CONFLICT (employee_no) DO NOTHING;
 
-INSERT INTO vehicles (vehicle_no, vehicle_name, capacity, wheelchair_accessible) VALUES 
+INSERT INTO vehicles (vehicle_no, vehicle_name, capacity, wheelchair_accessible, management_code_id) 
+SELECT 
+    v.vehicle_no,
+    v.vehicle_name,
+    v.capacity,
+    v.wheelchair_accessible,
+    mc.id
+FROM (VALUES 
     ('1001', 'ハイエース1号車', 8, false),
     ('1002', 'ハイエース2号車', 8, true),
     ('1003', 'アルファード1号車', 7, false),
     ('1004', 'ハイエース3号車', 8, true),
     ('1005', 'セレナ1号車', 8, false)
+) AS v(vehicle_no, vehicle_name, capacity, wheelchair_accessible)
+CROSS JOIN management_codes mc
+WHERE mc.code = '123456'
 ON CONFLICT (vehicle_no) DO NOTHING;
 
-INSERT INTO routes (route_name, route_code, display_order) VALUES 
+INSERT INTO routes (route_name, route_code, display_order, management_code_id) 
+SELECT 
+    r.route_name,
+    r.route_code,
+    r.display_order,
+    mc.id
+FROM (VALUES 
     ('通所支援Aルート', 'ROUTE_A', 1),
     ('通所支援Bルート', 'ROUTE_B', 2),
     ('医療送迎ルート', 'ROUTE_MEDICAL', 3),
     ('外出支援ルート', 'ROUTE_OUTING', 4),
     ('通所支援Cルート', 'ROUTE_C', 5)
+) AS r(route_name, route_code, display_order)
+CROSS JOIN management_codes mc
+WHERE mc.code = '123456'
 ON CONFLICT (route_code) DO NOTHING;
 
 -- 利用者サンプルデータ
-INSERT INTO users (user_no, name, phone, address, emergency_contact, emergency_phone, wheelchair_user, special_notes) VALUES 
+INSERT INTO users (user_no, name, phone, address, emergency_contact, emergency_phone, wheelchair_user, special_notes, management_code_id) 
+SELECT 
+    u.user_no,
+    u.name,
+    u.phone,
+    u.address,
+    u.emergency_contact,
+    u.emergency_phone,
+    u.wheelchair_user,
+    u.special_notes,
+    mc.id
+FROM (VALUES 
     ('U001', '山田太郎', '090-1234-5678', '東京都世田谷区1-1-1', '山田花子', '090-8765-4321', false, 'てんかん持ち、薬は朝夕服用'),
     ('U002', '田中次郎', '090-2345-6789', '東京都杉並区2-2-2', '田中美子', '090-7654-3210', true, '車椅子利用、リフト必要'),
     ('U003', '佐藤三郎', '090-3456-7890', '東京都練馬区3-3-3', '佐藤恵子', '090-6543-2109', false, '認知症、見守り必要'),
     ('U004', '鈴木四郎', '090-4567-8901', '東京都中野区4-4-4', '鈴木良子', '090-5432-1098', false, 'なし'),
     ('U005', '高橋五郎', '090-5678-9012', '東京都渋谷区5-5-5', '高橋明美', '090-4321-0987', true, '車椅子利用、介助なし')
+) AS u(user_no, name, phone, address, emergency_contact, emergency_phone, wheelchair_user, special_notes)
+CROSS JOIN management_codes mc
+WHERE mc.code = '123456'
 ON CONFLICT (user_no) DO NOTHING;
 
 -- 通所支援Aルートの送迎先サンプル
