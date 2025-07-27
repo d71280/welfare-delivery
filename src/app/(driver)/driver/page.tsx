@@ -932,7 +932,7 @@ export default function DriverPage() {
                           final: parseInt(e.target.value) || 0
                         }))}
                         className="form-input text-center text-lg font-mono pr-12"
-                        placeholder="12345"
+                        placeholder=""
                         min={session.startOdometer || 0}
                       />
                       <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">km</span>
