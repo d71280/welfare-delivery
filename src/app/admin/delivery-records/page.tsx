@@ -16,12 +16,43 @@ export default function DeliveryRecordsPage() {
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [driverFilter, setDriverFilter] = useState('')
+  const [managementCodeIds, setManagementCodeIds] = useState<string[]>([])
 
   const supabase = createClient()
 
   useEffect(() => {
-    fetchRecords()
-  }, [dateFilter, statusFilter, driverFilter])
+    // 管理者セッションから管理コードIDを取得
+    const fetchManagementCodes = async () => {
+      const sessionData = localStorage.getItem('adminSession')
+      if (!sessionData) return
+      
+      const session = JSON.parse(sessionData)
+      
+      // 組織に紐づく管理コードを取得
+      const { data: codes, error } = await supabase
+        .from('management_codes')
+        .select('id')
+        .eq('organization_id', session.organizationId)
+        .eq('is_active', true)
+      
+      if (error) {
+        console.error('管理コード取得エラー:', error)
+        return
+      }
+      
+      if (codes && codes.length > 0) {
+        setManagementCodeIds(codes.map(code => code.id))
+      }
+    }
+    
+    fetchManagementCodes()
+  }, [])
+
+  useEffect(() => {
+    if (managementCodeIds.length > 0) {
+      fetchRecords()
+    }
+  }, [dateFilter, statusFilter, driverFilter, managementCodeIds])
 
   const fetchRecords = async () => {
     try {
@@ -33,6 +64,7 @@ export default function DeliveryRecordsPage() {
           vehicle:vehicles!transportation_records_vehicle_id_fkey(id, vehicle_no, vehicle_name),
           route:routes!transportation_records_route_id_fkey(id, route_name, route_code)
         `)
+        .in('management_code_id', managementCodeIds)
         .order('transportation_date', { ascending: false })
         .order('created_at', { ascending: false })
 
