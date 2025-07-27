@@ -38,6 +38,10 @@ export default function LoginPage() {
 
   // ページ読み込み時にドライバーと車両データを取得
   useEffect(() => {
+    // 既存のドライバーセッションをクリア
+    localStorage.removeItem('driverSession')
+    console.log('既存のドライバーセッションをクリアしました')
+    
     async function fetchData() {
       try {
         const [driversRes, vehiclesRes, usersRes] = await Promise.all([
@@ -299,6 +303,8 @@ export default function LoginPage() {
 
       console.log('送迎データ:', deliveryData)
       const result = await createDeliveryRecord(deliveryData)
+      
+      console.log('createDeliveryRecord結果:', result)
       
       if (!result.data) {
         console.error('送迎記録作成エラー:', result)

@@ -126,6 +126,12 @@ export default function DriverPage() {
         return
       }
       
+      console.log('送迎記録取得条件:', {
+        driver_id: driverId,
+        transportation_date: today,
+        management_code_id: managementCodeId
+      })
+      
       const { data: records, error } = await supabase
         .from('transportation_records')
         .select('*')
@@ -135,6 +141,9 @@ export default function DriverPage() {
         .in('transportation_type', ['individual', 'regular', 'round_trip'])
         .order('created_at', { ascending: true })
 
+      console.log('取得した送迎記録:', records)
+      console.log('取得エラー:', error)
+      
       if (error) throw error
 
       // 各送迎記録に対応する利用者詳細情報を取得
