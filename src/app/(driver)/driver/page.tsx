@@ -14,7 +14,7 @@ interface DriverSession {
   loginTime: string
   selectedUsers?: string[]
   userNames?: string
-  selectedAddresses?: {[userId: string]: string}
+  selectedAddresses?: {[userId: string]: string | number}
   deliveryRecordIds?: string[]
   startOdometer?: number
   managementCodeId?: string
@@ -49,22 +49,34 @@ export default function DriverPage() {
     }
 
     const parsedSession = JSON.parse(sessionData) as DriverSession
-    console.log('ドライバーセッション情報:', parsedSession)
     setSession(parsedSession)
-    
-    // 現在時刻を設定
-    const now = new Date()
-    setCurrentTime(now.toLocaleTimeString('ja-JP', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }))
+
+    console.log('=== ドライバーセッション詳細 ===')
+    console.log('全セッションデータ:', parsedSession)
+    console.log('selectedAddresses:', parsedSession.selectedAddresses)
+    console.log('selectedUsers:', parsedSession.selectedUsers)
+    console.log('selectedAddresses type:', typeof parsedSession.selectedAddresses)
+    console.log('selectedAddresses keys:', parsedSession.selectedAddresses ? Object.keys(parsedSession.selectedAddresses) : 'なし')
+    console.log('selectedAddresses values:', parsedSession.selectedAddresses ? Object.values(parsedSession.selectedAddresses) : 'なし')
+
+    // 時間の表示を更新
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString('ja-JP', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }))
+    }, 1000)
 
     // 今日の送迎記録を取得
     fetchTodayDeliveries(parsedSession.driverId)
     
     // 選択された住所の名前を取得
     if (parsedSession.selectedAddresses) {
+      console.log('fetchAddressNames呼び出し前:', parsedSession.selectedAddresses)
       fetchAddressNames(parsedSession.selectedAddresses)
+    } else {
+      console.log('selectedAddressesがないため住所取得をスキップ')
     }
 
     // デバッグ用：allCompletedの状態変化を監視
@@ -85,7 +97,7 @@ export default function DriverPage() {
     return () => clearInterval(debugInterval)
   }, [router, allCompleted, deliveries, endOdometers])
 
-  const fetchAddressNames = async (selectedAddresses: {[userId: string]: string}) => {
+  const fetchAddressNames = async (selectedAddresses: {[userId: string]: string | number}) => {
     try {
       const userIds = Object.keys(selectedAddresses)
       if (userIds.length === 0) {
@@ -99,7 +111,12 @@ export default function DriverPage() {
       
       for (const userId of userIds) {
         const addressIndex = selectedAddresses[userId]
-        if (!addressIndex || addressIndex === '') continue
+        if (addressIndex === undefined || addressIndex === null || addressIndex === '') continue
+
+        // 数値と文字列両方に対応
+        const indexNum = typeof addressIndex === 'number' ? addressIndex : parseInt(String(addressIndex))
+        
+        console.log(`ユーザー${userId}の住所index:`, addressIndex, '→', indexNum)
 
         // ユーザーの住所リストを取得
         const { data: userAddresses } = await supabase
@@ -109,16 +126,19 @@ export default function DriverPage() {
           .eq('is_active', true)
           .order('display_order')
 
+        console.log(`ユーザー${userId}の住所リスト:`, userAddresses)
+
         if (userAddresses && userAddresses.length > 0) {
-          const indexNum = parseInt(addressIndex)
           const selectedAddress = userAddresses[indexNum]
           
           if (selectedAddress) {
             addressNameMap[userId] = `${selectedAddress.address_name}: ${selectedAddress.address}`
             console.log(`ユーザー${userId}の住所:`, addressNameMap[userId])
           } else {
-            console.log(`ユーザー${userId}のindex ${indexNum}に該当する住所が見つかりません`)
+            console.log(`ユーザー${userId}のindex ${indexNum}に該当する住所が見つかりません（住所数: ${userAddresses.length}）`)
           }
+        } else {
+          console.log(`ユーザー${userId}の住所データが見つかりません`)
         }
       }
 
@@ -1013,10 +1033,23 @@ export default function DriverPage() {
                         <span className="text-xs font-medium text-gray-700">送迎先住所</span>
                       </div>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        {delivery.user && session?.selectedAddresses && session.selectedAddresses[delivery.user.id]
-                          ? userAddressNames[delivery.user.id] || '住所情報なし'
-                          : delivery.user?.address || '住所情報なし'
-                        }
+                        {(() => {
+                          console.log('住所表示デバッグ:', {
+                            userId: delivery.user?.id,
+                            hasUser: !!delivery.user,
+                            hasSession: !!session,
+                            hasSelectedAddresses: !!(session?.selectedAddresses),
+                            selectedAddressForUser: session?.selectedAddresses ? session.selectedAddresses[delivery.user?.id || ''] : 'なし',
+                            userAddressName: delivery.user ? userAddressNames[delivery.user.id] : 'ユーザーなし',
+                            fallbackAddress: delivery.user?.address
+                          })
+                          
+                          if (delivery.user && session?.selectedAddresses && session.selectedAddresses[delivery.user.id] !== undefined) {
+                            return userAddressNames[delivery.user.id] || '住所情報なし'
+                          } else {
+                            return delivery.user?.address || '住所情報なし'
+                          }
+                        })()}
                       </p>
                     </div>
 
