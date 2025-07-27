@@ -87,8 +87,11 @@ export default function DriverPage() {
 
   const fetchAddressNames = async (selectedAddresses: {[userId: string]: string}) => {
     try {
-      const addressIds = Object.values(selectedAddresses)
-      if (addressIds.length === 0) return
+      const addressIds = Object.values(selectedAddresses).filter(id => id && id !== '')
+      if (addressIds.length === 0) {
+        console.log('住所IDが空のためスキップ')
+        return
+      }
 
       const { data: addresses } = await supabase
         .from('user_addresses')
@@ -190,13 +193,23 @@ export default function DriverPage() {
               // 詳細記録がない場合は作成
               if (!detail) {
                 console.log('詳細記録が見つからないため作成します:', userId)
+                const detailData = {
+                  transportation_record_id: record.id,
+                  user_id: userId,
+                  pickup_address_id: currentSession.selectedAddresses?.[userId] || null,
+                  pickup_time: null,
+                  arrival_time: null,
+                  departure_time: null,
+                  drop_off_time: null,
+                  health_condition: null,
+                  behavior_notes: null,
+                  assistance_required: null,
+                  remarks: null
+                }
+                
                 const { data: newDetail, error: createError } = await supabase
                   .from('transportation_details')
-                  .insert({
-                    transportation_record_id: record.id,
-                    user_id: userId,
-                    pickup_address_id: currentSession.selectedAddresses?.[userId] || null
-                  })
+                  .insert(detailData)
                   .select()
                   .single()
                   
@@ -211,41 +224,12 @@ export default function DriverPage() {
               // デバッグ: 詳細記録の内容を確認
               if (detail) {
                 console.log('既存の詳細記録:', {
+                  detailId: detail.id,
                   userId: detail.user_id,
                   arrival_time: detail.arrival_time,
-                  departure_time: detail.departure_time
+                  departure_time: detail.departure_time,
+                  pickup_address_id: detail.pickup_address_id
                 })
-              }
-              
-              // 詳細記録が存在しない場合は作成（destination_idをスキップ）
-              if (!detail) {
-                console.log('詳細記録が見つからないため作成:', { recordId: record.id, userId })
-                
-                const detailData = {
-                  transportation_record_id: record.id,
-                  user_id: userId,
-                  pickup_time: null,
-                  arrival_time: null,
-                  departure_time: null,
-                  drop_off_time: null,
-                  health_condition: null,
-                  behavior_notes: null,
-                  assistance_required: null,
-                  remarks: null
-                }
-                
-                const { data: newDetail, error: createError } = await supabase
-                  .from('transportation_details')
-                  .insert([detailData])
-                  .select()
-                  .single()
-                
-                if (createError) {
-                  console.error('詳細記録作成エラー:', createError)
-                } else {
-                  detail = newDetail
-                  console.log('詳細記録作成成功:', detail)
-                }
               }
               
               console.log('作成したdeliveryItem:', { recordId: record.id, userId, userData: userData?.name, detail: detail?.id })
